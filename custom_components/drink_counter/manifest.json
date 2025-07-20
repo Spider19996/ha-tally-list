@@ -4,6 +4,8 @@
   "documentation": "https://github.com/example/ha-drink-counter",
   "version": "0.1.2",
   "requirements": [],
+  "icon": "mdi:glass-mug",
+  "logo": "logo.svg",
   "config_flow": true,
   "codeowners": []
 }
