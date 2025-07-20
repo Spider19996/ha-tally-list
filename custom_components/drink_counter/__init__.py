@@ -14,6 +14,7 @@ from .const import (
     SERVICE_RESET_COUNTERS,
     ATTR_USER,
     ATTR_DRINK,
+    CONF_FREE_AMOUNT,
 )
 
 PLATFORMS: list[str] = ["sensor", "button"]
@@ -117,6 +118,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_data = {
             "user": entry.data.get("user"),
             "drinks": hass.data[DOMAIN]["drinks"],
+            CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
+        }
+        hass.config_entries.async_update_entry(entry, data=entry_data)
+    if (
+        not hass.data[DOMAIN].get("free_amount")
+        and entry.data.get(CONF_FREE_AMOUNT) is not None
+    ):
+        hass.data[DOMAIN]["free_amount"] = entry.data[CONF_FREE_AMOUNT]
+    if (
+        hass.data[DOMAIN].get("free_amount") is not None
+        and CONF_FREE_AMOUNT not in entry.data
+    ):
+        entry_data = {
+            "user": entry.data.get("user"),
+            "drinks": hass.data[DOMAIN]["drinks"],
+            CONF_FREE_AMOUNT: hass.data[DOMAIN]["free_amount"],
         }
         hass.config_entries.async_update_entry(entry, data=entry_data)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

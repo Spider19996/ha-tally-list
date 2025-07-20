@@ -13,6 +13,7 @@ from .const import (
     CONF_DRINKS,
     CONF_DRINK,
     CONF_PRICE,
+    CONF_FREE_AMOUNT,
     PRICE_LIST_USER,
 )
 
@@ -40,6 +41,7 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         self._user: str | None = None
         self._drinks: dict[str, float] = {}
+        self._free_amount: float = 0.0
 
     async def async_step_import(self, user_input=None):
         """Handle import of a config entry."""
@@ -47,6 +49,7 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_import")
         self._user = user_input.get(CONF_USER)
         self._drinks = user_input.get(CONF_DRINKS, {})
+        self._free_amount = float(user_input.get(CONF_FREE_AMOUNT, 0.0))
         return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
@@ -83,13 +86,20 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass.config_entries.flow.async_init(
                         DOMAIN,
                         context={"source": config_entries.SOURCE_IMPORT},
-                        data={CONF_USER: PRICE_LIST_USER},
+                        data={
+                            CONF_USER: PRICE_LIST_USER,
+                            CONF_FREE_AMOUNT: 0.0,
+                        },
                     )
                 )
 
             return self.async_create_entry(
                 title=self._user,
-                data={CONF_USER: self._user, CONF_DRINKS: self._drinks},
+                data={
+                    CONF_USER: self._user,
+                    CONF_DRINKS: self._drinks,
+                    CONF_FREE_AMOUNT: 0.0,
+                },
             )
 
         schema = vol.Schema(
@@ -113,9 +123,13 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         self.config_entry = config_entry
         self._drinks: dict[str, float] = {}
+        self._free_amount: float = 0.0
 
     async def async_step_init(self, user_input=None):
         self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
+        self._free_amount = self.hass.data.get(DOMAIN, {}).get(
+            "free_amount", 0.0
+        )
         return await self.async_step_menu()
 
     async def async_step_menu(self, user_input=None):
@@ -127,12 +141,14 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
                 return await self.async_step_remove_drink()
             if action == "edit":
                 return await self.async_step_edit_price()
+            if action == "free_amount":
+                return await self.async_step_set_free_amount()
             if action == "finish":
                 return await self._update_drinks()
         schema = vol.Schema(
             {
                 vol.Required("action"): vol.In(
-                    ["add", "remove", "edit", "finish"]
+                    ["add", "remove", "edit", "free_amount", "finish"]
                 ),
             }
         )
@@ -196,15 +212,32 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
         )
         return self.async_show_form(step_id="edit_price", data_schema=schema)
 
+    async def async_step_set_free_amount(self, user_input=None):
+        if user_input is not None:
+            self._free_amount = float(user_input[CONF_FREE_AMOUNT])
+            return await self.async_step_menu()
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_FREE_AMOUNT, default=self._free_amount
+                ): vol.Coerce(float)
+            }
+        )
+        return self.async_show_form(
+            step_id="set_free_amount", data_schema=schema
+        )
+
     async def _update_drinks(self):
         # Update global drinks list before reloading entries so that new
         # sensors are created with the latest values during setup.
         self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
+        self.hass.data[DOMAIN]["free_amount"] = self._free_amount
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             data = {
                 CONF_USER: entry.data[CONF_USER],
                 CONF_DRINKS: self._drinks,
+                CONF_FREE_AMOUNT: self._free_amount,
             }
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -213,5 +246,8 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
                 await sensor.async_update_state()
         return self.async_create_entry(
             title="",
-            data={CONF_DRINKS: self._drinks},
+            data={
+                CONF_DRINKS: self._drinks,
+                CONF_FREE_AMOUNT: self._free_amount,
+            },
         )

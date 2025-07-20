@@ -21,6 +21,7 @@ async def async_setup_entry(
     if user == PRICE_LIST_USER:
         for drink_name, price in drinks.items():
             sensors.append(DrinkPriceSensor(hass, entry, drink_name, price))
+        sensors.append(FreeAmountSensor(hass, entry))
     else:
         for drink_name, price in drinks.items():
             sensors.append(DrinkCounterSensor(hass, entry, drink_name, price))
@@ -106,6 +107,26 @@ class DrinkPriceSensor(SensorEntity):
         return drinks.get(self._drink, self._price)
 
 
+class FreeAmountSensor(SensorEntity):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        self._hass = hass
+        self._entry = entry
+        self._attr_should_poll = False
+        self._attr_name = f"{entry.data[CONF_USER]} Free Amount"
+        self._attr_unique_id = f"{entry.entry_id}_free_amount"
+        self._attr_unit_of_measurement = "EUR"
+
+    async def async_added_to_hass(self) -> None:
+        await self.async_update_state()
+
+    async def async_update_state(self):
+        self.async_write_ha_state()
+
+    @property
+    def native_value(self):
+        return self._hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
+
+
 class TotalAmountSensor(RestoreEntity, SensorEntity):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self._hass = hass
@@ -130,4 +151,8 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
         drinks = self._hass.data[DOMAIN].get("drinks", {})
         for drink, price in drinks.items():
             total += counts.get(drink, 0) * price
+        free_amount = self._hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
+        total -= free_amount
+        if total < 0:
+            total = 0.0
         return round(total, 2)
