@@ -25,8 +25,8 @@ When the first user is created you will be asked to enter the available drinks. 
 
 ## Price List and Sensors
 
-All drinks are stored in a single price list. Create a user named `Preisliste`
-to expose one price sensor per drink. Regular users only get count and total
-amount sensors while the `Preisliste` user holds the `<Preisliste> <drink>
-Price` sensors. You can edit the drinks and their prices at any time from the
+All drinks are stored in a single price list. A dedicated user named
+`Preisliste` is automatically created when the first user is set up. This user
+exposes one price sensor per drink while regular users only get count and total
+amount sensors. You can edit the drinks and their prices at any time from the
 integration options.
