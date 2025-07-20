@@ -102,9 +102,11 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
                 return await self.async_step_add_drink()
             if action == "remove":
                 return await self.async_step_remove_drink()
+            if action == "edit":
+                return await self.async_step_edit_price()
             if action == "finish":
                 return await self._update_drinks()
-        schema = vol.Schema({vol.Required("action"): vol.In(["add", "remove", "finish"])} )
+        schema = vol.Schema({vol.Required("action"): vol.In(["add", "remove", "edit", "finish"])} )
         return self.async_show_form(step_id="menu", data_schema=schema)
 
     async def async_step_add_drink(self, user_input=None):
@@ -143,6 +145,27 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
             }
         )
         return self.async_show_form(step_id="remove_drink", data_schema=schema)
+
+    async def async_step_edit_price(self, user_input=None):
+        if user_input is not None:
+            drink = user_input[CONF_DRINK]
+            price = float(user_input[CONF_PRICE])
+            self._drinks[drink] = price
+            if user_input.get("edit_more") and self._drinks:
+                return await self.async_step_edit_price()
+            return await self.async_step_menu()
+
+        if not self._drinks:
+            return await self.async_step_menu()
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
+                vol.Required(CONF_PRICE): vol.Coerce(float),
+                vol.Optional("edit_more", default=False): bool,
+            }
+        )
+        return self.async_show_form(step_id="edit_price", data_schema=schema)
 
     async def _update_drinks(self):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
