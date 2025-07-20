@@ -8,6 +8,19 @@ add_drink:
     drink:
       description: Drink name
       example: beer
+adjust_count:
+  name: Adjust count
+  description: Increase or decrease drink count for a user
+  fields:
+    user:
+      description: User name
+      example: Alice
+    drink:
+      description: Drink name
+      example: beer
+    amount:
+      description: Amount to add (use negative to subtract)
+      example: -1
 reset_counters:
   name: Reset counters
   description: Reset counters for a user. If no user is specified, reset all.

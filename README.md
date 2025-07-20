@@ -2,14 +2,15 @@
 
 This is a custom integration for [Home Assistant](https://www.home-assistant.io/) distributed via HACS.
 
-The integration allows you to manage drink tallies for multiple users. You can define drinks with prices and increment counters using a service call.
+The integration allows you to manage drink tallies for multiple users. Drinks are defined once and shared across all users. Counters start at zero and can be adjusted using services.
 
 ## Features
 
-- Configure users via the UI and add drinks individually with a name and price.
+- Configure users via the UI. Drinks are added only once with a name and price and are available for every user.
 - Sensor entities for each drink and a sensor showing the total amount a user has to pay.
 - Button entity to reset all counters for a user.
 - Service `drink_counter.add_drink` to add a drink for a user.
+- Service `drink_counter.adjust_count` to increase or decrease a drink count.
 
 ## Installation
 
@@ -20,4 +21,4 @@ The integration allows you to manage drink tallies for multiple users. You can d
 
 ## Usage
 
-After adding a user, the setup will prompt you to enter drinks with their prices one after another. Once configured, call the service `drink_counter.add_drink` with parameters `user` and `drink` to increment the counter. Use the reset button entity to reset all counters.
+When the first user is created you will be asked to enter the available drinks. All further users will automatically use this list. Call the service `drink_counter.add_drink` with parameters `user` and `drink` to increment the counter or `drink_counter.adjust_count` with `amount` to change it. Use the reset button entity to reset all counters.

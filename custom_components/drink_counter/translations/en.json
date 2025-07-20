@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Configure Drink Counter",
-        "description": "Add a user. Afterwards add drinks one by one.",
+        "description": "Add a user. Drinks are defined once and shared.",
         "data": {
           "user": "User name"
         }
@@ -25,7 +25,7 @@
       "step": {
         "init": {
           "title": "Drinks",
-          "description": "Update drinks for this user",
+          "description": "Update drinks for all users",
           "data": {
             "drinks": "Drinks"
           }

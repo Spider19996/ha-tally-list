@@ -7,30 +7,42 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers import service
 
-from .const import DOMAIN, SERVICE_ADD_DRINK, SERVICE_RESET_COUNTERS, ATTR_USER, ATTR_DRINK
+from .const import (
+    DOMAIN,
+    SERVICE_ADD_DRINK,
+    SERVICE_ADJUST_COUNT,
+    SERVICE_RESET_COUNTERS,
+    ATTR_USER,
+    ATTR_DRINK,
+)
 
 PLATFORMS: list[str] = ["sensor", "button"]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up via YAML is not supported."""
-    hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(DOMAIN, {"drinks": {}})
 
-    async def add_drink_service(call):
+    async def adjust_count_service(call):
         user = call.data[ATTR_USER]
         drink = call.data[ATTR_DRINK]
+        amount = call.data.get("amount", 1)
         for entry_id, data in hass.data[DOMAIN].items():
             if data["entry"].data.get("user") == user:
                 counts = data.setdefault("counts", {})
-                counts[drink] = counts.get(drink, 0) + 1
+                counts[drink] = counts.get(drink, 0) + amount
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
                 break
 
+    async def add_drink_service(call):
+        await adjust_count_service(call)
+
     async def reset_counters_service(call):
         user = call.data.get(ATTR_USER)
+        drinks = hass.data[DOMAIN].get("drinks", {})
         for entry_id, data in hass.data[DOMAIN].items():
             if user is None or data["entry"].data.get("user") == user:
-                data["counts"] = {drink: 0 for drink in data["entry"].data.get("drinks", {})}
+                data["counts"] = {drink: 0 for drink in drinks}
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
 
@@ -38,6 +50,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_ADD_DRINK,
         add_drink_service,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADJUST_COUNT,
+        adjust_count_service,
     )
 
     hass.services.async_register(
@@ -51,6 +69,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     hass.data[DOMAIN].setdefault(entry.entry_id, {"entry": entry, "counts": {}})
+    if not hass.data[DOMAIN].get("drinks") and entry.data.get("drinks"):
+        hass.data[DOMAIN]["drinks"] = entry.data["drinks"]
+    if hass.data[DOMAIN].get("drinks") and not entry.data.get("drinks"):
+        entry_data = {"user": entry.data.get("user"), "drinks": hass.data[DOMAIN]["drinks"]}
+        hass.config_entries.async_update_entry(entry, data=entry_data)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
