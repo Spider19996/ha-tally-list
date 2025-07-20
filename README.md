@@ -11,7 +11,7 @@ The integration allows you to manage drink tallies for multiple users. Drinks ar
 - Button entity to reset all counters for a user.
 - Service `drink_counter.add_drink` to add a drink for a user.
 - Service `drink_counter.remove_drink` to remove a drink for a user.
-- Service `drink_counter.adjust_count` to increase or decrease a drink count.
+- Service `drink_counter.adjust_count` to set a drink count to a specific value.
 
 ## Installation
 
@@ -22,7 +22,7 @@ The integration allows you to manage drink tallies for multiple users. Drinks ar
 
 ## Usage
 
-When the first user is created you will be asked to enter the available drinks. All further users will automatically use this list. Drinks can later be managed from the integration options where you can add, remove or edit their prices. Call the service `drink_counter.add_drink` with parameters `user` and `drink` to increment the counter or `drink_counter.adjust_count` with `amount` to change it. To decrement by one call `drink_counter.remove_drink` with `user` and `drink`. Use the reset button entity to reset all counters.
+When the first user is created you will be asked to enter the available drinks. All further users will automatically use this list. Drinks can later be managed from the integration options where you can add, remove or edit their prices. Call the service `drink_counter.add_drink` with parameters `user` and `drink` to increment the counter. Use `drink_counter.adjust_count` with `count` to set an exact value. To decrement by one call `drink_counter.remove_drink` with `user` and `drink`. Use the reset button entity to reset all counters.
 
 ## Price List and Sensors
 

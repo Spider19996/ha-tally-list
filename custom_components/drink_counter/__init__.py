@@ -26,30 +26,41 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def adjust_count_service(call):
         user = call.data[ATTR_USER]
         drink = call.data[ATTR_DRINK]
-        amount = call.data.get("amount", 1)
+        count = call.data.get("count", 0)
         for entry_id, data in hass.data[DOMAIN].items():
             if "entry" not in data:
                 continue
             if data["entry"].data.get("user") == user:
                 counts = data.setdefault("counts", {})
-                counts[drink] = counts.get(drink, 0) + amount
+                counts[drink] = count
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
                 break
 
     async def add_drink_service(call):
-        await adjust_count_service(call)
-
-    async def remove_drink_service(call):
         user = call.data[ATTR_USER]
         drink = call.data[ATTR_DRINK]
-        amount = -1
         for entry_id, data in hass.data[DOMAIN].items():
             if "entry" not in data:
                 continue
             if data["entry"].data.get("user") == user:
                 counts = data.setdefault("counts", {})
-                counts[drink] = counts.get(drink, 0) + amount
+                new_count = counts.get(drink, 0) + 1
+                counts[drink] = new_count
+                for sensor in data.get("sensors", []):
+                    await sensor.async_update_state()
+                break
+
+    async def remove_drink_service(call):
+        user = call.data[ATTR_USER]
+        drink = call.data[ATTR_DRINK]
+        for entry_id, data in hass.data[DOMAIN].items():
+            if "entry" not in data:
+                continue
+            if data["entry"].data.get("user") == user:
+                counts = data.setdefault("counts", {})
+                new_count = counts.get(drink, 0) - 1
+                counts[drink] = new_count
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
                 break
