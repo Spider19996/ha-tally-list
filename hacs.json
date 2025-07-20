@@ -5,5 +5,5 @@
   "country": "DE",
   "homeassistant": "2023.0.0",
   "render_readme": true,
-  "logo": "https://github.com/Spider19996/ha-drink-counter/tree/main/custom_components/drink_counter/icon.png"
+  "logo": "https://raw.githubusercontent.com/Spider19996/ha-drink-counter/main/custom_components/drink_counter/icon.png"
 }
