@@ -89,26 +89,64 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         self.config_entry = config_entry
+        self._drinks: dict[str, float] = {}
 
     async def async_step_init(self, user_input=None):
-        errors = {}
+        self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
+        return await self.async_step_menu()
+
+    async def async_step_menu(self, user_input=None):
         if user_input is not None:
-            try:
-                drinks = _parse_drinks(user_input[CONF_DRINKS])
-            except ValueError:
-                errors[CONF_DRINKS] = "invalid_drinks"
-            if not errors:
-                for entry in self.hass.config_entries.async_entries(DOMAIN):
-                    data = {CONF_USER: entry.data[CONF_USER]}
-                    if CONF_DRINKS in entry.data:
-                        data[CONF_DRINKS] = drinks
-                    self.hass.config_entries.async_update_entry(entry, data=data)
-                self.hass.data.setdefault(DOMAIN, {})["drinks"] = drinks
-                return self.async_create_entry(title="", data={CONF_DRINKS: drinks})
-        current = ",".join(
-            f"{name}={price}" for name, price in self.hass.data.get(DOMAIN, {}).get("drinks", {}).items()
-        )
+            action = user_input["action"]
+            if action == "add":
+                return await self.async_step_add_drink()
+            if action == "remove":
+                return await self.async_step_remove_drink()
+            if action == "finish":
+                return await self._update_drinks()
+        schema = vol.Schema({vol.Required("action"): vol.In(["add", "remove", "finish"])} )
+        return self.async_show_form(step_id="menu", data_schema=schema)
+
+    async def async_step_add_drink(self, user_input=None):
+        if user_input is not None:
+            drink = user_input[CONF_DRINK]
+            price = float(user_input[CONF_PRICE])
+            self._drinks[drink] = price
+            if user_input.get("add_more"):
+                return await self.async_step_add_drink()
+            return await self.async_step_menu()
+
         schema = vol.Schema(
-            {vol.Required(CONF_DRINKS, default=current): str}
+            {
+                vol.Required(CONF_DRINK): str,
+                vol.Required(CONF_PRICE): vol.Coerce(float),
+                vol.Optional("add_more", default=False): bool,
+            }
         )
-        return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
+        return self.async_show_form(step_id="add_drink", data_schema=schema)
+
+    async def async_step_remove_drink(self, user_input=None):
+        if user_input is not None:
+            drink = user_input[CONF_DRINK]
+            self._drinks.pop(drink, None)
+            if user_input.get("remove_more") and self._drinks:
+                return await self.async_step_remove_drink()
+            return await self.async_step_menu()
+
+        if not self._drinks:
+            return await self.async_step_menu()
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
+                vol.Optional("remove_more", default=False): bool,
+            }
+        )
+        return self.async_show_form(step_id="remove_drink", data_schema=schema)
+
+    async def _update_drinks(self):
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            data = {CONF_USER: entry.data[CONF_USER], CONF_DRINKS: self._drinks}
+            self.hass.config_entries.async_update_entry(entry, data=data)
+        self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
+        return self.async_create_entry(title="", data={CONF_DRINKS: self._drinks})

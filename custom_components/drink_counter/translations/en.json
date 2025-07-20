@@ -23,12 +23,33 @@
     },
     "options": {
       "step": {
-        "init": {
-          "title": "Drinks",
-          "description": "Update drinks for all users",
+        "menu": {
+          "title": "Manage Drinks",
           "data": {
-            "drinks": "Drinks"
+            "action": "Action"
           }
+        },
+        "add_drink": {
+          "title": "Add Drink",
+          "data": {
+            "drink": "Drink name",
+            "price": "Price",
+            "add_more": "Add another"
+          }
+        },
+        "remove_drink": {
+          "title": "Remove Drink",
+          "data": {
+            "drink": "Drink",
+            "remove_more": "Remove another"
+          }
+        }
+      },
+      "enum": {
+        "action": {
+          "add": "Add drink",
+          "remove": "Remove drink",
+          "finish": "Done"
         }
       }
     }

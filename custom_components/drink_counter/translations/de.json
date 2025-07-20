@@ -23,12 +23,33 @@
     },
     "options": {
       "step": {
-        "init": {
-          "title": "Getränke",
-          "description": "Getränke für alle Benutzer aktualisieren",
+        "menu": {
+          "title": "Getränke verwalten",
           "data": {
-            "drinks": "Getränke"
+            "action": "Aktion"
           }
+        },
+        "add_drink": {
+          "title": "Getränk hinzufügen",
+          "data": {
+            "drink": "Getränk",
+            "price": "Preis",
+            "add_more": "Weiteres hinzufügen"
+          }
+        },
+        "remove_drink": {
+          "title": "Getränk entfernen",
+          "data": {
+            "drink": "Getränk",
+            "remove_more": "Weiteres entfernen"
+          }
+        }
+      },
+      "enum": {
+        "action": {
+          "add": "Hinzufügen",
+          "remove": "Entfernen",
+          "finish": "Fertig"
         }
       }
     }
