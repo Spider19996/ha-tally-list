@@ -5,7 +5,6 @@
   "version": "0.1.2",
   "requirements": [],
   "icon": "mdi:glass-mug",
-  "logo": "logo.png",
   "config_flow": true,
   "codeowners": []
 }
