@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Drink Counter",
+        "description": "Add a user and drinks with prices separated by comma (drink=price)",
+        "data": {
+          "user": "User name",
+          "drinks": "Drinks"
+        }
+      }
+    },
+    "error": {
+      "invalid_drinks": "Invalid drinks format"
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Drinks",
+          "description": "Update drinks for this user",
+          "data": {
+            "drinks": "Drinks"
+          }
+        }
+      }
+    }
+  }
+}

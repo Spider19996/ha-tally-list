@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Drink Counter konfigurieren",
+        "description": "Benutzer und Getränke mit Preisen hinzufügen (Getränk=Preis)",
+        "data": {
+          "user": "Benutzername",
+          "drinks": "Getränke"
+        }
+      }
+    },
+    "error": {
+      "invalid_drinks": "Ungültiges Getränkeformat"
+    },
+    "options": {
+      "step": {
+        "init": {
+          "title": "Getränke",
+          "description": "Getränke für diesen Benutzer aktualisieren",
+          "data": {
+            "drinks": "Getränke"
+          }
+        }
+      }
+    }
+  }
+}
