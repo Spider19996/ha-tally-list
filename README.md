@@ -7,7 +7,7 @@ The integration allows you to manage drink tallies for multiple users. Drinks ar
 ## Features
 
 - Configure users via the UI. Drinks are added only once with a name and price and are available for every user.
-- Sensor entities for each drink and a sensor showing the total amount a user has to pay.
+- Sensor entities for each drink's count, each drink's price, and a sensor showing the total amount a user has to pay.
 - Button entity to reset all counters for a user.
 - Service `drink_counter.add_drink` to add a drink for a user.
 - Service `drink_counter.adjust_count` to increase or decrease a drink count.
