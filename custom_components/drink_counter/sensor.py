@@ -17,6 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     sensors = []
     for drink_name, price in drinks.items():
         sensors.append(DrinkCounterSensor(hass, entry, drink_name, price))
+        sensors.append(DrinkPriceSensor(hass, entry, drink_name, price))
     sensors.append(TotalAmountSensor(hass, entry))
     data.setdefault("sensors", []).extend(sensors)
     async_add_entities(sensors)
@@ -52,6 +53,29 @@ class DrinkCounterSensor(RestoreEntity, SensorEntity):
     def native_value(self):
         counts = self._hass.data[DOMAIN][self._entry.entry_id].setdefault("counts", {})
         return counts.get(self._drink, 0)
+
+
+class DrinkPriceSensor(SensorEntity):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, drink: str, price: float) -> None:
+        self._hass = hass
+        self._entry = entry
+        self._drink = drink
+        self._price = price
+        self._attr_should_poll = False
+        self._attr_name = f"{entry.data[CONF_USER]} {drink} Price"
+        self._attr_unique_id = f"{entry.entry_id}_{drink}_price"
+        self._attr_unit_of_measurement = "EUR"
+
+    async def async_added_to_hass(self) -> None:
+        await self.async_update_state()
+
+    async def async_update_state(self):
+        self.async_write_ha_state()
+
+    @property
+    def native_value(self):
+        drinks = self._hass.data.get(DOMAIN, {}).get("drinks", {})
+        return drinks.get(self._drink, self._price)
 
 
 class TotalAmountSensor(RestoreEntity, SensorEntity):

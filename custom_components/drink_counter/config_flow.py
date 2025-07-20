@@ -172,4 +172,7 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
             data = {CONF_USER: entry.data[CONF_USER], CONF_DRINKS: self._drinks}
             self.hass.config_entries.async_update_entry(entry, data=data)
         self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
+        for data in self.hass.data.get(DOMAIN, {}).values():
+            for sensor in data.get("sensors", []):
+                await sensor.async_update_state()
         return self.async_create_entry(title="", data={CONF_DRINKS: self._drinks})
