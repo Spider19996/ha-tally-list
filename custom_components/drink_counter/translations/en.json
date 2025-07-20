@@ -52,6 +52,12 @@
             "price": "Price",
             "edit_more": "Edit another"
           }
+        },
+        "set_free_amount": {
+          "title": "Set Free Amount",
+          "data": {
+            "free_amount": "Free amount"
+          }
         }
       },
       "enum": {
@@ -59,6 +65,7 @@
           "add": "Add drink",
           "remove": "Remove drink",
           "edit": "Edit price",
+          "free_amount": "Set free amount",
           "finish": "Done"
         }
       }

@@ -7,7 +7,7 @@ The integration allows you to manage drink tallies for multiple users. Drinks ar
 ## Features
 
 - Configure users via the UI. Drinks are added only once with a name and price and are available for every user.
-- Sensor entities for each drink's count, each drink's price, and a sensor showing the total amount a user has to pay.
+- Sensor entities for each drink's count, each drink's price, a free amount sensor, and a sensor showing the total amount a user has to pay.
 - Button entity to reset all counters for a user.
 - Service `drink_counter.add_drink` to add a drink for a user.
 - Service `drink_counter.remove_drink` to remove a drink for a user.
@@ -29,6 +29,7 @@ When the first user is created you will be asked to enter the available drinks. 
 
 All drinks are stored in a single price list. A dedicated user named
 `Preisliste` is automatically created when the first user is set up. This user
-exposes one price sensor per drink while regular users only get count and total
-amount sensors. You can edit the drinks and their prices at any time from the
-integration options.
+exposes one price sensor per drink as well as a free amount sensor while regular
+users only get count and total amount sensors. The free amount is subtracted from
+each user's total. You can edit the drinks, prices and free amount at any time
+from the integration options.

@@ -52,6 +52,12 @@
             "price": "Preis",
             "edit_more": "Weiteres bearbeiten"
           }
+        },
+        "set_free_amount": {
+          "title": "Freibetrag setzen",
+          "data": {
+            "free_amount": "Freibetrag"
+          }
         }
       },
       "enum": {
@@ -59,6 +65,7 @@
           "add": "Hinzufügen",
           "remove": "Entfernen",
           "edit": "Bearbeiten",
+          "free_amount": "Freibetrag",
           "finish": "Fertig"
         }
       }
