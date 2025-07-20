@@ -29,7 +29,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         drink = call.data[ATTR_DRINK]
         count = max(0, call.data.get("count", 0))
         for entry_id, data in hass.data[DOMAIN].items():
-            if "entry" not in data:
+            if not isinstance(data, dict) or "entry" not in data:
                 continue
             if data["entry"].data.get("user") == user:
                 counts = data.setdefault("counts", {})
@@ -42,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         user = call.data[ATTR_USER]
         drink = call.data[ATTR_DRINK]
         for entry_id, data in hass.data[DOMAIN].items():
-            if "entry" not in data:
+            if not isinstance(data, dict) or "entry" not in data:
                 continue
             if data["entry"].data.get("user") == user:
                 counts = data.setdefault("counts", {})
@@ -56,7 +56,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         user = call.data[ATTR_USER]
         drink = call.data[ATTR_DRINK]
         for entry_id, data in hass.data[DOMAIN].items():
-            if "entry" not in data:
+            if not isinstance(data, dict) or "entry" not in data:
                 continue
             if data["entry"].data.get("user") == user:
                 counts = data.setdefault("counts", {})
@@ -72,7 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         user = call.data.get(ATTR_USER)
         drinks = hass.data[DOMAIN].get("drinks", {})
         for entry_id, data in hass.data[DOMAIN].items():
-            if "entry" not in data:
+            if not isinstance(data, dict) or "entry" not in data:
                 continue
             if user is None or data["entry"].data.get("user") == user:
                 data["counts"] = {drink: 0 for drink in drinks}
