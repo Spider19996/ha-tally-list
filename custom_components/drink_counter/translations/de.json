@@ -43,12 +43,21 @@
             "drink": "Getränk",
             "remove_more": "Weiteres entfernen"
           }
+        },
+        "edit_price": {
+          "title": "Preis bearbeiten",
+          "data": {
+            "drink": "Getränk",
+            "price": "Preis",
+            "edit_more": "Weiteres bearbeiten"
+          }
         }
       },
       "enum": {
         "action": {
           "add": "Hinzufügen",
           "remove": "Entfernen",
+          "edit": "Bearbeiten",
           "finish": "Fertig"
         }
       }

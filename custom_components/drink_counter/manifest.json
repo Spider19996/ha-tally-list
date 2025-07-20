@@ -2,7 +2,7 @@
   "domain": "drink_counter",
   "name": "Drink Counter",
   "documentation": "https://github.com/example/ha-drink-counter",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "requirements": [],
   "config_flow": true,
   "codeowners": []

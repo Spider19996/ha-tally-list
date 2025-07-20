@@ -43,12 +43,21 @@
             "drink": "Drink",
             "remove_more": "Remove another"
           }
+        },
+        "edit_price": {
+          "title": "Edit Price",
+          "data": {
+            "drink": "Drink",
+            "price": "Price",
+            "edit_more": "Edit another"
+          }
         }
       },
       "enum": {
         "action": {
           "add": "Add drink",
           "remove": "Remove drink",
+          "edit": "Edit price",
           "finish": "Done"
         }
       }
