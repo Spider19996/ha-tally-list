@@ -21,4 +21,4 @@ The integration allows you to manage drink tallies for multiple users. Drinks ar
 
 ## Usage
 
-When the first user is created you will be asked to enter the available drinks. All further users will automatically use this list. Call the service `drink_counter.add_drink` with parameters `user` and `drink` to increment the counter or `drink_counter.adjust_count` with `amount` to change it. Use the reset button entity to reset all counters.
+When the first user is created you will be asked to enter the available drinks. All further users will automatically use this list. Drinks can later be managed from the integration options where you can add or remove them. Call the service `drink_counter.add_drink` with parameters `user` and `drink` to increment the counter or `drink_counter.adjust_count` with `amount` to change it. Use the reset button entity to reset all counters.
