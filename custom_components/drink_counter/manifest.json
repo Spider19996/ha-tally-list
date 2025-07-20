@@ -6,6 +6,6 @@
   "requirements": [],
   "icon": "mdi:glass-mug",
   "config_flow": true,
-  "logo": "custom_components/dein_integration_name/icon.png",
+  "logo": "custom_components/drink_counter/icon.png",
   "codeowners": []
 }
