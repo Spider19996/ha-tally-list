@@ -10,7 +10,9 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN, CONF_USER, PRICE_LIST_USER
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
     data = hass.data[DOMAIN][entry.entry_id]
     user = entry.data[CONF_USER]
     drinks = hass.data[DOMAIN].get("drinks", {})
@@ -29,7 +31,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
 
 class DrinkCounterSensor(RestoreEntity, SensorEntity):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, drink: str, price: float) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        drink: str,
+        price: float,
+    ) -> None:
         self._hass = hass
         self._entry = entry
         self._drink = drink
@@ -41,12 +49,18 @@ class DrinkCounterSensor(RestoreEntity, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         last_state = await self.async_get_last_state()
-        if last_state is not None and last_state.state not in (None, "unknown", "unavailable"):
+        if (
+            last_state is not None
+            and last_state.state not in (None, "unknown", "unavailable")
+        ):
             try:
                 restored = int(float(last_state.state))
             except ValueError:
                 restored = 0
-            counts = self._hass.data[DOMAIN][self._entry.entry_id].setdefault("counts", {})
+            counts = self._hass.data[DOMAIN][self._entry.entry_id].setdefault(
+                "counts",
+                {},
+            )
             counts[self._drink] = restored
             self._attr_native_value = restored
         await self.async_update_state()
@@ -56,12 +70,21 @@ class DrinkCounterSensor(RestoreEntity, SensorEntity):
 
     @property
     def native_value(self):
-        counts = self._hass.data[DOMAIN][self._entry.entry_id].setdefault("counts", {})
+        counts = self._hass.data[DOMAIN][self._entry.entry_id].setdefault(
+            "counts",
+            {},
+        )
         return counts.get(self._drink, 0)
 
 
 class DrinkPriceSensor(SensorEntity):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, drink: str, price: float) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        drink: str,
+        price: float,
+    ) -> None:
         self._hass = hass
         self._entry = entry
         self._drink = drink

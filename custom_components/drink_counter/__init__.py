@@ -5,7 +5,6 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers import service
 
 from .const import (
     DOMAIN,
@@ -17,6 +16,7 @@ from .const import (
 )
 
 PLATFORMS: list[str] = ["sensor", "button"]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up via YAML is not supported."""
@@ -70,20 +70,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     return True
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    hass.data[DOMAIN].setdefault(entry.entry_id, {"entry": entry, "counts": {}})
+    hass.data[DOMAIN].setdefault(
+        entry.entry_id,
+        {"entry": entry, "counts": {}},
+    )
     if not hass.data[DOMAIN].get("drinks") and entry.data.get("drinks"):
         hass.data[DOMAIN]["drinks"] = entry.data["drinks"]
     if hass.data[DOMAIN].get("drinks") and not entry.data.get("drinks"):
-        entry_data = {"user": entry.data.get("user"), "drinks": hass.data[DOMAIN]["drinks"]}
+        entry_data = {
+            "user": entry.data.get("user"),
+            "drinks": hass.data[DOMAIN]["drinks"],
+        }
         hass.config_entries.async_update_entry(entry, data=entry_data)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(
+        entry, PLATFORMS
+    )
     if unloaded:
         hass.data[DOMAIN].pop(entry.entry_id)
     return unloaded
