@@ -127,9 +127,7 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
-        self._free_amount = self.hass.data.get(DOMAIN, {}).get(
-            "free_amount", 0.0
-        )
+        self._free_amount = self.hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
         return await self.async_step_menu()
 
     async def async_step_menu(self, user_input=None):
@@ -218,14 +216,12 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_menu()
         schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_FREE_AMOUNT, default=self._free_amount
-                ): vol.Coerce(float)
+                vol.Required(CONF_FREE_AMOUNT, default=self._free_amount): vol.Coerce(
+                    float
+                )
             }
         )
-        return self.async_show_form(
-            step_id="set_free_amount", data_schema=schema
-        )
+        return self.async_show_form(step_id="set_free_amount", data_schema=schema)
 
     async def _update_drinks(self):
         # Update global drinks list before reloading entries so that new
@@ -241,9 +237,10 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
             }
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
-        for data in self.hass.data.get(DOMAIN, {}).values():
-            for sensor in data.get("sensors", []):
-                await sensor.async_update_state()
+        for value in self.hass.data.get(DOMAIN, {}).values():
+            if isinstance(value, dict):
+                for sensor in value.get("sensors", []):
+                    await sensor.async_update_state()
         return self.async_create_entry(
             title="",
             data={
