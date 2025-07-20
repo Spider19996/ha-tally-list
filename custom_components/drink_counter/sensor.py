@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
@@ -18,11 +18,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     for drink_name, price in drinks.items():
         sensors.append(DrinkCounterSensor(hass, entry, drink_name, price))
     sensors.append(TotalAmountSensor(hass, entry))
-    async_add_entities(sensors)
     data.setdefault("sensors", []).extend(sensors)
+    async_add_entities(sensors)
 
 
-class DrinkCounterSensor(Entity):
+class DrinkCounterSensor(RestoreEntity):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, drink: str, price: float) -> None:
         self._hass = hass
         self._entry = entry
@@ -33,6 +33,18 @@ class DrinkCounterSensor(Entity):
         self._attr_unique_id = f"{entry.entry_id}_{drink}_count"
         self._attr_native_value = 0
 
+    async def async_added_to_hass(self) -> None:
+        last_state = await self.async_get_last_state()
+        if last_state is not None and last_state.state not in (None, "unknown", "unavailable"):
+            try:
+                restored = int(float(last_state.state))
+            except ValueError:
+                restored = 0
+            counts = self._hass.data[DOMAIN][self._entry.entry_id].setdefault("counts", {})
+            counts[self._drink] = restored
+            self._attr_native_value = restored
+        await self.async_update_state()
+
     async def async_update_state(self):
         self.async_write_ha_state()
 
@@ -42,7 +54,7 @@ class DrinkCounterSensor(Entity):
         return counts.get(self._drink, 0)
 
 
-class TotalAmountSensor(Entity):
+class TotalAmountSensor(RestoreEntity):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self._hass = hass
         self._entry = entry
@@ -51,6 +63,9 @@ class TotalAmountSensor(Entity):
         self._attr_unique_id = f"{entry.entry_id}_amount_due"
         self._attr_unit_of_measurement = "EUR"
         self._attr_native_value = 0
+
+    async def async_added_to_hass(self) -> None:
+        await self.async_update_state()
 
     async def async_update_state(self):
         self.async_write_ha_state()
