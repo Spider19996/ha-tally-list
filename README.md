@@ -16,6 +16,7 @@ The integration allows you to manage drink tallies for multiple users. You can d
 1. Add this repository to HACS as a custom repository.
 2. Install the **Drink Counter** integration.
 3. Restart Home Assistant and add the integration via the integrations page.
+   The integration is fully configurable through the UI.
 
 ## Usage
 
