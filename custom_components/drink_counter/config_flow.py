@@ -41,6 +41,14 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._user: str | None = None
         self._drinks: dict[str, float] = {}
 
+    async def async_step_import(self, user_input=None):
+        """Handle import of a config entry."""
+        if user_input is None:
+            return self.async_abort(reason="invalid_import")
+        self._user = user_input.get(CONF_USER)
+        self._drinks = user_input.get(CONF_DRINKS, {})
+        return self.async_create_entry(title=self._user, data=user_input)
+
     async def async_step_user(self, user_input=None):
         if user_input is not None:
             self._user = user_input[CONF_USER]
