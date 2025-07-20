@@ -43,6 +43,14 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         if user_input is not None:
             self._user = user_input[CONF_USER]
+            entries = self.hass.config_entries.async_entries(DOMAIN)
+            for entry in entries:
+                if CONF_DRINKS in entry.data:
+                    self._drinks = entry.data[CONF_DRINKS]
+                    return self.async_create_entry(
+                        title=self._user,
+                        data={CONF_USER: self._user},
+                    )
             return await self.async_step_add_drink()
 
         schema = vol.Schema({vol.Required(CONF_USER): str})
@@ -55,6 +63,7 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._drinks[drink] = price
             if user_input.get("add_more"):
                 return await self.async_step_add_drink()
+            self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
             return self.async_create_entry(
                 title=self._user,
                 data={CONF_USER: self._user, CONF_DRINKS: self._drinks},
@@ -89,9 +98,15 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
             except ValueError:
                 errors[CONF_DRINKS] = "invalid_drinks"
             if not errors:
+                for entry in self.hass.config_entries.async_entries(DOMAIN):
+                    data = {CONF_USER: entry.data[CONF_USER]}
+                    if CONF_DRINKS in entry.data:
+                        data[CONF_DRINKS] = drinks
+                    self.hass.config_entries.async_update_entry(entry, data=data)
+                self.hass.data.setdefault(DOMAIN, {})["drinks"] = drinks
                 return self.async_create_entry(title="", data={CONF_DRINKS: drinks})
         current = ",".join(
-            f"{name}={price}" for name, price in self.config_entry.data.get(CONF_DRINKS, {}).items()
+            f"{name}={price}" for name, price in self.hass.data.get(DOMAIN, {}).get("drinks", {}).items()
         )
         schema = vol.Schema(
             {vol.Required(CONF_DRINKS, default=current): str}
