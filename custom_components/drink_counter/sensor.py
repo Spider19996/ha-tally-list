@@ -28,6 +28,7 @@ class DrinkCounterSensor(Entity):
         self._entry = entry
         self._drink = drink
         self._price = price
+        self._attr_should_poll = False
         self._attr_name = f"{entry.data[CONF_USER]} {drink} Count"
         self._attr_unique_id = f"{entry.entry_id}_{drink}_count"
         self._attr_native_value = 0
@@ -45,6 +46,7 @@ class TotalAmountSensor(Entity):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self._hass = hass
         self._entry = entry
+        self._attr_should_poll = False
         self._attr_name = f"{entry.data[CONF_USER]} Amount Due"
         self._attr_unique_id = f"{entry.entry_id}_amount_due"
         self._attr_unit_of_measurement = "EUR"
