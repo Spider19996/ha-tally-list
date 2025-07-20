@@ -27,6 +27,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         drink = call.data[ATTR_DRINK]
         amount = call.data.get("amount", 1)
         for entry_id, data in hass.data[DOMAIN].items():
+            if "entry" not in data:
+                continue
             if data["entry"].data.get("user") == user:
                 counts = data.setdefault("counts", {})
                 counts[drink] = counts.get(drink, 0) + amount
@@ -41,6 +43,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         user = call.data.get(ATTR_USER)
         drinks = hass.data[DOMAIN].get("drinks", {})
         for entry_id, data in hass.data[DOMAIN].items():
+            if "entry" not in data:
+                continue
             if user is None or data["entry"].data.get("user") == user:
                 data["counts"] = {drink: 0 for drink in drinks}
                 for sensor in data.get("sensors", []):
