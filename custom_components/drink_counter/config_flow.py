@@ -121,7 +121,13 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
                 return await self.async_step_edit_price()
             if action == "finish":
                 return await self._update_drinks()
-        schema = vol.Schema({vol.Required("action"): vol.In(["add", "remove", "edit", "finish"])} )
+        schema = vol.Schema(
+            {
+                vol.Required("action"): vol.In(
+                    ["add", "remove", "edit", "finish"]
+                ),
+            }
+        )
         return self.async_show_form(step_id="menu", data_schema=schema)
 
     async def async_step_add_drink(self, user_input=None):
@@ -184,10 +190,16 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def _update_drinks(self):
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            data = {CONF_USER: entry.data[CONF_USER], CONF_DRINKS: self._drinks}
+            data = {
+                CONF_USER: entry.data[CONF_USER],
+                CONF_DRINKS: self._drinks,
+            }
             self.hass.config_entries.async_update_entry(entry, data=data)
         self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
         for data in self.hass.data.get(DOMAIN, {}).values():
             for sensor in data.get("sensors", []):
                 await sensor.async_update_state()
-        return self.async_create_entry(title="", data={CONF_DRINKS: self._drinks})
+        return self.async_create_entry(
+            title="",
+            data={CONF_DRINKS: self._drinks},
+        )
