@@ -12,6 +12,7 @@ The integration allows you to manage drink tallies for multiple users. Drinks ar
 - Service `drink_counter.add_drink` to add a drink for a user.
 - Service `drink_counter.remove_drink` to remove a drink for a user.
 - Service `drink_counter.adjust_count` to set a drink count to a specific value.
+- Counters cannot go below zero when removing drinks.
 
 ## Installation
 
