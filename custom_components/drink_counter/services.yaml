@@ -8,6 +8,16 @@ add_drink:
     drink:
       description: Drink name
       example: beer
+remove_drink:
+  name: Remove drink
+  description: Decrement drink counter for a user
+  fields:
+    user:
+      description: User name
+      example: Alice
+    drink:
+      description: Drink name
+      example: beer
 adjust_count:
   name: Adjust count
   description: Increase or decrease drink count for a user
