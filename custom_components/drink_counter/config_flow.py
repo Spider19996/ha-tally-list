@@ -13,6 +13,7 @@ from .const import (
     CONF_DRINKS,
     CONF_DRINK,
     CONF_PRICE,
+    PRICE_LIST_USER,
 )
 
 
@@ -64,6 +65,20 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input.get("add_more"):
                 return await self.async_step_add_drink()
             self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
+
+            has_price_user = any(
+                entry.data.get(CONF_USER) == PRICE_LIST_USER
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+            )
+            if not has_price_user:
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": config_entries.SOURCE_IMPORT},
+                        data={CONF_USER: PRICE_LIST_USER},
+                    )
+                )
+
             return self.async_create_entry(
                 title=self._user,
                 data={CONF_USER: self._user, CONF_DRINKS: self._drinks},
