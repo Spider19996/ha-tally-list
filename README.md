@@ -30,21 +30,3 @@ All drinks are stored in a single price list. A dedicated user named
 exposes one price sensor per drink while regular users only get count and total
 amount sensors. You can edit the drinks and their prices at any time from the
 integration options.
-
-## Lovelace Card
-
-A simple Lovelace card is provided in `www/drink-counter-card.js`.
-It automatically lists all configured users, their drink counters and
-current costs. Each drink has a `+` button to add a drink and a `Reset`
-button to clear all counters for a user.
-
-Add the file as a resource in Home Assistant:
-
-```yaml
-lovelace:
-  resources:
-    - url: /local/drink-counter-card.js
-      type: module
-```
-
-Then add a new card with type `custom:drink-counter-card`.
