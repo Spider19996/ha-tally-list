@@ -15,6 +15,8 @@ from .const import (
     ATTR_USER,
     ATTR_DRINK,
     CONF_FREE_AMOUNT,
+    CONF_USERS,
+    PRICE_LIST_USER,
 )
 
 PLATFORMS: list[str] = ["sensor", "button"]
@@ -31,12 +33,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
                 continue
-            if data["entry"].data.get("user") == user:
-                counts = data.setdefault("counts", {})
-                counts[drink] = count
-                for sensor in data.get("sensors", []):
-                    await sensor.async_update_state()
-                break
+            counts = data.setdefault("counts", {})
+            if user not in counts:
+                counts[user] = {}
+            counts[user][drink] = count
+            for sensor in data.get("sensors", []):
+                await sensor.async_update_state()
+            break
 
     async def add_drink_service(call):
         user = call.data[ATTR_USER]
@@ -44,13 +47,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
                 continue
-            if data["entry"].data.get("user") == user:
-                counts = data.setdefault("counts", {})
-                new_count = counts.get(drink, 0) + 1
-                counts[drink] = new_count
-                for sensor in data.get("sensors", []):
-                    await sensor.async_update_state()
-                break
+            counts = data.setdefault("counts", {})
+            user_counts = counts.setdefault(user, {})
+            new_count = user_counts.get(drink, 0) + 1
+            user_counts[drink] = new_count
+            for sensor in data.get("sensors", []):
+                await sensor.async_update_state()
+            break
 
     async def remove_drink_service(call):
         user = call.data[ATTR_USER]
@@ -58,15 +61,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
                 continue
-            if data["entry"].data.get("user") == user:
-                counts = data.setdefault("counts", {})
-                new_count = counts.get(drink, 0) - 1
-                if new_count < 0:
-                    new_count = 0
-                counts[drink] = new_count
-                for sensor in data.get("sensors", []):
-                    await sensor.async_update_state()
-                break
+            counts = data.setdefault("counts", {})
+            user_counts = counts.setdefault(user, {})
+            new_count = user_counts.get(drink, 0) - 1
+            if new_count < 0:
+                new_count = 0
+            user_counts[drink] = new_count
+            for sensor in data.get("sensors", []):
+                await sensor.async_update_state()
+            break
 
     async def reset_counters_service(call):
         user = call.data.get(ATTR_USER)
@@ -74,10 +77,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
                 continue
-            if user is None or data["entry"].data.get("user") == user:
-                data["counts"] = {drink: 0 for drink in drinks}
-                for sensor in data.get("sensors", []):
-                    await sensor.async_update_state()
+            counts = data.setdefault("counts", {})
+            if user is None:
+                for usr in list(counts.keys()):
+                    counts[usr] = {drink: 0 for drink in drinks}
+            else:
+                counts.setdefault(user, {})
+                counts[user] = {drink: 0 for drink in drinks}
+            for sensor in data.get("sensors", []):
+                await sensor.async_update_state()
 
     hass.services.async_register(
         DOMAIN,
@@ -112,12 +120,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.entry_id,
         {"entry": entry, "counts": {}},
     )
-    if not hass.data[DOMAIN].get("drinks") and entry.data.get("drinks"):
-        hass.data[DOMAIN]["drinks"] = entry.data["drinks"]
-    if hass.data[DOMAIN].get("drinks") and not entry.data.get("drinks"):
+    counts = hass.data[DOMAIN][entry.entry_id].setdefault("counts", {})
+    for user in entry.data.get(CONF_USERS, []):
+        counts.setdefault(user, {})
+    if not hass.data[DOMAIN].get("drinks") and entry.data.get(CONF_DRINKS):
+        hass.data[DOMAIN]["drinks"] = entry.data[CONF_DRINKS]
+    if hass.data[DOMAIN].get("drinks") and not entry.data.get(CONF_DRINKS):
         entry_data = {
-            "user": entry.data.get("user"),
-            "drinks": hass.data[DOMAIN]["drinks"],
+            CONF_USERS: entry.data.get(CONF_USERS, []),
+            CONF_DRINKS: hass.data[DOMAIN]["drinks"],
             CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
         }
         hass.config_entries.async_update_entry(entry, data=entry_data)
@@ -131,8 +142,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         and CONF_FREE_AMOUNT not in entry.data
     ):
         entry_data = {
-            "user": entry.data.get("user"),
-            "drinks": hass.data[DOMAIN]["drinks"],
+            CONF_USERS: entry.data.get(CONF_USERS, []),
+            CONF_DRINKS: hass.data[DOMAIN]["drinks"],
             CONF_FREE_AMOUNT: hass.data[DOMAIN]["free_amount"],
         }
         hass.config_entries.async_update_entry(entry, data=entry_data)

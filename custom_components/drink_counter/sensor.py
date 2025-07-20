@@ -7,25 +7,30 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, CONF_USER, PRICE_LIST_USER
+from .const import DOMAIN, CONF_USERS, CONF_USER, PRICE_LIST_USER
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     data = hass.data[DOMAIN][entry.entry_id]
-    user = entry.data[CONF_USER]
+    users = entry.data.get(CONF_USERS, [])
     drinks = hass.data[DOMAIN].get("drinks", {})
     sensors: list[SensorEntity] = []
 
-    if user == PRICE_LIST_USER:
-        for drink_name, price in drinks.items():
-            sensors.append(DrinkPriceSensor(hass, entry, drink_name, price))
-        sensors.append(FreeAmountSensor(hass, entry))
-    else:
-        for drink_name, price in drinks.items():
-            sensors.append(DrinkCounterSensor(hass, entry, drink_name, price))
-        sensors.append(TotalAmountSensor(hass, entry))
+    for user in users:
+        if user == PRICE_LIST_USER:
+            for drink_name, price in drinks.items():
+                sensors.append(
+                    DrinkPriceSensor(hass, entry, user, drink_name, price)
+                )
+            sensors.append(FreeAmountSensor(hass, entry, user))
+        else:
+            for drink_name, price in drinks.items():
+                sensors.append(
+                    DrinkCounterSensor(hass, entry, user, drink_name, price)
+                )
+            sensors.append(TotalAmountSensor(hass, entry, user))
 
     data.setdefault("sensors", []).extend(sensors)
     async_add_entities(sensors)
@@ -36,16 +41,18 @@ class DrinkCounterSensor(RestoreEntity, SensorEntity):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
+        user: str,
         drink: str,
         price: float,
     ) -> None:
         self._hass = hass
         self._entry = entry
+        self._user = user
         self._drink = drink
         self._price = price
         self._attr_should_poll = False
-        self._attr_name = f"{entry.data[CONF_USER]} {drink} Count"
-        self._attr_unique_id = f"{entry.entry_id}_{drink}_count"
+        self._attr_name = f"{user} {drink} Count"
+        self._attr_unique_id = f"{entry.entry_id}_{user}_{drink}_count"
         self._attr_native_value = 0
 
     async def async_added_to_hass(self) -> None:
@@ -62,7 +69,8 @@ class DrinkCounterSensor(RestoreEntity, SensorEntity):
                 "counts",
                 {},
             )
-            counts[self._drink] = restored
+            user_counts = counts.setdefault(self._user, {})
+            user_counts[self._drink] = restored
             self._attr_native_value = restored
         await self.async_update_state()
 
@@ -75,7 +83,8 @@ class DrinkCounterSensor(RestoreEntity, SensorEntity):
             "counts",
             {},
         )
-        return counts.get(self._drink, 0)
+        user_counts = counts.setdefault(self._user, {})
+        return user_counts.get(self._drink, 0)
 
 
 class DrinkPriceSensor(SensorEntity):
@@ -83,16 +92,18 @@ class DrinkPriceSensor(SensorEntity):
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
+        user: str,
         drink: str,
         price: float,
     ) -> None:
         self._hass = hass
         self._entry = entry
+        self._user = user
         self._drink = drink
         self._price = price
         self._attr_should_poll = False
-        self._attr_name = f"{entry.data[CONF_USER]} {drink} Price"
-        self._attr_unique_id = f"{entry.entry_id}_{drink}_price"
+        self._attr_name = f"{user} {drink} Price"
+        self._attr_unique_id = f"{entry.entry_id}_{user}_{drink}_price"
         self._attr_unit_of_measurement = "EUR"
 
     async def async_added_to_hass(self) -> None:
@@ -108,12 +119,13 @@ class DrinkPriceSensor(SensorEntity):
 
 
 class FreeAmountSensor(SensorEntity):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, user: str) -> None:
         self._hass = hass
         self._entry = entry
+        self._user = user
         self._attr_should_poll = False
-        self._attr_name = f"{entry.data[CONF_USER]} Free Amount"
-        self._attr_unique_id = f"{entry.entry_id}_free_amount"
+        self._attr_name = f"{user} Free Amount"
+        self._attr_unique_id = f"{entry.entry_id}_{user}_free_amount"
         self._attr_unit_of_measurement = "EUR"
 
     async def async_added_to_hass(self) -> None:
@@ -128,12 +140,13 @@ class FreeAmountSensor(SensorEntity):
 
 
 class TotalAmountSensor(RestoreEntity, SensorEntity):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, user: str) -> None:
         self._hass = hass
         self._entry = entry
+        self._user = user
         self._attr_should_poll = False
-        self._attr_name = f"{entry.data[CONF_USER]} Amount Due"
-        self._attr_unique_id = f"{entry.entry_id}_amount_due"
+        self._attr_name = f"{user} Amount Due"
+        self._attr_unique_id = f"{entry.entry_id}_{user}_amount_due"
         self._attr_unit_of_measurement = "EUR"
         self._attr_native_value = 0
 
@@ -147,10 +160,11 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
     def native_value(self):
         data = self._hass.data[DOMAIN][self._entry.entry_id]
         counts = data.setdefault("counts", {})
+        user_counts = counts.setdefault(self._user, {})
         total = 0.0
         drinks = self._hass.data[DOMAIN].get("drinks", {})
         for drink, price in drinks.items():
-            total += counts.get(drink, 0) * price
+            total += user_counts.get(drink, 0) * price
         free_amount = self._hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
         total -= free_amount
         if total < 0:
