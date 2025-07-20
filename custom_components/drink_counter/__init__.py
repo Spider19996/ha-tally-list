@@ -26,7 +26,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def adjust_count_service(call):
         user = call.data[ATTR_USER]
         drink = call.data[ATTR_DRINK]
-        count = call.data.get("count", 0)
+        count = max(0, call.data.get("count", 0))
         for entry_id, data in hass.data[DOMAIN].items():
             if "entry" not in data:
                 continue
@@ -60,6 +60,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if data["entry"].data.get("user") == user:
                 counts = data.setdefault("counts", {})
                 new_count = counts.get(drink, 0) - 1
+                if new_count < 0:
+                    new_count = 0
                 counts[drink] = new_count
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
