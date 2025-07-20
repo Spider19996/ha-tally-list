@@ -3,10 +3,18 @@
     "step": {
       "user": {
         "title": "Drink Counter konfigurieren",
-        "description": "Benutzer und Getränke mit Preisen hinzufügen (Getränk=Preis)",
+        "description": "Benutzer hinzufügen. Danach Getränke einzeln eintragen.",
         "data": {
-          "user": "Benutzername",
-          "drinks": "Getränke"
+          "user": "Benutzername"
+        }
+      },
+      "add_drink": {
+        "title": "Getränk hinzufügen",
+        "description": "Getränk und Preis eingeben. 'Weiteres hinzufügen' aktivieren, um weitere Getränke einzutragen.",
+        "data": {
+          "drink": "Getränk",
+          "price": "Preis",
+          "add_more": "Weiteres hinzufügen"
         }
       }
     },
