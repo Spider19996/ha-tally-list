@@ -11,3 +11,6 @@ ATTR_DRINK = "drink"
 SERVICE_ADD_DRINK = "add_drink"
 SERVICE_ADJUST_COUNT = "adjust_count"
 SERVICE_RESET_COUNTERS = "reset_counters"
+
+# Dedicated user name that exposes drink prices
+PRICE_LIST_USER = "Preisliste"

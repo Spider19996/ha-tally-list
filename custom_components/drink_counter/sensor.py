@@ -7,18 +7,23 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, CONF_USER
+from .const import DOMAIN, CONF_USER, PRICE_LIST_USER
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
     data = hass.data[DOMAIN][entry.entry_id]
     user = entry.data[CONF_USER]
     drinks = hass.data[DOMAIN].get("drinks", {})
-    sensors = []
-    for drink_name, price in drinks.items():
-        sensors.append(DrinkCounterSensor(hass, entry, drink_name, price))
-        sensors.append(DrinkPriceSensor(hass, entry, drink_name, price))
-    sensors.append(TotalAmountSensor(hass, entry))
+    sensors: list[SensorEntity] = []
+
+    if user == PRICE_LIST_USER:
+        for drink_name, price in drinks.items():
+            sensors.append(DrinkPriceSensor(hass, entry, drink_name, price))
+    else:
+        for drink_name, price in drinks.items():
+            sensors.append(DrinkCounterSensor(hass, entry, drink_name, price))
+        sensors.append(TotalAmountSensor(hass, entry))
+
     data.setdefault("sensors", []).extend(sensors)
     async_add_entities(sensors)
 
