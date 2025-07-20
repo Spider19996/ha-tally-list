@@ -4,6 +4,6 @@
   "domains": ["sensor", "button"],
   "country": "DE",
   "homeassistant": "2023.0.0",
-  "image": "https://github.com/example/ha-drink-counter/raw/main/custom_components/drink_counter/logo.png",
+  "image": "https://github.com/Spider19996/ha-drink-counter/raw/main/custom_components/drink_counter/logo.png",
   "render_readme": true
 }
