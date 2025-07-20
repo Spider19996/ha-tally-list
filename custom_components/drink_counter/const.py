@@ -2,6 +2,7 @@ DOMAIN = "drink_counter"
 
 CONF_USER = "user"
 CONF_DRINKS = "drinks"
+CONF_DRINK = "drink"
 CONF_PRICE = "price"
 
 ATTR_USER = "user"

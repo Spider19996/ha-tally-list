@@ -7,7 +7,13 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .const import DOMAIN, CONF_USER, CONF_DRINKS
+from .const import (
+    DOMAIN,
+    CONF_USER,
+    CONF_DRINKS,
+    CONF_DRINK,
+    CONF_PRICE,
+)
 
 
 def _parse_drinks(value: str) -> dict[str, float]:
@@ -30,25 +36,38 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        self._user: str | None = None
+        self._drinks: dict[str, float] = {}
+
     async def async_step_user(self, user_input=None):
-        errors = {}
         if user_input is not None:
-            try:
-                drinks = _parse_drinks(user_input[CONF_DRINKS])
-            except ValueError:
-                errors[CONF_DRINKS] = "invalid_drinks"
-            if not errors:
-                return self.async_create_entry(
-                    title=user_input[CONF_USER],
-                    data={CONF_USER: user_input[CONF_USER], CONF_DRINKS: drinks},
-                )
+            self._user = user_input[CONF_USER]
+            return await self.async_step_add_drink()
+
+        schema = vol.Schema({vol.Required(CONF_USER): str})
+        return self.async_show_form(step_id="user", data_schema=schema)
+
+    async def async_step_add_drink(self, user_input=None):
+        if user_input is not None:
+            drink = user_input[CONF_DRINK]
+            price = float(user_input[CONF_PRICE])
+            self._drinks[drink] = price
+            if user_input.get("add_more"):
+                return await self.async_step_add_drink()
+            return self.async_create_entry(
+                title=self._user,
+                data={CONF_USER: self._user, CONF_DRINKS: self._drinks},
+            )
+
         schema = vol.Schema(
             {
-                vol.Required(CONF_USER): str,
-                vol.Required(CONF_DRINKS): str,
+                vol.Required(CONF_DRINK): str,
+                vol.Required(CONF_PRICE): vol.Coerce(float),
+                vol.Optional("add_more", default=False): bool,
             }
         )
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(step_id="add_drink", data_schema=schema)
 
     @staticmethod
     @callback

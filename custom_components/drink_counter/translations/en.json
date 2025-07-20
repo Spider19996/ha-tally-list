@@ -3,10 +3,18 @@
     "step": {
       "user": {
         "title": "Configure Drink Counter",
-        "description": "Add a user and drinks with prices separated by comma (drink=price)",
+        "description": "Add a user. Afterwards add drinks one by one.",
         "data": {
-          "user": "User name",
-          "drinks": "Drinks"
+          "user": "User name"
+        }
+      },
+      "add_drink": {
+        "title": "Add Drink",
+        "description": "Enter a drink and price. Enable 'Add another' to continue adding drinks.",
+        "data": {
+          "drink": "Drink name",
+          "price": "Price",
+          "add_more": "Add another"
         }
       }
     },
