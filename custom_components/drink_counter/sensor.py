@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities(sensors)
 
 
-class DrinkCounterSensor(RestoreEntity):
+class DrinkCounterSensor(RestoreEntity, SensorEntity):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, drink: str, price: float) -> None:
         self._hass = hass
         self._entry = entry
@@ -54,7 +54,7 @@ class DrinkCounterSensor(RestoreEntity):
         return counts.get(self._drink, 0)
 
 
-class TotalAmountSensor(RestoreEntity):
+class TotalAmountSensor(RestoreEntity, SensorEntity):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self._hass = hass
         self._entry = entry
