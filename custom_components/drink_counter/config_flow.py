@@ -197,6 +197,10 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="edit_price", data_schema=schema)
 
     async def _update_drinks(self):
+        # Update global drinks list before reloading entries so that new
+        # sensors are created with the latest values during setup.
+        self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
+
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             data = {
                 CONF_USER: entry.data[CONF_USER],
@@ -204,7 +208,6 @@ class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
             }
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
-        self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
         for data in self.hass.data.get(DOMAIN, {}).values():
             for sensor in data.get("sensors", []):
                 await sensor.async_update_state()
