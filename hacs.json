@@ -1,0 +1,7 @@
+{
+  "name": "Drink Counter",
+  "content_in_root": false,
+  "domains": ["sensor", "button"],
+  "country": "DE",
+  "homeassistant": "2023.0.0"
+}

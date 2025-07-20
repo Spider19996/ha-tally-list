@@ -1,0 +1,18 @@
+add_drink:
+  name: Add drink
+  description: Increment drink counter for a user
+  fields:
+    user:
+      description: User name
+      example: Alice
+    drink:
+      description: Drink name
+      example: beer
+reset_counters:
+  name: Reset counters
+  description: Reset counters for a user. If no user is specified, reset all.
+  fields:
+    user:
+      description: User name
+      example: Alice
+      required: false

@@ -1,0 +1,8 @@
+{
+  "domain": "drink_counter",
+  "name": "Drink Counter",
+  "documentation": "https://github.com/example/ha-drink-counter",
+  "version": "0.1.0",
+  "requirements": [],
+  "codeowners": []
+}
