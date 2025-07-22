@@ -55,28 +55,47 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
-        if user_input is not None:
-            self._user = user_input[CONF_USER]
-            entries = self.hass.config_entries.async_entries(DOMAIN)
-            for entry in entries:
-                if CONF_DRINKS in entry.data:
-                    self._drinks = entry.data[CONF_DRINKS]
-                    return self.async_create_entry(
-                        title=self._user,
-                        data={CONF_USER: self._user},
-                    )
-            return await self.async_step_add_drink()
-
         registry = er.async_get(self.hass)
-        persons = sorted(
-            {
-                entry.original_name or entry.name or entry.entity_id
-                for entry in registry.entities.values()
-                if entry.domain == "person"
-            }
-        )
-        schema = vol.Schema({vol.Required(CONF_USER): vol.In(persons)})
-        return self.async_show_form(step_id="user", data_schema=schema)
+        persons = [
+            entry.original_name or entry.name or entry.entity_id
+            for entry in registry.entities.values()
+            if entry.domain == "person"
+            and (
+                (state := self.hass.states.get(entry.entity_id))
+                and state.attributes.get("user_id")
+            )
+        ]
+
+        existing = {
+            entry.data.get(CONF_USER)
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+        }
+
+        persons = [p for p in persons if p not in existing and p != PRICE_LIST_USER]
+
+        if not persons:
+            return self.async_abort(reason="no_users")
+
+        self._user = persons[0]
+        for p in persons[1:]:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data={CONF_USER: p},
+                )
+            )
+
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        for entry in entries:
+            if CONF_DRINKS in entry.data:
+                self._drinks = entry.data[CONF_DRINKS]
+                return self.async_create_entry(
+                    title=self._user,
+                    data={CONF_USER: self._user},
+                )
+
+        return await self.async_step_add_drink()
 
     async def async_step_add_drink(self, user_input=None):
         if user_input is not None:
