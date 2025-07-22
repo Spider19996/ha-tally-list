@@ -15,6 +15,7 @@ from .const import (
     ATTR_USER,
     ATTR_DRINK,
     CONF_FREE_AMOUNT,
+    CONF_EXCLUDED_USERS,
 )
 
 PLATFORMS: list[str] = ["sensor", "button"]
@@ -22,7 +23,7 @@ PLATFORMS: list[str] = ["sensor", "button"]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up via YAML is not supported."""
-    hass.data.setdefault(DOMAIN, {"drinks": {}})
+    hass.data.setdefault(DOMAIN, {"drinks": {}, "excluded_users": []})
 
     async def adjust_count_service(call):
         user = call.data[ATTR_USER]
@@ -119,6 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "user": entry.data.get("user"),
             "drinks": hass.data[DOMAIN]["drinks"],
             CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
+            CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
         }
         hass.config_entries.async_update_entry(entry, data=entry_data)
     if (
@@ -134,6 +136,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "user": entry.data.get("user"),
             "drinks": hass.data[DOMAIN]["drinks"],
             CONF_FREE_AMOUNT: hass.data[DOMAIN]["free_amount"],
+            CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
+        }
+        hass.config_entries.async_update_entry(entry, data=entry_data)
+    if (
+        not hass.data[DOMAIN].get("excluded_users")
+        and entry.data.get(CONF_EXCLUDED_USERS) is not None
+    ):
+        hass.data[DOMAIN]["excluded_users"] = entry.data[CONF_EXCLUDED_USERS]
+    if (
+        hass.data[DOMAIN].get("excluded_users") is not None
+        and CONF_EXCLUDED_USERS not in entry.data
+    ):
+        entry_data = {
+            "user": entry.data.get("user"),
+            "drinks": hass.data[DOMAIN]["drinks"],
+            CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
+            CONF_EXCLUDED_USERS: hass.data[DOMAIN]["excluded_users"],
         }
         hass.config_entries.async_update_entry(entry, data=entry_data)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
