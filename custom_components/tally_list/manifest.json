@@ -2,7 +2,7 @@
   "domain": "tally_list",
   "name": "Tally List",
   "documentation": "https://github.com/example/ha-drink-counter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "requirements": [],
   "icon": "mdi:glass-mug",
   "config_flow": true,

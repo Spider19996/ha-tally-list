@@ -156,6 +156,8 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
+        if config_entry.data.get(CONF_USER) != PRICE_LIST_USER:
+            return None
         return TallyListOptionsFlowHandler(config_entry)
 
 
