@@ -59,18 +59,10 @@
             "free_amount": "Free amount"
           }
         },
-        "add_excluded_user": {
-          "title": "Exclude User",
+        "set_excluded_users": {
+          "title": "Excluded Users",
           "data": {
-            "user": "User",
-            "add_more": "Exclude another"
-          }
-        },
-        "remove_excluded_user": {
-          "title": "Include User",
-          "data": {
-            "user": "User",
-            "remove_more": "Include another"
+            "excluded_users": "Users"
           }
         }
       },
@@ -80,8 +72,17 @@
           "remove": "Remove drink",
           "edit": "Edit price",
           "free_amount": "Set free amount",
-          "exclude": "Exclude user",
-          "include": "Include user",
+          "exclude_users": "Excluded users",
+          "finish": "Done"
+        }
+      },
+      "menu": {
+        "menu": {
+          "add": "Add drink",
+          "remove": "Remove drink",
+          "edit": "Edit price",
+          "free_amount": "Set free amount",
+          "exclude_users": "Excluded users",
           "finish": "Done"
         }
       }

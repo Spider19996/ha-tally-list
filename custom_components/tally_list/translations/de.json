@@ -59,18 +59,10 @@
             "free_amount": "Freibetrag"
           }
         },
-        "add_excluded_user": {
-          "title": "Nutzer ausschließen",
+        "set_excluded_users": {
+          "title": "Ausgeschlossene Nutzer",
           "data": {
-            "user": "Nutzer",
-            "add_more": "Weiteren ausschließen"
-          }
-        },
-        "remove_excluded_user": {
-          "title": "Ausschluss aufheben",
-          "data": {
-            "user": "Nutzer",
-            "remove_more": "Weiteren einschließen"
+            "excluded_users": "Nutzer"
           }
         }
       },
@@ -80,8 +72,17 @@
           "remove": "Entfernen",
           "edit": "Bearbeiten",
           "free_amount": "Freibetrag",
-          "exclude": "Ausschließen",
-          "include": "Einschließen",
+          "exclude_users": "Ausschließen",
+          "finish": "Fertig"
+        }
+      },
+      "menu": {
+        "menu": {
+          "add": "Hinzufügen",
+          "remove": "Entfernen",
+          "edit": "Bearbeiten",
+          "free_amount": "Freibetrag",
+          "exclude_users": "Ausschließen",
           "finish": "Fertig"
         }
       }

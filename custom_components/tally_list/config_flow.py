@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import voluptuous as vol
+from homeassistant.helpers import config_validation as cv
 
 from homeassistant.helpers import entity_registry as er
 
@@ -178,7 +179,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_menu(self, user_input=None):
         if user_input is not None:
-            action = user_input["action"]
+            action = user_input["menu_option"]
             if action == "add":
                 return await self.async_step_add_drink()
             if action == "remove":
@@ -187,28 +188,21 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 return await self.async_step_edit_price()
             if action == "free_amount":
                 return await self.async_step_set_free_amount()
-            if action == "exclude":
-                return await self.async_step_add_excluded_user()
-            if action == "include":
-                return await self.async_step_remove_excluded_user()
+            if action == "exclude_users":
+                return await self.async_step_set_excluded_users()
             if action == "finish":
                 return await self._update_drinks()
-        schema = vol.Schema(
-            {
-                vol.Required("action"): vol.In(
-                    [
-                        "add",
-                        "remove",
-                        "edit",
-                        "free_amount",
-                        "exclude",
-                        "include",
-                        "finish",
-                    ]
-                ),
-            }
+        return self.async_show_menu(
+            step_id="menu",
+            menu_options={
+                "add": "add",
+                "remove": "remove",
+                "edit": "edit",
+                "free_amount": "free_amount",
+                "exclude_users": "exclude_users",
+                "finish": "finish",
+            },
         )
-        return self.async_show_form(step_id="menu", data_schema=schema)
 
     async def async_step_add_drink(self, user_input=None):
         if user_input is not None:
@@ -281,7 +275,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         )
         return self.async_show_form(step_id="set_free_amount", data_schema=schema)
 
-    async def async_step_add_excluded_user(self, user_input=None):
+    async def async_step_set_excluded_users(self, user_input=None):
         registry = er.async_get(self.hass)
         persons = [
             entry.original_name or entry.name or entry.entity_id
@@ -292,49 +286,22 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 and state.attributes.get("user_id")
             )
         ]
-        persons = [
-            p
-            for p in persons
-            if p not in self._excluded_users and p != PRICE_LIST_USER
-        ]
 
-        if not persons:
-            return await self.async_step_menu()
+        persons = [p for p in persons if p != PRICE_LIST_USER]
 
         if user_input is not None:
-            user = user_input[CONF_USER]
-            self._excluded_users.append(user)
-            if user_input.get("add_more") and len(persons) > 1:
-                return await self.async_step_add_excluded_user()
+            self._excluded_users = user_input.get(CONF_EXCLUDED_USERS, [])
             return await self.async_step_menu()
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_USER): vol.In(persons),
-                vol.Optional("add_more", default=False): bool,
+
+                vol.Optional(
+                    CONF_EXCLUDED_USERS, default=self._excluded_users
+                ): cv.multi_select(persons)
             }
         )
-        return self.async_show_form(step_id="add_excluded_user", data_schema=schema)
-
-    async def async_step_remove_excluded_user(self, user_input=None):
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            if user in self._excluded_users:
-                self._excluded_users.remove(user)
-            if user_input.get("remove_more") and self._excluded_users:
-                return await self.async_step_remove_excluded_user()
-            return await self.async_step_menu()
-
-        if not self._excluded_users:
-            return await self.async_step_menu()
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(list(self._excluded_users)),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="remove_excluded_user", data_schema=schema)
+        return self.async_show_form(step_id="set_excluded_users", data_schema=schema)
 
     async def _update_drinks(self):
         # Update global drinks list before reloading entries so that new
