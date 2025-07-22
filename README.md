@@ -24,7 +24,7 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 
 ## Usage
 
-When the integration is first set up, all persons with a user account are added and you will be asked to enter the available drinks. All further persons will automatically use this list. Drinks can later be managed from the integration options of the dedicated `Preisliste` entry where you can add, remove or edit their prices. Call the service `tally_list.add_drink` with parameters `user` and `drink` to increment the counter. Use `tally_list.adjust_count` with `count` to set an exact value. To decrement by one call `tally_list.remove_drink` with `user` and `drink`. Use the reset button entity to reset all counters.
+When the integration is first set up, all persons with a user account are added and you will be asked to enter the available drinks. All further persons will automatically use this list. Drinks can later be managed from the integration options where you can add, remove or edit their prices. Call the service `tally_list.add_drink` with parameters `user` and `drink` to increment the counter. Use `tally_list.adjust_count` with `count` to set an exact value. To decrement by one call `tally_list.remove_drink` with `user` and `drink`. Use the reset button entity to reset all counters.
 
 ## Price List and Sensors
 
@@ -33,4 +33,4 @@ All drinks are stored in a single price list. A dedicated user named
 exposes one price sensor per drink as well as a free amount sensor while regular
 persons only get count and total amount sensors. The free amount is subtracted from
 each person's total. You can edit the drinks, prices and free amount at any time
-from the integration options of this `Preisliste` entry.
+from the integration options.
