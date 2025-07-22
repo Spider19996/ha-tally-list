@@ -1,4 +1,4 @@
-"""Buttons for Drink Counter."""
+"""Buttons for Tally List."""
 
 from __future__ import annotations
 

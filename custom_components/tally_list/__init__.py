@@ -1,4 +1,4 @@
-"""Drink Counter integration."""
+"""Tally List integration."""
 
 from __future__ import annotations
 

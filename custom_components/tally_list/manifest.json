@@ -1,11 +1,11 @@
 {
-  "domain": "drink_counter",
-  "name": "Drink Counter",
+  "domain": "tally_list",
+  "name": "Tally List",
   "documentation": "https://github.com/example/ha-drink-counter",
   "version": "0.1.4",
   "requirements": [],
   "icon": "mdi:glass-mug",
   "config_flow": true,
-  "logo": "custom_components/drink_counter/icon.png",
+  "logo": "custom_components/tally_list/icon.png",
   "codeowners": []
 }

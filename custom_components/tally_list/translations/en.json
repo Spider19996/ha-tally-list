@@ -1,12 +1,12 @@
 {
-  "title": "Drink Counter",
+  "title": "Tally List",
   "config": {
     "abort": {
       "no_users": "No persons with a user account found"
     },
     "step": {
       "user": {
-        "title": "Configure Drink Counter",
+        "title": "Configure Tally List",
         "description": "All persons with a user account are added automatically. Drinks are defined once and shared."
       },
       "add_drink": {
