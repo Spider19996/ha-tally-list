@@ -1,4 +1,4 @@
-"""Config flow for Drink Counter."""
+"""Config flow for Tally List."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def _parse_drinks(value: str) -> dict[str, float]:
     return drinks
 
 
-class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -143,10 +143,10 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return DrinkCounterOptionsFlowHandler(config_entry)
+        return TallyListOptionsFlowHandler(config_entry)
 
 
-class DrinkCounterOptionsFlowHandler(config_entries.OptionsFlow):
+class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
 
     def __init__(self, config_entry):

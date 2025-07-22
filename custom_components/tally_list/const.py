@@ -1,4 +1,4 @@
-DOMAIN = "drink_counter"
+DOMAIN = "tally_list"
 
 CONF_USER = "user"
 CONF_DRINKS = "drinks"

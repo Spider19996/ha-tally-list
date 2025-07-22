@@ -1,4 +1,4 @@
-"""Sensors for Drink Counter."""
+"""Sensors for Tally List."""
 
 from __future__ import annotations
 
@@ -24,14 +24,14 @@ async def async_setup_entry(
         sensors.append(FreeAmountSensor(hass, entry))
     else:
         for drink_name, price in drinks.items():
-            sensors.append(DrinkCounterSensor(hass, entry, drink_name, price))
+            sensors.append(TallyListSensor(hass, entry, drink_name, price))
         sensors.append(TotalAmountSensor(hass, entry))
 
     data.setdefault("sensors", []).extend(sensors)
     async_add_entities(sensors)
 
 
-class DrinkCounterSensor(RestoreEntity, SensorEntity):
+class TallyListSensor(RestoreEntity, SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,

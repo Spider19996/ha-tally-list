@@ -1,12 +1,12 @@
 {
-  "title": "Getränkezähler",
+  "title": "Strichliste",
   "config": {
     "abort": {
       "no_users": "Keine Personen mit Benutzerkonto gefunden"
     },
     "step": {
       "user": {
-        "title": "Drink Counter konfigurieren",
+        "title": "Strichliste konfigurieren",
         "description": "Alle Personen mit Benutzerkonto werden automatisch hinzugefügt. Getränke werden einmalig definiert und geteilt."
       },
       "add_drink": {
