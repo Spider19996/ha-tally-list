@@ -1,13 +1,13 @@
 {
   "title": "Drink Counter",
   "config": {
+    "abort": {
+      "no_users": "No persons with a user account found"
+    },
     "step": {
       "user": {
         "title": "Configure Drink Counter",
-        "description": "Add a user. Drinks are defined once and shared.",
-        "data": {
-          "user": "User name"
-        }
+        "description": "All persons with a user account are added automatically. Drinks are defined once and shared."
       },
       "add_drink": {
         "title": "Add Drink",

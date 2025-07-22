@@ -1,13 +1,13 @@
 {
   "title": "Getränkezähler",
   "config": {
+    "abort": {
+      "no_users": "Keine Personen mit Benutzerkonto gefunden"
+    },
     "step": {
       "user": {
         "title": "Drink Counter konfigurieren",
-        "description": "Benutzer hinzufügen. Getränke werden einmalig definiert und geteilt.",
-        "data": {
-          "user": "Benutzername"
-        }
+        "description": "Alle Personen mit Benutzerkonto werden automatisch hinzugefügt. Getränke werden einmalig definiert und geteilt."
       },
       "add_drink": {
         "title": "Getränk hinzufügen",
