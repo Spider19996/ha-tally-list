@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.helpers import entity_registry as er
+
 from homeassistant import config_entries
 from homeassistant.core import callback
 
@@ -65,7 +67,15 @@ class DrinkCounterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
             return await self.async_step_add_drink()
 
-        schema = vol.Schema({vol.Required(CONF_USER): str})
+        registry = er.async_get(self.hass)
+        persons = sorted(
+            {
+                entry.original_name or entry.name or entry.entity_id
+                for entry in registry.entities.values()
+                if entry.domain == "person"
+            }
+        )
+        schema = vol.Schema({vol.Required(CONF_USER): vol.In(persons)})
         return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_add_drink(self, user_input=None):

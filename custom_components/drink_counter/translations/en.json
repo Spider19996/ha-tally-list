@@ -4,9 +4,9 @@
     "step": {
       "user": {
         "title": "Configure Drink Counter",
-        "description": "Add a user. Drinks are defined once and shared.",
+        "description": "Select a person. Drinks are defined once and shared.",
         "data": {
-          "user": "User name"
+          "user": "Person"
         }
       },
       "add_drink": {
