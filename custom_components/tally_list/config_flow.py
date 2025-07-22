@@ -178,32 +178,37 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_menu(self, user_input=None):
         if user_input is not None:
-            if user_input == "add":
+            action = user_input["action"]
+            if action == "add":
                 return await self.async_step_add_drink()
-            if user_input == "remove":
+            if action == "remove":
                 return await self.async_step_remove_drink()
-            if user_input == "edit":
+            if action == "edit":
                 return await self.async_step_edit_price()
-            if user_input == "free_amount":
+            if action == "free_amount":
                 return await self.async_step_set_free_amount()
-            if user_input == "exclude":
+            if action == "exclude":
                 return await self.async_step_add_excluded_user()
-            if user_input == "include":
+            if action == "include":
                 return await self.async_step_remove_excluded_user()
-            if user_input == "finish":
+            if action == "finish":
                 return await self._update_drinks()
-        return self.async_show_menu(
-            step_id="menu",
-            menu_options=[
-                "add",
-                "remove",
-                "edit",
-                "free_amount",
-                "exclude",
-                "include",
-                "finish",
-            ],
+        schema = vol.Schema(
+            {
+                vol.Required("action"): vol.In(
+                    [
+                        "add",
+                        "remove",
+                        "edit",
+                        "free_amount",
+                        "exclude",
+                        "include",
+                        "finish",
+                    ]
+                ),
+            }
         )
+        return self.async_show_form(step_id="menu", data_schema=schema)
 
     async def async_step_add_drink(self, user_input=None):
         if user_input is not None:
