@@ -13,6 +13,7 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 - Service `tally_list.remove_drink` to remove a drink for a person.
 - Service `tally_list.adjust_count` to set a drink count to a specific value.
 - Counters cannot go below zero when removing drinks.
+- Manage a list of excluded persons from the integration options.
 
 ## Installation
 

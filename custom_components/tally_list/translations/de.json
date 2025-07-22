@@ -58,6 +58,12 @@
           "data": {
             "free_amount": "Freibetrag"
           }
+        },
+        "set_excluded_users": {
+          "title": "Ausgeschlossene Nutzer",
+          "data": {
+            "excluded_users": "Nutzer"
+          }
         }
       },
       "enum": {
@@ -66,6 +72,17 @@
           "remove": "Entfernen",
           "edit": "Bearbeiten",
           "free_amount": "Freibetrag",
+          "exclude_users": "Ausschließen",
+          "finish": "Fertig"
+        }
+      },
+      "menu": {
+        "menu": {
+          "add": "Hinzufügen",
+          "remove": "Entfernen",
+          "edit": "Bearbeiten",
+          "free_amount": "Freibetrag",
+          "exclude_users": "Ausschließen",
           "finish": "Fertig"
         }
       }

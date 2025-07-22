@@ -58,6 +58,12 @@
           "data": {
             "free_amount": "Free amount"
           }
+        },
+        "set_excluded_users": {
+          "title": "Excluded Users",
+          "data": {
+            "excluded_users": "Users"
+          }
         }
       },
       "enum": {
@@ -66,6 +72,17 @@
           "remove": "Remove drink",
           "edit": "Edit price",
           "free_amount": "Set free amount",
+          "exclude_users": "Excluded users",
+          "finish": "Done"
+        }
+      },
+      "menu": {
+        "menu": {
+          "add": "Add drink",
+          "remove": "Remove drink",
+          "edit": "Edit price",
+          "free_amount": "Set free amount",
+          "exclude_users": "Excluded users",
           "finish": "Done"
         }
       }

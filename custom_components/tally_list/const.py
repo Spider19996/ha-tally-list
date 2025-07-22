@@ -5,6 +5,7 @@ CONF_DRINKS = "drinks"
 CONF_DRINK = "drink"
 CONF_PRICE = "price"
 CONF_FREE_AMOUNT = "free_amount"
+CONF_EXCLUDED_USERS = "excluded_users"
 
 ATTR_USER = "user"
 ATTR_DRINK = "drink"
