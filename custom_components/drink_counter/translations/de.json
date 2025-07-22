@@ -4,9 +4,9 @@
     "step": {
       "user": {
         "title": "Drink Counter konfigurieren",
-        "description": "Benutzer hinzufügen. Getränke werden einmalig definiert und geteilt.",
+        "description": "Person auswählen. Getränke werden einmalig definiert und geteilt.",
         "data": {
-          "user": "Benutzername"
+          "user": "Person"
         }
       },
       "add_drink": {

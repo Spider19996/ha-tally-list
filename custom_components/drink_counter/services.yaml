@@ -1,29 +1,29 @@
 add_drink:
   name: Add drink
-  description: Increment drink counter for a user
+  description: Increment drink counter for a person
   fields:
     user:
-      description: User name
+      description: Person name
       example: Alice
     drink:
       description: Drink name
       example: beer
 remove_drink:
   name: Remove drink
-  description: Decrement drink counter for a user
+  description: Decrement drink counter for a person
   fields:
     user:
-      description: User name
+      description: Person name
       example: Alice
     drink:
       description: Drink name
       example: beer
 adjust_count:
   name: Adjust count
-  description: Set drink count for a user
+  description: Set drink count for a person
   fields:
     user:
-      description: User name
+      description: Person name
       example: Alice
     drink:
       description: Drink name
@@ -33,9 +33,9 @@ adjust_count:
       example: 3
 reset_counters:
   name: Reset counters
-  description: Reset counters for a user. If no user is specified, reset all.
+  description: Reset counters for a person. If no user is specified, reset all.
   fields:
     user:
-      description: User name
+      description: Person name
       example: Alice
       required: false
