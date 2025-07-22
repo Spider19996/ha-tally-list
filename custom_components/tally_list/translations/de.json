@@ -58,6 +58,20 @@
           "data": {
             "free_amount": "Freibetrag"
           }
+        },
+        "add_excluded_user": {
+          "title": "Nutzer ausschließen",
+          "data": {
+            "user": "Nutzer",
+            "add_more": "Weiteren ausschließen"
+          }
+        },
+        "remove_excluded_user": {
+          "title": "Ausschluss aufheben",
+          "data": {
+            "user": "Nutzer",
+            "remove_more": "Weiteren einschließen"
+          }
         }
       },
       "enum": {
@@ -66,6 +80,8 @@
           "remove": "Entfernen",
           "edit": "Bearbeiten",
           "free_amount": "Freibetrag",
+          "exclude": "Ausschließen",
+          "include": "Einschließen",
           "finish": "Fertig"
         }
       }
