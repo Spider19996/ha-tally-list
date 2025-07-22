@@ -286,6 +286,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 and state.attributes.get("user_id")
             )
         ]
+
         persons = [p for p in persons if p != PRICE_LIST_USER]
 
         if user_input is not None:
@@ -294,6 +295,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
         schema = vol.Schema(
             {
+
                 vol.Optional(
                     CONF_EXCLUDED_USERS, default=self._excluded_users
                 ): cv.multi_select(persons)
