@@ -26,14 +26,8 @@
       "step": {
         "menu": {
           "title": "Getränke verwalten",
-          "menu_options": {
-            "add": "Hinzufügen",
-            "remove": "Entfernen",
-            "edit": "Bearbeiten",
-            "free_amount": "Freibetrag",
-            "exclude": "Ausschließen",
-            "include": "Einschließen",
-            "finish": "Fertig"
+          "data": {
+            "action": "Aktion"
           }
         },
         "add_drink": {
