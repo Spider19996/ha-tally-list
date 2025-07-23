@@ -120,10 +120,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if hass.data[DOMAIN].get("drinks") and not entry.data.get("drinks"):
         entry_data = {
             "user": entry.data.get("user"),
-            "drinks": hass.data[DOMAIN]["drinks"],
             CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
             CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
         }
+        if "drinks" in hass.data[DOMAIN]:
+            entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
         hass.config_entries.async_update_entry(entry, data=entry_data)
     if (
         not hass.data[DOMAIN].get("free_amount")
@@ -136,10 +137,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ):
         entry_data = {
             "user": entry.data.get("user"),
-            "drinks": hass.data[DOMAIN]["drinks"],
             CONF_FREE_AMOUNT: hass.data[DOMAIN]["free_amount"],
             CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
         }
+        if "drinks" in hass.data[DOMAIN]:
+            entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
         hass.config_entries.async_update_entry(entry, data=entry_data)
     if (
         not hass.data[DOMAIN].get("excluded_users")
@@ -152,10 +154,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ):
         entry_data = {
             "user": entry.data.get("user"),
-            "drinks": hass.data[DOMAIN]["drinks"],
             CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
             CONF_EXCLUDED_USERS: hass.data[DOMAIN]["excluded_users"],
         }
+        if "drinks" in hass.data[DOMAIN]:
+            entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
         hass.config_entries.async_update_entry(entry, data=entry_data)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
