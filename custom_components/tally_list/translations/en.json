@@ -77,13 +77,11 @@
         }
       },
       "enum": {
-        "drink_action": {
+        "action": {
           "add": "Add drink",
           "remove": "Remove drink",
           "edit": "Edit price",
-          "free_amount": "Set free amount"
-        },
-        "user_action": {
+          "free_amount": "Set free amount",
           "exclude": "Exclude user",
           "include": "Include user"
         }
