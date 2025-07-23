@@ -209,27 +209,17 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_menu()
 
     async def async_step_menu(self, user_input=None):
-        if user_input is not None:
-            action = user_input.get("drink_action")
-            if action:
-                return await getattr(self, f"async_step_{action}")()
-            action = user_input.get("user_action")
-            if action:
-                return await getattr(self, f"async_step_{action}")()
-            return await self._update_drinks()
-
-        schema = vol.Schema(
-            {
-                vol.Optional("drink_action"): vol.In(
-                    ["add", "remove", "edit", "free_amount"]
-                ),
-                vol.Optional("user_action"): vol.In(["exclude", "include"]),
-            }
-        )
-
-        return self.async_show_form(
+        return self.async_show_menu(
             step_id="menu",
-            data_schema=schema,
+            menu_options=[
+                "add",
+                "remove",
+                "edit",
+                "free_amount",
+                "exclude",
+                "include",
+                "finish",
+            ],
         )
 
     async def async_step_add(self, user_input=None):
@@ -249,6 +239,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_include(self, user_input=None):
         return await self.async_step_remove_excluded_user(user_input)
+
+    async def async_step_finish(self, user_input=None):
+        return await self._update_drinks()
 
     async def async_step_add_drink(self, user_input=None):
         if user_input is not None:

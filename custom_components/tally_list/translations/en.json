@@ -26,10 +26,15 @@
   "options": {
     "step": {
         "menu": {
-          "title": "Manage Tally List",
-          "data": {
-            "drink_action": "Drink settings",
-            "user_action": "User settings"
+          "title": "Manage Drinks",
+          "menu_options": {
+            "add": "Add drink",
+            "remove": "Remove drink",
+            "edit": "Edit price",
+            "free_amount": "Set free amount",
+            "exclude": "Exclude user",
+            "include": "Include user",
+            "finish": "Done"
           }
         },
         "add_drink": {
@@ -83,7 +88,8 @@
           "edit": "Edit price",
           "free_amount": "Set free amount",
           "exclude": "Exclude user",
-          "include": "Include user"
+          "include": "Include user",
+          "finish": "Done"
         }
       }
   }
