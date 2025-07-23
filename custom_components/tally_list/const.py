@@ -17,3 +17,6 @@ SERVICE_RESET_COUNTERS = "reset_counters"
 
 # Dedicated user name that exposes drink prices
 PRICE_LIST_USER = "Preisliste"
+
+# Identifier to mark sub entries that use the connection of the parent entry.
+CONF_USES = "uses"
