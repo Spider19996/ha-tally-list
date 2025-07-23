@@ -77,13 +77,11 @@
         }
       },
       "enum": {
-        "drink_action": {
+        "action": {
           "add": "Hinzufügen",
           "remove": "Entfernen",
           "edit": "Bearbeiten",
-          "free_amount": "Freibetrag"
-        },
-        "user_action": {
+          "free_amount": "Freibetrag",
           "exclude": "Ausschließen",
           "include": "Einschließen"
         }
