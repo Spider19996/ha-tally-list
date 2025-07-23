@@ -46,7 +46,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._drinks: dict[str, float] = {}
         self._free_amount: float = 0.0
         self._excluded_users: list[str] = []
-        self._pending_users: list[str] = []
 
     async def async_step_import(self, user_input=None):
         """Handle import of a config entry."""
@@ -89,7 +88,14 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_users")
 
         self._user = persons[0]
-        self._pending_users = persons[1:]
+        for p in persons[1:]:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data={CONF_USER: p},
+                )
+            )
 
         entries = self.hass.config_entries.async_entries(DOMAIN)
         has_price_user = any(
@@ -100,23 +106,16 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._drinks = entry.data[CONF_DRINKS]
                 self._excluded_users = entry.data.get(CONF_EXCLUDED_USERS, [])
                 if not has_price_user:
-                    await self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": config_entries.SOURCE_IMPORT},
-                        data={
-                            CONF_USER: PRICE_LIST_USER,
-                            CONF_FREE_AMOUNT: 0.0,
-                        },
-                    )
-                for p in self._pending_users:
                     self.hass.async_create_task(
                         self.hass.config_entries.flow.async_init(
                             DOMAIN,
                             context={"source": config_entries.SOURCE_IMPORT},
-                            data={CONF_USER: p},
+                            data={
+                                CONF_USER: PRICE_LIST_USER,
+                                CONF_FREE_AMOUNT: 0.0,
+                            },
                         )
                     )
-                self._pending_users = []
                 return self.async_create_entry(
                     title=self._user,
                     data={CONF_USER: self._user},
@@ -138,23 +137,16 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
             )
             if not has_price_user:
-                await self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data={
-                        CONF_USER: PRICE_LIST_USER,
-                        CONF_FREE_AMOUNT: 0.0,
-                    },
-                )
-            for p in self._pending_users:
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_init(
                         DOMAIN,
                         context={"source": config_entries.SOURCE_IMPORT},
-                        data={CONF_USER: p},
+                        data={
+                            CONF_USER: PRICE_LIST_USER,
+                            CONF_FREE_AMOUNT: 0.0,
+                        },
                     )
                 )
-            self._pending_users = []
 
             return self.async_create_entry(
                 title=self._user,
