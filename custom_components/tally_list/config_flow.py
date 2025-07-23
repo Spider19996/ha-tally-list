@@ -98,10 +98,24 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         entries = self.hass.config_entries.async_entries(DOMAIN)
+        has_price_user = any(
+            entry.data.get(CONF_USER) == PRICE_LIST_USER for entry in entries
+        )
         for entry in entries:
             if CONF_DRINKS in entry.data:
                 self._drinks = entry.data[CONF_DRINKS]
                 self._excluded_users = entry.data.get(CONF_EXCLUDED_USERS, [])
+                if not has_price_user:
+                    self.hass.async_create_task(
+                        self.hass.config_entries.flow.async_init(
+                            DOMAIN,
+                            context={"source": config_entries.SOURCE_IMPORT},
+                            data={
+                                CONF_USER: PRICE_LIST_USER,
+                                CONF_FREE_AMOUNT: 0.0,
+                            },
+                        )
+                    )
                 return self.async_create_entry(
                     title=self._user,
                     data={CONF_USER: self._user},
@@ -169,8 +183,14 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._excluded_users: list[str] = []
 
     async def async_step_init(self, user_input=None):
-        self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
-        self._free_amount = self.hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
+        self._drinks = (
+            self.hass.data.get(DOMAIN, {})
+            .get("drinks", {})
+            .copy()
+        )
+        self._free_amount = self.hass.data.get(DOMAIN, {}).get(
+            "free_amount", 0.0
+        )
         self._excluded_users = (
             self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, [])
         ).copy()
@@ -274,12 +294,16 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_menu()
         schema = vol.Schema(
             {
-                vol.Required(CONF_FREE_AMOUNT, default=self._free_amount): vol.Coerce(
-                    float
-                )
+                vol.Required(
+                    CONF_FREE_AMOUNT,
+                    default=self._free_amount,
+                ): vol.Coerce(float)
             }
         )
-        return self.async_show_form(step_id="set_free_amount", data_schema=schema)
+        return self.async_show_form(
+            step_id="set_free_amount",
+            data_schema=schema,
+        )
 
     async def async_step_add_excluded_user(self, user_input=None):
         registry = er.async_get(self.hass)
@@ -314,7 +338,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional("add_more", default=False): bool,
             }
         )
-        return self.async_show_form(step_id="add_excluded_user", data_schema=schema)
+        return self.async_show_form(
+            step_id="add_excluded_user",
+            data_schema=schema,
+        )
 
     async def async_step_remove_excluded_user(self, user_input=None):
         if user_input is not None:
@@ -334,7 +361,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional("remove_more", default=False): bool,
             }
         )
-        return self.async_show_form(step_id="remove_excluded_user", data_schema=schema)
+        return self.async_show_form(
+            step_id="remove_excluded_user",
+            data_schema=schema,
+        )
 
     async def _update_drinks(self):
         # Update global drinks list before reloading entries so that new
