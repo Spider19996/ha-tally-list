@@ -16,6 +16,7 @@ from .const import (
     ATTR_DRINK,
     CONF_FREE_AMOUNT,
     CONF_EXCLUDED_USERS,
+    PRICE_LIST_USER,
 )
 
 PLATFORMS: list[str] = ["sensor", "button"]
@@ -165,5 +166,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, PLATFORMS
     )
     if unloaded:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        if entry.data.get(CONF_USER) == PRICE_LIST_USER:
+            hass.data[DOMAIN].pop("drinks", None)
+            hass.data[DOMAIN].pop("free_amount", None)
+            hass.data[DOMAIN].pop(CONF_EXCLUDED_USERS, None)
+        if not any(
+            isinstance(value, dict) and "entry" in value
+            for value in hass.data.get(DOMAIN, {}).values()
+        ):
+            hass.data.pop(DOMAIN, None)
     return unloaded
