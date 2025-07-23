@@ -17,6 +17,7 @@ from .const import (
     CONF_PRICE,
     CONF_FREE_AMOUNT,
     CONF_EXCLUDED_USERS,
+    CONF_USES,
     PRICE_LIST_USER,
 )
 
@@ -46,6 +47,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._drinks: dict[str, float] = {}
         self._free_amount: float = 0.0
         self._excluded_users: list[str] = []
+        self._parent_entry_id: str | None = None
 
     async def async_step_import(self, user_input=None):
         """Handle import of a config entry."""
@@ -55,7 +57,12 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._drinks = user_input.get(CONF_DRINKS, {})
         self._free_amount = float(user_input.get(CONF_FREE_AMOUNT, 0.0))
         self._excluded_users = user_input.get(CONF_EXCLUDED_USERS, [])
-        return self.async_create_entry(title=self._user, data=user_input)
+        self._parent_entry_id = user_input.get(CONF_USES)
+        return self.async_create_entry(
+            title=self._user,
+            data=user_input,
+            uses=self._parent_entry_id,
+        )
 
     async def async_step_user(self, user_input=None):
         registry = er.async_get(self.hass)
@@ -88,24 +95,36 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_users")
 
         self._user = persons[0]
-        for p in persons[1:]:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data={CONF_USER: p},
-                )
-            )
 
         entries = self.hass.config_entries.async_entries(DOMAIN)
         for entry in entries:
             if CONF_DRINKS in entry.data:
                 self._drinks = entry.data[CONF_DRINKS]
                 self._excluded_users = entry.data.get(CONF_EXCLUDED_USERS, [])
-                return self.async_create_entry(
-                    title=self._user,
-                    data={CONF_USER: self._user},
+                self._parent_entry_id = entry.entry_id
+                break
+
+        for p in persons[1:]:
+            data = {CONF_USER: p}
+            if self._parent_entry_id:
+                data[CONF_USES] = self._parent_entry_id
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data=data,
                 )
+            )
+
+        if self._parent_entry_id:
+            return self.async_create_entry(
+                title=self._user,
+                data={
+                    CONF_USER: self._user,
+                    CONF_USES: self._parent_entry_id,
+                },
+                uses=self._parent_entry_id,
+            )
 
         return await self.async_step_add_drink()
 
