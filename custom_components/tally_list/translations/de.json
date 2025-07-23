@@ -21,13 +21,20 @@
     },
     "error": {
       "invalid_drinks": "Ungültiges Getränkeformat"
-    },
-    "options": {
+    }
+  },
+  "options": {
       "step": {
         "menu": {
           "title": "Getränke verwalten",
-          "data": {
-            "action": "Aktion"
+          "menu_options": {
+            "add": "Hinzufügen",
+            "remove": "Entfernen",
+            "edit": "Bearbeiten",
+            "free_amount": "Freibetrag",
+            "exclude": "Ausschließen",
+            "include": "Einschließen",
+            "finish": "Fertig"
           }
         },
         "add_drink": {
@@ -87,4 +94,3 @@
       }
     }
   }
-}
