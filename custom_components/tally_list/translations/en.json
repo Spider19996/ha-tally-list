@@ -33,8 +33,7 @@
             "edit": "Edit price",
             "free_amount": "Set free amount",
             "exclude": "Exclude user",
-            "include": "Include user",
-            "finish": "Done"
+            "include": "Include user"
           }
         },
         "add_drink": {
