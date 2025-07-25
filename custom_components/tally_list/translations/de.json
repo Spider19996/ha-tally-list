@@ -30,6 +30,7 @@
           "menu_options": {
             "add": "Hinzufügen",
             "remove": "Entfernen",
+            "cleanup_sensors": "Sensoren bereinigen",
             "edit": "Bearbeiten",
             "free_amount": "Freibetrag",
             "exclude": "Ausschließen",
@@ -49,8 +50,13 @@
           "title": "Getränk entfernen",
           "data": {
             "drink": "Getränk",
+            "cleanup_sensors": "Sensoren bereinigen",
             "remove_more": "Weiteres entfernen"
           }
+        },
+        "cleanup_sensors": {
+          "title": "Sensoren bereinigen",
+          "description": "Das Löschen der Sensoren entfernt auch gespeicherte 'zu zahlen' Beträge"
         },
         "edit_price": {
           "title": "Preis bearbeiten",
