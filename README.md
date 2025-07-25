@@ -34,7 +34,3 @@ exposes one price sensor per drink as well as a free amount sensor while regular
 persons only get count and total amount sensors. The free amount is subtracted from
 each person's total. You can edit the drinks, prices and free amount at any time
 from the integration options.
-
-## Parent/Child Entries
-
-Home Assistant groups all user entries under the main price list entry. This keeps the Integrations page tidy since additional users appear as sub-integrations of the `Preisliste` entry.
