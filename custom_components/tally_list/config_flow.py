@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.helpers import entity_registry as er
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 
 from .const import (
     DOMAIN,
@@ -19,14 +19,6 @@ from .const import (
     CONF_EXCLUDED_USERS,
     PRICE_LIST_USER,
 )
-
-
-def _find_parent_entry_id(hass: HomeAssistant) -> str | None:
-    """Return the entry_id of the price list parent entry if present."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data.get(CONF_USER) == PRICE_LIST_USER:
-            return entry.entry_id
-    return None
 
 
 def _parse_drinks(value: str) -> dict[str, float]:
@@ -64,14 +56,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._drinks = user_input.get(CONF_DRINKS, {})
         self._free_amount = float(user_input.get(CONF_FREE_AMOUNT, 0.0))
         self._excluded_users = user_input.get(CONF_EXCLUDED_USERS, [])
-        parent_id = None
-        if self._user != PRICE_LIST_USER:
-            parent_id = _find_parent_entry_id(self.hass)
-        return self.async_create_entry(
-            title=self._user,
-            data=user_input,
-            parent_entry_id=parent_id,
-        )
+        return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
         registry = er.async_get(self.hass)
@@ -134,11 +119,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     )
                 self._pending_users = []
-                parent_id = _find_parent_entry_id(self.hass)
                 return self.async_create_entry(
                     title=self._user,
                     data={CONF_USER: self._user},
-                    parent_entry_id=parent_id,
                 )
 
         return await self.async_step_add_drink()
@@ -177,7 +160,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             self._pending_users = []
 
-            parent_id = _find_parent_entry_id(self.hass)
             return self.async_create_entry(
                 title=self._user,
                 data={
@@ -186,7 +168,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_FREE_AMOUNT: 0.0,
                     CONF_EXCLUDED_USERS: self._excluded_users,
                 },
-                parent_entry_id=parent_id,
             )
 
         schema = vol.Schema(
