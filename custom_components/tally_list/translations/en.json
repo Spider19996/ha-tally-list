@@ -30,7 +30,6 @@
           "menu_options": {
             "add": "Add drink",
             "remove": "Remove drink",
-            "cleanup_sensors": "Cleanup sensors",
             "edit": "Edit price",
             "free_amount": "Set free amount",
             "exclude": "Exclude user",
@@ -50,13 +49,8 @@
           "title": "Remove Drink",
           "data": {
             "drink": "Drink",
-            "cleanup_sensors": "Cleanup sensors",
             "remove_more": "Remove another"
           }
-        },
-        "cleanup_sensors": {
-          "title": "Cleanup Sensors",
-          "description": "Removing sensors resets stored amounts due"
         },
         "edit_price": {
           "title": "Edit Price",
