@@ -5,9 +5,10 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.helpers import entity_registry as er
+import inspect
 
 from homeassistant import config_entries
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     DOMAIN,
@@ -19,6 +20,14 @@ from .const import (
     CONF_EXCLUDED_USERS,
     PRICE_LIST_USER,
 )
+
+
+def _find_parent_entry_id(hass: HomeAssistant) -> str | None:
+    """Return the entry_id of the price list parent entry if present."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data.get(CONF_USER) == PRICE_LIST_USER:
+            return entry.entry_id
+    return None
 
 
 def _parse_drinks(value: str) -> dict[str, float]:
@@ -48,6 +57,24 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._excluded_users: list[str] = []
         self._pending_users: list[str] = []
 
+    def _create_entry(
+        self,
+        *,
+        title: str,
+        data: dict,
+        parent_id: str | None = None,
+    ):
+        """Create a config entry, attaching a parent when supported."""
+        kwargs = {"title": title, "data": data}
+        if parent_id:
+            try:
+                sig = inspect.signature(self.async_create_entry)
+                if "parent_entry_id" in sig.parameters:
+                    kwargs["parent_entry_id"] = parent_id
+            except Exception:
+                pass
+        return self.async_create_entry(**kwargs)
+
     async def async_step_import(self, user_input=None):
         """Handle import of a config entry."""
         if user_input is None:
@@ -56,7 +83,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._drinks = user_input.get(CONF_DRINKS, {})
         self._free_amount = float(user_input.get(CONF_FREE_AMOUNT, 0.0))
         self._excluded_users = user_input.get(CONF_EXCLUDED_USERS, [])
-        return self.async_create_entry(title=self._user, data=user_input)
+        parent_id = None
+        if self._user != PRICE_LIST_USER:
+            parent_id = _find_parent_entry_id(self.hass)
+        return self._create_entry(title=self._user, data=user_input, parent_id=parent_id)
 
     async def async_step_user(self, user_input=None):
         registry = er.async_get(self.hass)
@@ -119,9 +149,11 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     )
                 self._pending_users = []
-                return self.async_create_entry(
+                parent_id = _find_parent_entry_id(self.hass)
+                return self._create_entry(
                     title=self._user,
                     data={CONF_USER: self._user},
+                    parent_id=parent_id,
                 )
 
         return await self.async_step_add_drink()
@@ -160,7 +192,8 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             self._pending_users = []
 
-            return self.async_create_entry(
+            parent_id = _find_parent_entry_id(self.hass)
+            return self._create_entry(
                 title=self._user,
                 data={
                     CONF_USER: self._user,
@@ -168,6 +201,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_FREE_AMOUNT: 0.0,
                     CONF_EXCLUDED_USERS: self._excluded_users,
                 },
+                parent_id=parent_id,
             )
 
         schema = vol.Schema(
