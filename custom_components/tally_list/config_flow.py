@@ -17,6 +17,7 @@ from .const import (
     CONF_PRICE,
     CONF_FREE_AMOUNT,
     CONF_EXCLUDED_USERS,
+    CONF_ACTION,
     PRICE_LIST_USER,
 )
 
@@ -209,17 +210,25 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_menu()
 
     async def async_step_menu(self, user_input=None):
-        return self.async_show_menu(
+        if user_input is not None:
+            action: str | None = user_input.get(CONF_ACTION)
+            if not action:
+                return await self._update_drinks()
+            return await getattr(self, f"async_step_{action}")()
+
+        schema = vol.Schema({vol.Optional(CONF_ACTION): vol.In([
+            "add",
+            "remove",
+            "edit",
+            "free_amount",
+            "exclude",
+            "include",
+        ])})
+
+        return self.async_show_form(
             step_id="menu",
-            menu_options=[
-                "add",
-                "remove",
-                "edit",
-                "free_amount",
-                "exclude",
-                "include",
-                "finish",
-            ],
+            data_schema=schema,
+            last_step=True,
         )
 
     async def async_step_add(self, user_input=None):

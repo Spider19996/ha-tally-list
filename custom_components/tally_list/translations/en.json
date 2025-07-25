@@ -27,14 +27,16 @@
     "step": {
         "menu": {
           "title": "Manage Drinks",
+          "data": {
+            "action": "Action"
+          },
           "menu_options": {
             "add": "Add drink",
             "remove": "Remove drink",
             "edit": "Edit price",
             "free_amount": "Set free amount",
             "exclude": "Exclude user",
-            "include": "Include user",
-            "finish": "Done"
+            "include": "Include user"
           }
         },
         "add_drink": {
