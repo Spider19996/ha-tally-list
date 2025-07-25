@@ -13,6 +13,7 @@ from .const import (
     CONF_USER,
     PRICE_LIST_USER,
 )
+from .helpers import device_info_for_entry
 
 
 async def async_setup_entry(
@@ -30,6 +31,7 @@ class ResetButton(ButtonEntity):
         self._attr_name = f"{user} Reset"
         self._attr_unique_id = f"{entry.entry_id}_reset_tally"
         self.entity_id = f"button.{slugify(user)}_reset_tally"
+        self._attr_device_info = device_info_for_entry(hass, entry)
 
     async def async_press(self) -> None:
         await self._hass.services.async_call(
