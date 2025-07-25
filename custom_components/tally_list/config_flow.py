@@ -226,77 +226,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_add_drink(user_input)
 
     async def async_step_remove(self, user_input=None):
-        return await self.async_step_remove_menu(user_input)
-
-    async def async_step_remove_menu(self, user_input=None):
-        if user_input is not None:
-            if user_input == "drink":
-                return await self.async_step_remove_drink()
-            if user_input == "cleanup_sensors":
-                return await self.async_step_cleanup_sensors()
-            return await self.async_step_menu()
-
-        return self.async_show_menu(
-            step_id="remove",
-            menu_options=["drink", "cleanup_sensors"],
-        )
-
-    async def async_step_cleanup_sensors(self, user_input=None):
-        await self._cleanup_sensors()
-        return await self.async_step_menu()
-
-    async def _cleanup_sensors(self):
-        registry = er.async_get(self.hass)
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        entry_ids = {entry.entry_id for entry in entries}
-        active_users = {entry.data.get(CONF_USER) for entry in entries}
-        active_drinks = set(self._drinks.keys())
-
-        removed = False
-        for entity_id, entry in list(registry.entities.items()):
-            if entry.domain != "sensor" or entry.platform != DOMAIN:
-                continue
-            if entry.config_entry_id not in entry_ids:
-                registry.async_remove(entity_id)
-                removed = True
-                continue
-            config_entry = next(
-                (e for e in entries if e.entry_id == entry.config_entry_id), None
-            )
-            if not config_entry:
-                registry.async_remove(entity_id)
-                removed = True
-                continue
-            user = config_entry.data.get(CONF_USER)
-            if user not in active_users:
-                registry.async_remove(entity_id)
-                removed = True
-                continue
-            uid = entry.unique_id
-            suffixes = {"_count", "_price"}
-            drink = None
-            for suffix in suffixes:
-                if uid.endswith(suffix):
-                    base = uid[: -len(suffix)]
-                    prefix = f"{config_entry.entry_id}_"
-                    if base.startswith(prefix):
-                        drink = base[len(prefix) :]
-                    break
-            if drink is not None and drink not in active_drinks:
-                registry.async_remove(entity_id)
-                removed = True
-
-        if removed:
-            for entry in entries:
-                await self.hass.config_entries.async_reload(entry.entry_id)
-
-        self.hass.components.persistent_notification.create(
-            (
-                "Unused sensors have been removed. "
-                "This also resets stored 'amount due' values."
-            ),
-            title="Tally List",
-        )
+        return await self.async_step_remove_drink(user_input)
 
     async def async_step_edit(self, user_input=None):
         return await self.async_step_edit_price(user_input)
@@ -333,26 +263,18 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_remove_drink(self, user_input=None):
         if user_input is not None:
-            drink = user_input.get(CONF_DRINK)
-            cleanup = user_input.get("cleanup_sensors")
-            if drink:
-                self._drinks.pop(drink, None)
-            if cleanup:
-                await self._cleanup_sensors()
+            drink = user_input[CONF_DRINK]
+            self._drinks.pop(drink, None)
             if user_input.get("remove_more") and self._drinks:
                 return await self.async_step_remove_drink()
             return await self.async_step_menu()
 
         if not self._drinks:
-            schema = vol.Schema(
-                {vol.Optional("cleanup_sensors", default=False): bool}
-            )
-            return self.async_show_form(step_id="remove_drink", data_schema=schema)
+            return await self.async_step_menu()
 
         schema = vol.Schema(
             {
-                vol.Optional(CONF_DRINK): vol.In(list(self._drinks.keys())),
-                vol.Optional("cleanup_sensors", default=False): bool,
+                vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
                 vol.Optional("remove_more", default=False): bool,
             }
         )
