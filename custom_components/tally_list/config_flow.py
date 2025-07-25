@@ -214,6 +214,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             menu_options=[
                 "add",
                 "remove",
+                "cleanup_sensors",
                 "edit",
                 "free_amount",
                 "exclude",
@@ -227,6 +228,53 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_remove(self, user_input=None):
         return await self.async_step_remove_drink(user_input)
+
+    async def async_step_cleanup_sensors(self, user_input=None):
+        registry = er.async_get(self.hass)
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        entry_ids = {entry.entry_id for entry in entries}
+        active_users = {entry.data.get(CONF_USER) for entry in entries}
+        active_drinks = set(self._drinks.keys())
+
+        removed = False
+        for entity_id, entry in list(registry.entities.items()):
+            if entry.domain != "sensor" or entry.platform != DOMAIN:
+                continue
+            if entry.config_entry_id not in entry_ids:
+                registry.async_remove(entity_id)
+                removed = True
+                continue
+            config_entry = next(
+                (e for e in entries if e.entry_id == entry.config_entry_id), None
+            )
+            if not config_entry:
+                registry.async_remove(entity_id)
+                removed = True
+                continue
+            user = config_entry.data.get(CONF_USER)
+            if user not in active_users:
+                registry.async_remove(entity_id)
+                removed = True
+                continue
+            uid = entry.unique_id
+            suffixes = {"_count", "_price"}
+            drink = None
+            for suffix in suffixes:
+                if uid.endswith(suffix):
+                    base = uid[: -len(suffix)]
+                    prefix = f"{config_entry.entry_id}_"
+                    if base.startswith(prefix):
+                        drink = base[len(prefix) :]
+                    break
+            if drink is not None and drink not in active_drinks:
+                registry.async_remove(entity_id)
+                removed = True
+
+        if removed:
+            for entry in entries:
+                await self.hass.config_entries.async_reload(entry.entry_id)
+
+        return await self.async_step_menu()
 
     async def async_step_edit(self, user_input=None):
         return await self.async_step_edit_price(user_input)
