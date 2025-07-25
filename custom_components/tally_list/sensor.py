@@ -8,7 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN, CONF_USER, PRICE_LIST_USER
-from .helpers import device_info_for_entry
 
 
 async def async_setup_entry(
@@ -49,7 +48,6 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{drink}_count"
         self._attr_native_value = 0
         self._attr_native_unit_of_measurement = "€"
-        self._attr_device_info = device_info_for_entry(hass, entry)
 
     async def async_added_to_hass(self) -> None:
         last_state = await self.async_get_last_state()
@@ -97,7 +95,6 @@ class DrinkPriceSensor(SensorEntity):
         self._attr_name = f"{entry.data[CONF_USER]} {drink} Price"
         self._attr_unique_id = f"{entry.entry_id}_{drink}_price"
         self._attr_native_unit_of_measurement = "€"
-        self._attr_device_info = device_info_for_entry(hass, entry)
 
     async def async_added_to_hass(self) -> None:
         await self.async_update_state()
@@ -119,7 +116,6 @@ class FreeAmountSensor(SensorEntity):
         self._attr_name = f"{entry.data[CONF_USER]} Free Amount"
         self._attr_unique_id = f"{entry.entry_id}_free_amount"
         self._attr_native_unit_of_measurement = "€"
-        self._attr_device_info = device_info_for_entry(hass, entry)
 
     async def async_added_to_hass(self) -> None:
         await self.async_update_state()
@@ -142,7 +138,6 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
         self._attr_native_unit_of_measurement = "€"
         self._attr_native_value = 0
         self._attr_suggested_display_precision = 2
-        self._attr_device_info = device_info_for_entry(hass, entry)
 
     async def async_added_to_hass(self) -> None:
         await self.async_update_state()
