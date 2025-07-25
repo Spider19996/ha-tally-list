@@ -26,7 +26,7 @@
   "options": {
       "step": {
         "menu": {
-          "title": "Getränke verwalten",
+          "title": "Strichliste verwalten",
           "menu_options": {
             "add": "Hinzufügen",
             "remove": "Entfernen",
