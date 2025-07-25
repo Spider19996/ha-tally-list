@@ -79,6 +79,9 @@
             "user": "Nutzer",
             "remove_more": "Weiteren einschließen"
           }
+        },
+        "finish": {
+          "title": "Fertig"
         }
       },
       "enum": {

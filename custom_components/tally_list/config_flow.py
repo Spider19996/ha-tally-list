@@ -241,7 +241,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_remove_excluded_user(user_input)
 
     async def async_step_finish(self, user_input=None):
-        return await self._update_drinks()
+        if user_input is not None:
+            return await self._update_drinks()
+        return self.async_show_form(step_id="finish", last_step=True)
 
     async def async_step_add_drink(self, user_input=None):
         if user_input is not None:

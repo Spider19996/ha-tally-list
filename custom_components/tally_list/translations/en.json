@@ -79,6 +79,9 @@
             "user": "User",
             "remove_more": "Include another"
           }
+        },
+        "finish": {
+          "title": "Done"
         }
       },
       "enum": {
