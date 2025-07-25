@@ -9,6 +9,9 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 - Persons with user accounts are added automatically. Drinks are added only once with a name and price and are available for every person.
 - Sensor entities for each drink's count, each drink's price, a free amount sensor, and a sensor showing the total amount a person has to pay.
 - Button entity to reset all counters for a person.
+- Entities for each user are now grouped under a device.
+  These devices are linked to the price list device using Home Assistant's
+  parent device feature.
 - Service `tally_list.add_drink` to add a drink for a person.
 - Service `tally_list.remove_drink` to remove a drink for a person.
 - Service `tally_list.adjust_count` to set a drink count to a specific value.
