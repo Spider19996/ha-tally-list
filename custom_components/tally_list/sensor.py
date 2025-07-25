@@ -133,7 +133,7 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
         self._hass = hass
         self._entry = entry
         self._attr_should_poll = False
-        self._attr_name = entry.data[CONF_USER]
+        self._attr_name = f"{entry.data[CONF_USER]} Amount Due"
         self._attr_unique_id = f"{entry.entry_id}_amount_due"
         self._attr_native_unit_of_measurement = "€"
         self._attr_native_value = 0
