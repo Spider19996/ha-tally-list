@@ -5,7 +5,6 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.selector import selector
 
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -210,38 +209,18 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_menu()
 
     async def async_step_menu(self, user_input=None):
-        if user_input is not None:
-            if user_input.get("finish"):
-                return await self._update_drinks()
-
-            action = user_input.get("action")
-            if action:
-                return await getattr(self, f"async_step_{action}")()
-
-        options = [
-            "add",
-            "remove",
-            "edit",
-            "free_amount",
-            "exclude",
-            "include",
-        ]
-
-        schema = vol.Schema(
-            {
-                vol.Optional("action"): selector(
-                    {
-                        "select": {
-                            "options": options,
-                            "translation_key": "action",
-                        }
-                    }
-                ),
-                vol.Optional("finish"): selector({"action": {}}),
-            }
+        return self.async_show_menu(
+            step_id="menu",
+            menu_options=[
+                "add",
+                "remove",
+                "edit",
+                "free_amount",
+                "exclude",
+                "include",
+                "finish",
+            ],
         )
-
-        return self.async_show_form(step_id="menu", data_schema=schema)
 
     async def async_step_add(self, user_input=None):
         return await self.async_step_add_drink(user_input)

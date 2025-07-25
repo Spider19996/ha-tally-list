@@ -33,7 +33,8 @@
             "edit": "Bearbeiten",
             "free_amount": "Freibetrag",
             "exclude": "Ausschließen",
-            "include": "Einschließen"
+            "include": "Einschließen",
+            "finish": "Fertig"
           }
         },
         "add_drink": {
