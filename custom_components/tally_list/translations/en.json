@@ -34,6 +34,7 @@
             "free_amount": "Set free amount",
             "exclude": "Exclude user",
             "include": "Include user",
+            "cleanup": "Remove unused sensors",
             "finish": "Done"
           }
         },
@@ -79,6 +80,9 @@
             "user": "User",
             "remove_more": "Include another"
           }
+        },
+        "cleanup": {
+          "title": "Remove unused sensors"
         }
       },
       "enum": {
@@ -89,6 +93,7 @@
           "free_amount": "Set free amount",
           "exclude": "Exclude user",
           "include": "Include user",
+          "cleanup": "Remove unused sensors",
           "finish": "Done"
         }
       }

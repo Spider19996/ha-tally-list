@@ -218,6 +218,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 "free_amount",
                 "exclude",
                 "include",
+                "cleanup",
                 "finish",
             ],
         )
@@ -239,6 +240,12 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_include(self, user_input=None):
         return await self.async_step_remove_excluded_user(user_input)
+
+    async def async_step_cleanup(self, user_input=None):
+        if user_input is not None:
+            await self._cleanup_unused_entities()
+            return await self.async_step_menu()
+        return self.async_show_form(step_id="cleanup")
 
     async def async_step_finish(self, user_input=None):
         return await self._update_drinks()
@@ -378,6 +385,31 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="remove_excluded_user",
             data_schema=schema,
         )
+
+    async def _cleanup_unused_entities(self):
+        registry = er.async_get(self.hass)
+        drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {})
+        valid_unique_ids: set[str] = set()
+
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            entry_id = entry.entry_id
+            user = entry.data.get(CONF_USER)
+            if user == PRICE_LIST_USER:
+                for drink in drinks:
+                    valid_unique_ids.add(f"{entry_id}_{drink}_price")
+                valid_unique_ids.add(f"{entry_id}_free_amount")
+            else:
+                for drink in drinks:
+                    valid_unique_ids.add(f"{entry_id}_{drink}_count")
+                valid_unique_ids.add(f"{entry_id}_amount_due")
+                valid_unique_ids.add(f"{entry_id}_reset_tally")
+
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            for entity in er.async_entries_for_config_entry(
+                registry, entry.entry_id
+            ):
+                if entity.unique_id not in valid_unique_ids:
+                    await registry.async_remove(entity.entity_id)
 
     async def _update_drinks(self):
         # Update global drinks list before reloading entries so that new
