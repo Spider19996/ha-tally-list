@@ -79,6 +79,9 @@
             "user": "Nutzer",
             "remove_more": "Weiteren einschließen"
           }
+        },
+        "cleanup": {
+          "title": "Nicht mehr genutzte Sensoren entfernen"
         }
       },
       "enum": {
@@ -89,6 +92,7 @@
           "free_amount": "Freibetrag",
           "exclude": "Ausschließen",
           "include": "Einschließen",
+          "cleanup": "Nicht mehr genutzte Sensoren entfernen",
           "finish": "Fertig"
         }
       }
