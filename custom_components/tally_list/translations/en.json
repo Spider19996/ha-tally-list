@@ -30,7 +30,6 @@
           "menu_options": {
             "add": "Add drink",
             "remove": "Remove drink",
-            "cleanup_sensors": "Cleanup sensors",
             "edit": "Edit price",
             "free_amount": "Set free amount",
             "exclude": "Exclude user",
@@ -90,7 +89,6 @@
           "free_amount": "Set free amount",
           "exclude": "Exclude user",
           "include": "Include user",
-          "cleanup_sensors": "Cleanup sensors",
           "finish": "Done"
         }
       }
