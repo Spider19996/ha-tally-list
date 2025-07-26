@@ -30,6 +30,7 @@
           "menu_options": {
             "add": "Hinzufügen",
             "remove": "Entfernen",
+            "cleanup_sensors": "Sensoren bereinigen",
             "edit": "Bearbeiten",
             "free_amount": "Freibetrag",
             "exclude": "Ausschließen",
@@ -89,6 +90,7 @@
           "free_amount": "Freibetrag",
           "exclude": "Ausschließen",
           "include": "Einschließen",
+          "cleanup_sensors": "Sensoren bereinigen",
           "finish": "Fertig"
         }
       }
