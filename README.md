@@ -14,7 +14,6 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 - Service `tally_list.adjust_count` to set a drink count to a specific value.
 - Counters cannot go below zero when removing drinks.
 - Exclude persons from automatic import via the integration options.
-- Remove unused sensors from the options menu.
 
 ## Installation
 
@@ -25,7 +24,7 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 
 ## Usage
 
-When the integration is first set up, all persons with a user account are added and you will be asked to enter the available drinks. All further persons will automatically use this list. Drinks can later be managed from the integration options where you can add, remove or edit their prices. Call the service `tally_list.add_drink` with parameters `user` and `drink` to increment the counter. Use `tally_list.adjust_count` with `count` to set an exact value. To decrement by one call `tally_list.remove_drink` with `user` and `drink`. Use the reset button entity to reset all counters. The reset button entity ID follows `button.<person>_reset_tally`, so you can match all reset buttons with `button.*_reset_tally`. Use the **Cleanup sensors** option in the integration settings to remove entities for drinks that no longer exist.
+When the integration is first set up, all persons with a user account are added and you will be asked to enter the available drinks. All further persons will automatically use this list. Drinks can later be managed from the integration options where you can add, remove or edit their prices. Call the service `tally_list.add_drink` with parameters `user` and `drink` to increment the counter. Use `tally_list.adjust_count` with `count` to set an exact value. To decrement by one call `tally_list.remove_drink` with `user` and `drink`. Use the reset button entity to reset all counters. The reset button entity ID follows `button.<person>_reset_tally`, so you can match all reset buttons with `button.*_reset_tally`.
 
 ## Price List and Sensors
 
