@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import voluptuous as vol
 
 from homeassistant.helpers import entity_registry as er
@@ -20,6 +21,9 @@ from .const import (
     CONF_EXCLUDED_USERS,
     PRICE_LIST_USER,
 )
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _parse_drinks(value: str) -> dict[str, float]:
@@ -394,17 +398,19 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         active_users = {entry.data.get(CONF_USER) for entry in entries}
         active_drinks = set(self._drinks.keys())
 
-        removed = False
+        to_remove: list[str] = []
+
         for entity_entry in list(registry.entities.values()):
             if (
                 entity_entry.domain != "sensor"
                 or entity_entry.platform != DOMAIN
             ):
                 continue
+
             if entity_entry.config_entry_id not in entry_ids:
-                await registry.async_remove(entity_entry.entity_id)
-                removed = True
+                to_remove.append(entity_entry.entity_id)
                 continue
+
             cfg_entry = next(
                 (
                     e for e in entries
@@ -412,19 +418,21 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 ),
                 None,
             )
+
             if not cfg_entry:
-                await registry.async_remove(entity_entry.entity_id)
-                removed = True
+                to_remove.append(entity_entry.entity_id)
                 continue
+
             user = cfg_entry.data.get(CONF_USER)
             if user not in active_users:
-                await registry.async_remove(entity_entry.entity_id)
-                removed = True
+                to_remove.append(entity_entry.entity_id)
                 continue
+
             uid = entity_entry.unique_id or ""
             prefix = f"{cfg_entry.entry_id}_"
             if not uid.startswith(prefix):
                 continue
+
             if uid.endswith("_count"):
                 drink = uid[len(prefix):-6]
             elif uid.endswith("_price"):
@@ -435,20 +443,28 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 drink = None
             else:
                 continue
-            if drink is not None and drink not in active_drinks:
-                await registry.async_remove(entity_entry.entity_id)
-                removed = True
 
-        if removed:
+            if drink is not None and drink not in active_drinks:
+                to_remove.append(entity_entry.entity_id)
+
+        if to_remove:
+            for entity_id in to_remove:
+                try:
+                    await registry.async_remove(entity_id)
+                except Exception as exc:  # pragma: no cover - just log
+                    _LOGGER.error("Failed to remove %s: %s", entity_id, exc)
+
             for entry in entries:
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
                 )
+
             await persistent_notification.async_create(
                 self.hass,
                 (
-                    "Unused sensors have been removed. "
-                    "This also resets stored 'amount due' values."
+                    "Removed unused sensors:\n- "
+                    + "\n- ".join(sorted(to_remove))
+                    + "\nThis also resets stored 'amount due' values."
                 ),
                 title="Tally List",
             )
