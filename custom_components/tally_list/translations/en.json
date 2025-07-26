@@ -83,6 +83,10 @@
         },
         "cleanup": {
           "title": "Remove unused sensors"
+        },
+        "cleanup_result": {
+          "title": "Unused sensors removed",
+          "description": "Removed unused sensors:\n- {sensors}\nThis also resets stored 'amount due' values."
         }
       },
       "enum": {
