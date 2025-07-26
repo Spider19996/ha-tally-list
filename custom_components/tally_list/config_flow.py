@@ -6,7 +6,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import entity_registry as er
-from homeassistant.components import persistent_notification
 
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -248,9 +247,19 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_cleanup(self, user_input=None):
         if user_input is not None:
-            await self._cleanup_unused_entities()
+            removed = await self._cleanup_unused_entities()
+            if removed:
+                return self.async_show_form(
+                    step_id="cleanup_result",
+                    description_placeholders={
+                        "sensors": "\n- ".join(sorted(removed))
+                    },
+                )
             return await self.async_step_menu()
         return self.async_show_form(step_id="cleanup")
+
+    async def async_step_cleanup_result(self, user_input=None):
+        return await self.async_step_menu()
 
     async def async_step_finish(self, user_input=None):
         return await self._update_drinks()
@@ -391,7 +400,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=schema,
         )
 
-    async def _cleanup_unused_entities(self) -> None:
+    async def _cleanup_unused_entities(self) -> list[str]:
         registry = er.async_get(self.hass)
         entries = self.hass.config_entries.async_entries(DOMAIN)
         entry_ids = {entry.entry_id for entry in entries}
@@ -459,15 +468,8 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                     self.hass.config_entries.async_reload(entry.entry_id)
                 )
 
-            await persistent_notification.async_create(
-                self.hass,
-                (
-                    "Removed unused sensors:\n- "
-                    + "\n- ".join(sorted(to_remove))
-                    + "\nThis also resets stored 'amount due' values."
-                ),
-                title="Tally List",
-            )
+            return sorted(to_remove)
+        return []
 
     async def _update_drinks(self):
         # Update global drinks list before reloading entries so that new
