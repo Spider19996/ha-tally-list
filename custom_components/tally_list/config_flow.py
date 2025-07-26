@@ -5,6 +5,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.helpers import entity_registry as er
+from homeassistant.components import persistent_notification
 
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -214,6 +215,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             menu_options=[
                 "add",
                 "remove",
+                "cleanup_sensors",
                 "edit",
                 "free_amount",
                 "exclude",
@@ -227,6 +229,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_remove(self, user_input=None):
         return await self.async_step_remove_drink(user_input)
+
+    async def async_step_cleanup_sensors(self, user_input=None):
+        await self._cleanup_sensors()
+        return await self.async_step_menu()
 
     async def async_step_edit(self, user_input=None):
         return await self.async_step_edit_price(user_input)
@@ -378,6 +384,62 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             step_id="remove_excluded_user",
             data_schema=schema,
         )
+
+    async def _cleanup_sensors(self) -> None:
+        registry = er.async_get(self.hass)
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        entry_ids = {entry.entry_id for entry in entries}
+        active_users = {entry.data.get(CONF_USER) for entry in entries}
+        active_drinks = set(self._drinks.keys())
+
+        removed = False
+        for entity_entry in list(registry.entities.values()):
+            if entity_entry.domain != "sensor" or entity_entry.platform != DOMAIN:
+                continue
+            if entity_entry.config_entry_id not in entry_ids:
+                await registry.async_remove(entity_entry.entity_id)
+                removed = True
+                continue
+            cfg_entry = next(
+                (e for e in entries if e.entry_id == entity_entry.config_entry_id),
+                None,
+            )
+            if not cfg_entry:
+                await registry.async_remove(entity_entry.entity_id)
+                removed = True
+                continue
+            user = cfg_entry.data.get(CONF_USER)
+            if user not in active_users:
+                await registry.async_remove(entity_entry.entity_id)
+                removed = True
+                continue
+            uid = entity_entry.unique_id or ""
+            prefix = f"{cfg_entry.entry_id}_"
+            if not uid.startswith(prefix):
+                continue
+            if uid.endswith("_count"):
+                drink = uid[len(prefix):-6]
+            elif uid.endswith("_price"):
+                drink = uid[len(prefix):-6]
+            else:
+                continue
+            if drink not in active_drinks:
+                await registry.async_remove(entity_entry.entity_id)
+                removed = True
+
+        if removed:
+            for entry in entries:
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+            persistent_notification.async_create(
+                self.hass,
+                (
+                    "Unused sensors have been removed. "
+                    "This also resets stored 'amount due' values."
+                ),
+                title="Tally List",
+            )
 
     async def _update_drinks(self):
         # Update global drinks list before reloading entries so that new
