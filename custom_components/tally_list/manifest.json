@@ -2,7 +2,7 @@
   "domain": "tally_list",
   "name": "Tally List",
   "documentation": "https://github.com/Spider19996/ha-tally-list",
-  "version": "1.1.0",
+  "version": "1.0.0",
   "requirements": [],
   "config_flow": true,
   "codeowners": []
