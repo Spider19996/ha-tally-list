@@ -38,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if user_id is None:
             return
         hass_user = await hass.auth.async_get_user(user_id)
-        if hass_user is None or hass_user.is_admin:
+        if hass_user is None:
             return
         override_users = hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
         person_name = None
