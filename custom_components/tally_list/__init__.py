@@ -13,7 +13,6 @@ from .const import (
     SERVICE_REMOVE_DRINK,
     SERVICE_ADJUST_COUNT,
     SERVICE_RESET_COUNTERS,
-    SERVICE_GET_ADMINS,
     ATTR_USER,
     ATTR_DRINK,
     CONF_USER,
@@ -112,14 +111,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
 
-    async def get_admins_service(call):
-        override_users = hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
-        admins = list(override_users)
-        hass.bus.async_fire(
-            "ha_tally_list_admins",
-            {"admins": admins},
-        )
-        return {"admins": admins}
 
     hass.services.async_register(
         DOMAIN,
@@ -143,12 +134,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_RESET_COUNTERS,
         reset_counters_service,
-    )
-
-    hass.services.async_register(
-        "ha_tally_list",
-        SERVICE_GET_ADMINS,
-        get_admins_service,
     )
 
     return True
