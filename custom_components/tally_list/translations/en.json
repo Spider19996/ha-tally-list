@@ -81,6 +81,20 @@
             "remove_more": "Include another"
           }
         },
+        "add_override_user": {
+          "title": "Authorize User",
+          "data": {
+            "user": "User",
+            "add_more": "Authorize another"
+          }
+        },
+        "remove_override_user": {
+          "title": "Unauthorize User",
+          "data": {
+            "user": "User",
+            "remove_more": "Unauthorize another"
+          }
+        },
         "cleanup": {
           "title": "Remove unused sensors"
         },
@@ -97,6 +111,8 @@
           "free_amount": "Set free amount",
           "exclude": "Exclude user",
           "include": "Include user",
+          "authorize": "Authorize user",
+          "unauthorize": "Unauthorize user",
           "cleanup": "Remove unused sensors",
           "finish": "Done"
         }
