@@ -16,7 +16,6 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 - Exclude persons from automatic import via the integration options.
 - Grant override permissions to selected users so they can tally drinks for
   everyone.
-- Service `ha_tally_list.get_admins` to list all authorized users.
 
 ## Installation
 

@@ -39,6 +39,3 @@ reset_counters:
       description: Person name
       example: Alice
       required: false
-get_admins:
-  name: Get admins
-  description: Return all users allowed to tally drinks for others
