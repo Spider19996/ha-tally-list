@@ -5,6 +5,7 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.exceptions import Unauthorized
 
 from .const import (
     DOMAIN,
@@ -27,8 +28,27 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up via YAML is not supported."""
     hass.data.setdefault(DOMAIN, {"drinks": {}, "excluded_users": []})
 
+    async def _verify_permissions(call, target_user: str | None) -> None:
+        user_id = call.context.user_id
+        if user_id is None:
+            return
+        hass_user = await hass.auth.async_get_user(user_id)
+        if hass_user is None or hass_user.is_admin:
+            return
+        if target_user is None:
+            raise Unauthorized
+
+        person_name = None
+        for state in hass.states.async_all("person"):
+            if state.attributes.get("user_id") == hass_user.id:
+                person_name = state.name
+                break
+        if person_name != target_user:
+            raise Unauthorized
+
     async def adjust_count_service(call):
         user = call.data[ATTR_USER]
+        await _verify_permissions(call, user)
         drink = call.data[ATTR_DRINK]
         count = max(0, call.data.get("count", 0))
         for entry_id, data in hass.data[DOMAIN].items():
@@ -43,6 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def add_drink_service(call):
         user = call.data[ATTR_USER]
+        await _verify_permissions(call, user)
         drink = call.data[ATTR_DRINK]
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
@@ -57,6 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def remove_drink_service(call):
         user = call.data[ATTR_USER]
+        await _verify_permissions(call, user)
         drink = call.data[ATTR_DRINK]
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
@@ -73,6 +95,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def reset_counters_service(call):
         user = call.data.get(ATTR_USER)
+        await _verify_permissions(call, user)
         drinks = hass.data[DOMAIN].get("drinks", {})
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
