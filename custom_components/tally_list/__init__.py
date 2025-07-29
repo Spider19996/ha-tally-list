@@ -18,7 +18,6 @@ from .const import (
     CONF_USER,
     CONF_FREE_AMOUNT,
     CONF_EXCLUDED_USERS,
-    CONF_OVERRIDE_USERS,
     PRICE_LIST_USER,
 )
 
@@ -27,10 +26,7 @@ PLATFORMS: list[str] = ["sensor", "button"]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up via YAML is not supported."""
-    hass.data.setdefault(
-        DOMAIN,
-        {"drinks": {}, "excluded_users": [], "override_users": []},
-    )
+    hass.data.setdefault(DOMAIN, {"drinks": {}, "excluded_users": []})
 
     async def _verify_permissions(call, target_user: str | None) -> None:
         user_id = call.context.user_id
@@ -39,16 +35,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass_user = await hass.auth.async_get_user(user_id)
         if hass_user is None or hass_user.is_admin:
             return
-        override_users = hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
+        if target_user is None:
+            raise Unauthorized
+
         person_name = None
         for state in hass.states.async_all("person"):
             if state.attributes.get("user_id") == hass_user.id:
                 person_name = state.name
                 break
-        if person_name in override_users:
-            return
-        if target_user is None:
-            raise Unauthorized
         if person_name != target_user:
             raise Unauthorized
 
@@ -151,7 +145,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "user": entry.data.get("user"),
             CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
             CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
-            CONF_OVERRIDE_USERS: hass.data[DOMAIN].get("override_users", []),
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
@@ -169,7 +162,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "user": entry.data.get("user"),
             CONF_FREE_AMOUNT: hass.data[DOMAIN]["free_amount"],
             CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
-            CONF_OVERRIDE_USERS: hass.data[DOMAIN].get("override_users", []),
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
@@ -180,11 +172,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ):
         hass.data[DOMAIN]["excluded_users"] = entry.data[CONF_EXCLUDED_USERS]
     if (
-        not hass.data[DOMAIN].get("override_users")
-        and entry.data.get(CONF_OVERRIDE_USERS) is not None
-    ):
-        hass.data[DOMAIN]["override_users"] = entry.data[CONF_OVERRIDE_USERS]
-    if (
         hass.data[DOMAIN].get("excluded_users") is not None
         and CONF_EXCLUDED_USERS not in entry.data
     ):
@@ -192,20 +179,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "user": entry.data.get("user"),
             CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
             CONF_EXCLUDED_USERS: hass.data[DOMAIN]["excluded_users"],
-            CONF_OVERRIDE_USERS: hass.data[DOMAIN].get("override_users", []),
-        }
-        if "drinks" in hass.data[DOMAIN]:
-            entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
-        hass.config_entries.async_update_entry(entry, data=entry_data)
-    if (
-        hass.data[DOMAIN].get("override_users") is not None
-        and CONF_OVERRIDE_USERS not in entry.data
-    ):
-        entry_data = {
-            "user": entry.data.get("user"),
-            CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
-            CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
-            CONF_OVERRIDE_USERS: hass.data[DOMAIN]["override_users"],
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
@@ -225,7 +198,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN].pop("drinks", None)
             hass.data[DOMAIN].pop("free_amount", None)
             hass.data[DOMAIN].pop(CONF_EXCLUDED_USERS, None)
-            hass.data[DOMAIN].pop(CONF_OVERRIDE_USERS, None)
         if not any(
             isinstance(value, dict) and "entry" in value
             for value in hass.data.get(DOMAIN, {}).values()
