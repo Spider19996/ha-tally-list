@@ -18,6 +18,7 @@ from .const import (
     CONF_PRICE,
     CONF_FREE_AMOUNT,
     CONF_EXCLUDED_USERS,
+    CONF_OVERRIDE_USERS,
     PRICE_LIST_USER,
 )
 
@@ -50,6 +51,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._drinks: dict[str, float] = {}
         self._free_amount: float = 0.0
         self._excluded_users: list[str] = []
+        self._override_users: list[str] = []
         self._pending_users: list[str] = []
 
     async def async_step_import(self, user_input=None):
@@ -60,6 +62,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._drinks = user_input.get(CONF_DRINKS, {})
         self._free_amount = float(user_input.get(CONF_FREE_AMOUNT, 0.0))
         self._excluded_users = user_input.get(CONF_EXCLUDED_USERS, [])
+        self._override_users = user_input.get(CONF_OVERRIDE_USERS, [])
         return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
@@ -197,6 +200,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._drinks: dict[str, float] = {}
         self._free_amount: float = 0.0
         self._excluded_users: list[str] = []
+        self._override_users: list[str] = []
 
     async def async_step_init(self, user_input=None):
         self._drinks = (
@@ -210,6 +214,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._excluded_users = (
             self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, [])
         ).copy()
+        self._override_users = (
+            self.hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
+        ).copy()
         return await self.async_step_menu()
 
     async def async_step_menu(self, user_input=None):
@@ -222,6 +229,8 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 "free_amount",
                 "exclude",
                 "include",
+                "authorize",
+                "unauthorize",
                 "cleanup",
                 "finish",
             ],
@@ -244,6 +253,12 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_include(self, user_input=None):
         return await self.async_step_remove_excluded_user(user_input)
+
+    async def async_step_authorize(self, user_input=None):
+        return await self.async_step_add_override_user(user_input)
+
+    async def async_step_unauthorize(self, user_input=None):
+        return await self.async_step_remove_override_user(user_input)
 
     async def async_step_cleanup(self, user_input=None):
         if user_input is not None:
@@ -400,6 +415,67 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=schema,
         )
 
+    async def async_step_add_override_user(self, user_input=None):
+        registry = er.async_get(self.hass)
+        persons = [
+            entry.original_name or entry.name or entry.entity_id
+            for entry in registry.entities.values()
+            if entry.domain == "person"
+            and (
+                (state := self.hass.states.get(entry.entity_id))
+                and state.attributes.get("user_id")
+            )
+        ]
+        persons = [
+            p
+            for p in persons
+            if p not in self._override_users and p != PRICE_LIST_USER
+        ]
+
+        if not persons:
+            return await self.async_step_menu()
+
+        if user_input is not None:
+            user = user_input[CONF_USER]
+            self._override_users.append(user)
+            if user_input.get("add_more") and len(persons) > 1:
+                return await self.async_step_add_override_user()
+            return await self.async_step_menu()
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_USER): vol.In(persons),
+                vol.Optional("add_more", default=False): bool,
+            }
+        )
+        return self.async_show_form(
+            step_id="add_override_user",
+            data_schema=schema,
+        )
+
+    async def async_step_remove_override_user(self, user_input=None):
+        if user_input is not None:
+            user = user_input[CONF_USER]
+            if user in self._override_users:
+                self._override_users.remove(user)
+            if user_input.get("remove_more") and self._override_users:
+                return await self.async_step_remove_override_user()
+            return await self.async_step_menu()
+
+        if not self._override_users:
+            return await self.async_step_menu()
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_USER): vol.In(list(self._override_users)),
+                vol.Optional("remove_more", default=False): bool,
+            }
+        )
+        return self.async_show_form(
+            step_id="remove_override_user",
+            data_schema=schema,
+        )
+
     async def _cleanup_unused_entities(self) -> list[str]:
         registry = er.async_get(self.hass)
         entries = self.hass.config_entries.async_entries(DOMAIN)
@@ -477,6 +553,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
         self.hass.data[DOMAIN]["free_amount"] = self._free_amount
         self.hass.data[DOMAIN][CONF_EXCLUDED_USERS] = self._excluded_users
+        self.hass.data[DOMAIN][CONF_OVERRIDE_USERS] = self._override_users
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             data = {
@@ -484,6 +561,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_DRINKS: self._drinks,
                 CONF_FREE_AMOUNT: self._free_amount,
                 CONF_EXCLUDED_USERS: self._excluded_users,
+                CONF_OVERRIDE_USERS: self._override_users,
             }
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -497,5 +575,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_DRINKS: self._drinks,
                 CONF_FREE_AMOUNT: self._free_amount,
                 CONF_EXCLUDED_USERS: self._excluded_users,
+                CONF_OVERRIDE_USERS: self._override_users,
             },
         )
