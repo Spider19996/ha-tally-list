@@ -7,8 +7,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.exceptions import Unauthorized
 
-from .websocket import async_register as async_register_ws
-
 from .const import (
     DOMAIN,
     SERVICE_ADD_DRINK,
@@ -137,8 +135,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RESET_COUNTERS,
         reset_counters_service,
     )
-
-    await async_register_ws(hass)
 
     return True
 
