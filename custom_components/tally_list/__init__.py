@@ -114,9 +114,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def get_admins_service(call):
         override_users = hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
-        return {
-            "admins": list(override_users)
-        }
+        admins = list(override_users)
+        hass.bus.async_fire(
+            "ha_tally_list_admins",
+            {"admins": admins},
+        )
+        return {"admins": admins}
 
     hass.services.async_register(
         DOMAIN,
