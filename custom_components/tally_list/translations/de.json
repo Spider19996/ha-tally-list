@@ -34,6 +34,8 @@
             "free_amount": "Freibetrag",
             "exclude": "Ausschließen",
             "include": "Einschließen",
+            "authorize": "Berechtigen",
+            "unauthorize": "Entziehen",
             "cleanup": "Nicht mehr genutzte Sensoren entfernen",
             "finish": "Fertig"
           }
@@ -81,6 +83,20 @@
             "remove_more": "Weiteren einschließen"
           }
         },
+        "add_override_user": {
+          "title": "Nutzer berechtigen",
+          "data": {
+            "user": "Nutzer",
+            "add_more": "Weiteren berechtigen"
+          }
+        },
+        "remove_override_user": {
+          "title": "Berechtigung entziehen",
+          "data": {
+            "user": "Nutzer",
+            "remove_more": "Weiteren entziehen"
+          }
+        },
         "cleanup": {
           "title": "Nicht mehr genutzte Sensoren entfernen"
         },
@@ -97,6 +113,8 @@
           "free_amount": "Freibetrag",
           "exclude": "Ausschließen",
           "include": "Einschließen",
+          "authorize": "Berechtigen",
+          "unauthorize": "Entziehen",
           "cleanup": "Nicht mehr genutzte Sensoren entfernen",
           "finish": "Fertig"
         }
