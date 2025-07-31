@@ -36,3 +36,20 @@ exposes one price sensor per drink as well as a free amount sensor while regular
 persons only get count and total amount sensors. The free amount is subtracted from
 each person's total. You can edit the drinks, prices and free amount at any time
 from the integration options.
+
+## WebSocket API
+
+The integration exposes a WebSocket command `tally_list/get_admins`. It returns
+all users that currently have override permissions and can be called from a
+Home Assistant frontend or external client. The command requires an
+authenticated Home Assistant user.
+
+```js
+await this.hass.connection.sendMessagePromise({ type: "tally_list/get_admins" });
+```
+
+The response contains the usernames in an array:
+
+```json
+{ "admins": ["robin_zimmermann", "tablet_dashboard"] }
+```
