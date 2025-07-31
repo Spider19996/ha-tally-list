@@ -8,7 +8,8 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 
 - Persons with user accounts are added automatically. Drinks are added only once with a name and price and are available for every person.
 - Sensor entities for each drink's count, each drink's price, a free amount sensor, and a sensor showing the total amount a person has to pay.
-- Button entity to reset all counters for a person.
+- Button entity to reset all counters for a person. Only users with
+  override permissions ("Tally Admins") can press it.
 - Service `tally_list.add_drink` to add a drink for a person.
 - Service `tally_list.remove_drink` to remove a drink for a person.
 - Service `tally_list.adjust_count` to set a drink count to a specific value.
@@ -26,7 +27,7 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 
 ## Usage
 
-When the integration is first set up, all persons with a user account are added and you will be asked to enter the available drinks. All further persons will automatically use this list. Drinks can later be managed from the integration options where you can add, remove or edit their prices. Call the service `tally_list.add_drink` with parameters `user` and `drink` to increment the counter. Use `tally_list.adjust_count` with `count` to set an exact value. To decrement by one call `tally_list.remove_drink` with `user` and `drink`. Use the reset button entity to reset all counters. The reset button entity ID follows `button.<person>_reset_tally`, so you can match all reset buttons with `button.*_reset_tally`.
+When the integration is first set up, all persons with a user account are added and you will be asked to enter the available drinks. All further persons will automatically use this list. Drinks can later be managed from the integration options where you can add, remove or edit their prices. Call the service `tally_list.add_drink` with parameters `user` and `drink` to increment the counter. Use `tally_list.adjust_count` with `count` to set an exact value. To decrement by one call `tally_list.remove_drink` with `user` and `drink`. Only Tally Admins can use the reset button entity to reset all counters. The reset button entity ID follows `button.<person>_reset_tally`, so you can match all reset buttons with `button.*_reset_tally`.
 
 ## Price List and Sensors
 
