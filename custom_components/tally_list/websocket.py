@@ -7,7 +7,7 @@ from homeassistant.components import websocket_api
 from homeassistant.exceptions import Unauthorized
 import voluptuous as vol
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_OVERRIDE_USERS
 
 
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/get_admins"})
@@ -21,8 +21,7 @@ async def websocket_get_admins(
     if connection.user is None:
         raise Unauthorized
 
-    users = await hass.auth.async_get_users()
-    admins = [user.name for user in users if user.is_admin]
+    admins = hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
     connection.send_result(msg["id"], {"admins": admins})
 
 
