@@ -48,8 +48,8 @@ authenticated Home Assistant user.
 await this.hass.connection.sendMessagePromise({ type: "tally_list/get_admins" });
 ```
 
-The response contains the usernames in an array:
+The response contains the usernames in an array and includes the WebSocket metadata:
 
 ```json
-{ "admins": ["robin_zimmermann", "tablet_dashboard"] }
+{"id":42,"type":"result","success":true,"result":{"admins":["tablet_dashboard","Test","Test 2"]}}
 ```
