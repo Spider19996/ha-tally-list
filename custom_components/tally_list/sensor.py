@@ -47,9 +47,7 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         self._attr_name = f"{entry.data[CONF_USER]} {drink} Count"
         self._attr_unique_id = f"{entry.entry_id}_{drink}_count"
         self._attr_native_value = 0
-        self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
-            CONF_CURRENCY, "€"
-        )
+        self._attr_native_unit_of_measurement = None
 
     async def async_added_to_hass(self) -> None:
         last_state = await self.async_get_last_state()
@@ -70,9 +68,7 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         await self.async_update_state()
 
     async def async_update_state(self):
-        self._attr_native_unit_of_measurement = self._hass.data.get(
-            DOMAIN, {}
-        ).get(CONF_CURRENCY, "€")
+        self._attr_native_unit_of_measurement = None
         self.async_write_ha_state()
 
     @property
