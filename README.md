@@ -10,6 +10,7 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 - Sensor entities for each drink's count, each drink's price, a free amount sensor, and a sensor showing the total amount a person has to pay.
 - Button entity to reset all counters for a person. Only users with
   override permissions ("Tally Admins") can press it.
+- Currency symbol is configurable (defaults to €).
 - Service `tally_list.add_drink` to add a drink for a person.
 - Service `tally_list.remove_drink` to remove a drink for a person.
 - Service `tally_list.adjust_count` to set a drink count to a specific value.

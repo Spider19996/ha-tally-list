@@ -22,6 +22,7 @@ from .const import (
     CONF_EXCLUDED_USERS,
     CONF_OVERRIDE_USERS,
     PRICE_LIST_USER,
+    CONF_CURRENCY,
 )
 
 PLATFORMS: list[str] = ["sensor", "button"]
@@ -31,7 +32,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up via YAML is not supported."""
     hass.data.setdefault(
         DOMAIN,
-        {"drinks": {}, "excluded_users": [], "override_users": []},
+        {
+            "drinks": {},
+            CONF_EXCLUDED_USERS: [],
+            CONF_OVERRIDE_USERS: [],
+            CONF_CURRENCY: "€",
+        },
     )
 
     async def _verify_permissions(call, target_user: str | None) -> None:
@@ -157,6 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
             CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
             CONF_OVERRIDE_USERS: hass.data[DOMAIN].get("override_users", []),
+            CONF_CURRENCY: hass.data[DOMAIN].get(CONF_CURRENCY, "€"),
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
@@ -175,6 +182,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_FREE_AMOUNT: hass.data[DOMAIN]["free_amount"],
             CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
             CONF_OVERRIDE_USERS: hass.data[DOMAIN].get("override_users", []),
+            CONF_CURRENCY: hass.data[DOMAIN].get(CONF_CURRENCY, "€"),
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
@@ -198,6 +206,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
             CONF_EXCLUDED_USERS: hass.data[DOMAIN]["excluded_users"],
             CONF_OVERRIDE_USERS: hass.data[DOMAIN].get("override_users", []),
+            CONF_CURRENCY: hass.data[DOMAIN].get(CONF_CURRENCY, "€"),
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
@@ -211,6 +220,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
             CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
             CONF_OVERRIDE_USERS: hass.data[DOMAIN]["override_users"],
+            CONF_CURRENCY: hass.data[DOMAIN].get(CONF_CURRENCY, "€"),
+        }
+        if "drinks" in hass.data[DOMAIN]:
+            entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
+        hass.config_entries.async_update_entry(entry, data=entry_data)
+    if (
+        not hass.data[DOMAIN].get(CONF_CURRENCY)
+        and entry.data.get(CONF_CURRENCY) is not None
+    ):
+        hass.data[DOMAIN][CONF_CURRENCY] = entry.data[CONF_CURRENCY]
+    if (
+        hass.data[DOMAIN].get(CONF_CURRENCY) is not None
+        and CONF_CURRENCY not in entry.data
+    ):
+        entry_data = {
+            "user": entry.data.get("user"),
+            CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
+            CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
+            CONF_OVERRIDE_USERS: hass.data[DOMAIN].get("override_users", []),
+            CONF_CURRENCY: hass.data[DOMAIN][CONF_CURRENCY],
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
@@ -231,6 +260,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN].pop("free_amount", None)
             hass.data[DOMAIN].pop(CONF_EXCLUDED_USERS, None)
             hass.data[DOMAIN].pop(CONF_OVERRIDE_USERS, None)
+            hass.data[DOMAIN].pop(CONF_CURRENCY, None)
         if not any(
             isinstance(value, dict) and "entry" in value
             for value in hass.data.get(DOMAIN, {}).values()

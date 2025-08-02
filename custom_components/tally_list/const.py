@@ -7,6 +7,7 @@ CONF_PRICE = "price"
 CONF_FREE_AMOUNT = "free_amount"
 CONF_EXCLUDED_USERS = "excluded_users"
 CONF_OVERRIDE_USERS = "override_users"
+CONF_CURRENCY = "currency"
 
 ATTR_USER = "user"
 ATTR_DRINK = "drink"

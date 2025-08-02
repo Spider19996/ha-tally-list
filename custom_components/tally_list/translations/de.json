@@ -17,6 +17,12 @@
           "price": "Preis",
           "add_more": "Weiteres hinzufügen"
         }
+      },
+      "set_currency": {
+        "title": "Währung setzen",
+        "data": {
+          "currency": "Währung"
+        }
       }
     },
     "error": {
@@ -32,6 +38,7 @@
             "remove": "Entfernen",
             "edit": "Bearbeiten",
             "free_amount": "Freibetrag",
+            "currency": "Währung setzen",
             "exclude": "Ausschließen",
             "include": "Einschließen",
             "authorize": "Berechtigen",
@@ -67,6 +74,12 @@
           "title": "Freibetrag setzen",
           "data": {
             "free_amount": "Freibetrag"
+          }
+        },
+        "currency": {
+          "title": "Währung setzen",
+          "data": {
+            "currency": "Währung"
           }
         },
         "add_excluded_user": {
@@ -111,6 +124,7 @@
           "remove": "Entfernen",
           "edit": "Bearbeiten",
           "free_amount": "Freibetrag",
+          "currency": "Währung setzen",
           "exclude": "Ausschließen",
           "include": "Einschließen",
           "authorize": "Berechtigen",

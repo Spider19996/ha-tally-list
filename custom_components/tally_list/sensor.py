@@ -7,7 +7,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, CONF_USER, PRICE_LIST_USER
+from .const import DOMAIN, CONF_USER, PRICE_LIST_USER, CONF_CURRENCY
 
 
 async def async_setup_entry(
@@ -47,7 +47,9 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         self._attr_name = f"{entry.data[CONF_USER]} {drink} Count"
         self._attr_unique_id = f"{entry.entry_id}_{drink}_count"
         self._attr_native_value = 0
-        self._attr_native_unit_of_measurement = "€"
+        self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
+            CONF_CURRENCY, "€"
+        )
 
     async def async_added_to_hass(self) -> None:
         last_state = await self.async_get_last_state()
@@ -68,6 +70,9 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         await self.async_update_state()
 
     async def async_update_state(self):
+        self._attr_native_unit_of_measurement = self._hass.data.get(
+            DOMAIN, {}
+        ).get(CONF_CURRENCY, "€")
         self.async_write_ha_state()
 
     @property
@@ -94,12 +99,17 @@ class DrinkPriceSensor(SensorEntity):
         self._attr_should_poll = False
         self._attr_name = f"{entry.data[CONF_USER]} {drink} Price"
         self._attr_unique_id = f"{entry.entry_id}_{drink}_price"
-        self._attr_native_unit_of_measurement = "€"
+        self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
+            CONF_CURRENCY, "€"
+        )
 
     async def async_added_to_hass(self) -> None:
         await self.async_update_state()
 
     async def async_update_state(self):
+        self._attr_native_unit_of_measurement = self._hass.data.get(
+            DOMAIN, {}
+        ).get(CONF_CURRENCY, "€")
         self.async_write_ha_state()
 
     @property
@@ -115,12 +125,17 @@ class FreeAmountSensor(SensorEntity):
         self._attr_should_poll = False
         self._attr_name = f"{entry.data[CONF_USER]} Free Amount"
         self._attr_unique_id = f"{entry.entry_id}_free_amount"
-        self._attr_native_unit_of_measurement = "€"
+        self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
+            CONF_CURRENCY, "€"
+        )
 
     async def async_added_to_hass(self) -> None:
         await self.async_update_state()
 
     async def async_update_state(self):
+        self._attr_native_unit_of_measurement = self._hass.data.get(
+            DOMAIN, {}
+        ).get(CONF_CURRENCY, "€")
         self.async_write_ha_state()
 
     @property
@@ -135,7 +150,9 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
         self._attr_should_poll = False
         self._attr_name = f"{entry.data[CONF_USER]} Amount Due"
         self._attr_unique_id = f"{entry.entry_id}_amount_due"
-        self._attr_native_unit_of_measurement = "€"
+        self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
+            CONF_CURRENCY, "€"
+        )
         self._attr_native_value = 0
         self._attr_suggested_display_precision = 2
 
@@ -143,6 +160,9 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
         await self.async_update_state()
 
     async def async_update_state(self):
+        self._attr_native_unit_of_measurement = self._hass.data.get(
+            DOMAIN, {}
+        ).get(CONF_CURRENCY, "€")
         self.async_write_ha_state()
 
     @property
