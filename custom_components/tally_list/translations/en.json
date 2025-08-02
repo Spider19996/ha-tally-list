@@ -17,6 +17,12 @@
           "price": "Price",
           "add_more": "Add another"
         }
+      },
+      "set_currency": {
+        "title": "Set Currency",
+        "data": {
+          "currency": "Currency"
+        }
       }
     },
     "error": {
@@ -32,6 +38,7 @@
             "remove": "Remove drink",
             "edit": "Edit price",
             "free_amount": "Set free amount",
+            "currency": "Set currency",
             "exclude": "Exclude user",
             "include": "Include user",
             "authorize": "Authorize user",
@@ -67,6 +74,12 @@
           "title": "Set Free Amount",
           "data": {
             "free_amount": "Free amount"
+          }
+        },
+        "currency": {
+          "title": "Set Currency",
+          "data": {
+            "currency": "Currency"
           }
         },
         "add_excluded_user": {
@@ -111,6 +124,7 @@
           "remove": "Remove drink",
           "edit": "Edit price",
           "free_amount": "Set free amount",
+          "currency": "Set currency",
           "exclude": "Exclude user",
           "include": "Include user",
           "authorize": "Authorize user",

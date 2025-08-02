@@ -20,6 +20,7 @@ from .const import (
     CONF_EXCLUDED_USERS,
     CONF_OVERRIDE_USERS,
     PRICE_LIST_USER,
+    CONF_CURRENCY,
 )
 
 
@@ -53,6 +54,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._excluded_users: list[str] = []
         self._override_users: list[str] = []
         self._pending_users: list[str] = []
+        self._currency: str = "€"
 
     async def async_step_import(self, user_input=None):
         """Handle import of a config entry."""
@@ -63,6 +65,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._free_amount = float(user_input.get(CONF_FREE_AMOUNT, 0.0))
         self._excluded_users = user_input.get(CONF_EXCLUDED_USERS, [])
         self._override_users = user_input.get(CONF_OVERRIDE_USERS, [])
+        self._currency = user_input.get(CONF_CURRENCY, "€")
+        if CONF_CURRENCY not in user_input:
+            user_input[CONF_CURRENCY] = self._currency
         return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
@@ -106,6 +111,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_DRINKS in entry.data:
                 self._drinks = entry.data[CONF_DRINKS]
                 self._excluded_users = entry.data.get(CONF_EXCLUDED_USERS, [])
+                self._currency = entry.data.get(CONF_CURRENCY, "€")
                 if not has_price_user:
                     self.hass.async_create_task(
                         self.hass.config_entries.flow.async_init(
@@ -126,10 +132,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                     )
                 self._pending_users = []
-                return self.async_create_entry(
-                    title=self._user,
-                    data={CONF_USER: self._user},
-                )
+                return await self.async_step_set_currency()
 
         return await self.async_step_add_drink()
 
@@ -166,16 +169,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 )
             self._pending_users = []
-
-            return self.async_create_entry(
-                title=self._user,
-                data={
-                    CONF_USER: self._user,
-                    CONF_DRINKS: self._drinks,
-                    CONF_FREE_AMOUNT: 0.0,
-                    CONF_EXCLUDED_USERS: self._excluded_users,
-                },
-            )
+            return await self.async_step_set_currency()
 
         schema = vol.Schema(
             {
@@ -185,6 +179,24 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(step_id="add_drink", data_schema=schema)
+
+    async def async_step_set_currency(self, user_input=None):
+        if user_input is not None:
+            self._currency = user_input[CONF_CURRENCY]
+            return self.async_create_entry(
+                title=self._user,
+                data={
+                    CONF_USER: self._user,
+                    CONF_DRINKS: self._drinks,
+                    CONF_FREE_AMOUNT: 0.0,
+                    CONF_EXCLUDED_USERS: self._excluded_users,
+                    CONF_CURRENCY: self._currency,
+                },
+            )
+        schema = vol.Schema(
+            {vol.Required(CONF_CURRENCY, default=self._currency): str}
+        )
+        return self.async_show_form(step_id="set_currency", data_schema=schema)
 
     @staticmethod
     @callback
@@ -201,6 +213,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._free_amount: float = 0.0
         self._excluded_users: list[str] = []
         self._override_users: list[str] = []
+        self._currency: str = "€"
 
     async def async_step_init(self, user_input=None):
         self._drinks = (
@@ -217,6 +230,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._override_users = (
             self.hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
         ).copy()
+        self._currency = self.hass.data.get(DOMAIN, {}).get(CONF_CURRENCY, "€")
         return await self.async_step_menu()
 
     async def async_step_menu(self, user_input=None):
@@ -227,6 +241,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 "remove",
                 "edit",
                 "free_amount",
+                "currency",
                 "exclude",
                 "include",
                 "authorize",
@@ -247,6 +262,13 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_free_amount(self, user_input=None):
         return await self.async_step_set_free_amount(user_input)
+
+    async def async_step_currency(self, user_input=None):
+        if user_input is not None:
+            self._currency = user_input[CONF_CURRENCY]
+            return await self.async_step_menu()
+        schema = vol.Schema({vol.Required(CONF_CURRENCY, default=self._currency): str})
+        return self.async_show_form(step_id="currency", data_schema=schema)
 
     async def async_step_exclude(self, user_input=None):
         return await self.async_step_add_excluded_user(user_input)
@@ -554,6 +576,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self.hass.data[DOMAIN]["free_amount"] = self._free_amount
         self.hass.data[DOMAIN][CONF_EXCLUDED_USERS] = self._excluded_users
         self.hass.data[DOMAIN][CONF_OVERRIDE_USERS] = self._override_users
+        self.hass.data[DOMAIN][CONF_CURRENCY] = self._currency
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             data = {
@@ -562,6 +585,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_FREE_AMOUNT: self._free_amount,
                 CONF_EXCLUDED_USERS: self._excluded_users,
                 CONF_OVERRIDE_USERS: self._override_users,
+                CONF_CURRENCY: self._currency,
             }
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -576,5 +600,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_FREE_AMOUNT: self._free_amount,
                 CONF_EXCLUDED_USERS: self._excluded_users,
                 CONF_OVERRIDE_USERS: self._override_users,
+                CONF_CURRENCY: self._currency,
             },
         )
