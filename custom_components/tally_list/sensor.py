@@ -98,6 +98,7 @@ class DrinkPriceSensor(SensorEntity):
         self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
             CONF_CURRENCY, "€"
         )
+        self._attr_suggested_display_precision = 2
 
     async def async_added_to_hass(self) -> None:
         await self.async_update_state()
@@ -111,7 +112,7 @@ class DrinkPriceSensor(SensorEntity):
     @property
     def native_value(self):
         drinks = self._hass.data.get(DOMAIN, {}).get("drinks", {})
-        return drinks.get(self._drink, self._price)
+        return round(drinks.get(self._drink, self._price), 2)
 
 
 class FreeAmountSensor(SensorEntity):
@@ -124,6 +125,7 @@ class FreeAmountSensor(SensorEntity):
         self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
             CONF_CURRENCY, "€"
         )
+        self._attr_suggested_display_precision = 2
 
     async def async_added_to_hass(self) -> None:
         await self.async_update_state()
@@ -136,7 +138,7 @@ class FreeAmountSensor(SensorEntity):
 
     @property
     def native_value(self):
-        return self._hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
+        return round(self._hass.data.get(DOMAIN, {}).get("free_amount", 0.0), 2)
 
 
 class TotalAmountSensor(RestoreEntity, SensorEntity):
