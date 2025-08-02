@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.helpers import entity_registry as er
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 
 from .const import (
     DOMAIN,
@@ -27,28 +27,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _parse_float(hass: HomeAssistant, value: str) -> float:
-    """Parse a localized float using Home Assistant's locale settings."""
-    decimal = hass.config.locale.decimal_separator
-    thousands = hass.config.locale.thousands_separator
-    value = value.strip()
-    if thousands:
-        value = value.replace(thousands, "")
-    if decimal and decimal != ".":
-        value = value.replace(decimal, ".")
-    return float(value)
-
-
-def _format_float(hass: HomeAssistant, value: float) -> str:
-    """Format a float according to Home Assistant's locale settings."""
-    decimal = hass.config.locale.decimal_separator
-    text = f"{value}"
-    if decimal and decimal != ".":
-        text = text.replace(".", decimal)
-    return text
-
-
-def _parse_drinks(hass: HomeAssistant, value: str) -> dict[str, float]:
+def _parse_drinks(value: str) -> dict[str, float]:
     drinks: dict[str, float] = {}
     if not value:
         return drinks
@@ -59,7 +38,7 @@ def _parse_drinks(hass: HomeAssistant, value: str) -> dict[str, float]:
         if "=" not in part:
             raise ValueError
         name, price = part.split("=", 1)
-        drinks[name.strip()] = _parse_float(hass, price)
+        drinks[name.strip()] = float(price)
     return drinks
 
 
@@ -83,9 +62,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_import")
         self._user = user_input.get(CONF_USER)
         self._drinks = user_input.get(CONF_DRINKS, {})
-        self._free_amount = _parse_float(
-            self.hass, str(user_input.get(CONF_FREE_AMOUNT, 0.0))
-        )
+        self._free_amount = float(user_input.get(CONF_FREE_AMOUNT, 0.0))
         self._excluded_users = user_input.get(CONF_EXCLUDED_USERS, [])
         self._override_users = user_input.get(CONF_OVERRIDE_USERS, [])
         self._currency = user_input.get(CONF_CURRENCY, "€")
@@ -162,7 +139,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_add_drink(self, user_input=None):
         if user_input is not None:
             drink = user_input[CONF_DRINK]
-            price = _parse_float(self.hass, user_input[CONF_PRICE])
+            price = float(user_input[CONF_PRICE])
             self._drinks[drink] = price
             if user_input.get("add_more"):
                 return await self.async_step_add_drink()
@@ -197,7 +174,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_DRINK): str,
-                vol.Required(CONF_PRICE): str,
+                vol.Required(CONF_PRICE): vol.Coerce(float),
                 vol.Optional("add_more", default=False): bool,
             }
         )
@@ -327,7 +304,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_add_drink(self, user_input=None):
         if user_input is not None:
             drink = user_input[CONF_DRINK]
-            price = _parse_float(self.hass, user_input[CONF_PRICE])
+            price = float(user_input[CONF_PRICE])
             self._drinks[drink] = price
             if user_input.get("add_more"):
                 return await self.async_step_add_drink()
@@ -336,7 +313,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         schema = vol.Schema(
             {
                 vol.Required(CONF_DRINK): str,
-                vol.Required(CONF_PRICE): str,
+                vol.Required(CONF_PRICE): vol.Coerce(float),
                 vol.Optional("add_more", default=False): bool,
             }
         )
@@ -364,7 +341,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_edit_price(self, user_input=None):
         if user_input is not None:
             drink = user_input[CONF_DRINK]
-            price = _parse_float(self.hass, user_input[CONF_PRICE])
+            price = float(user_input[CONF_PRICE])
             self._drinks[drink] = price
             if user_input.get("edit_more") and self._drinks:
                 return await self.async_step_edit_price()
@@ -376,7 +353,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         schema = vol.Schema(
             {
                 vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
-                vol.Required(CONF_PRICE): str,
+                vol.Required(CONF_PRICE): vol.Coerce(float),
                 vol.Optional("edit_more", default=False): bool,
             }
         )
@@ -384,14 +361,14 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_set_free_amount(self, user_input=None):
         if user_input is not None:
-            self._free_amount = _parse_float(self.hass, user_input[CONF_FREE_AMOUNT])
+            self._free_amount = float(user_input[CONF_FREE_AMOUNT])
             return await self.async_step_menu()
         schema = vol.Schema(
             {
                 vol.Required(
                     CONF_FREE_AMOUNT,
-                    default=_format_float(self.hass, self._free_amount),
-                ): str
+                    default=self._free_amount,
+                ): vol.Coerce(float)
             }
         )
         return self.async_show_form(
