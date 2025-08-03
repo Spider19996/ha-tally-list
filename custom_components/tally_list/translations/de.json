@@ -34,17 +34,31 @@
         "menu": {
           "title": "Strichliste verwalten",
           "menu_options": {
+            "user": "Nutzereinstellungen",
+            "drinks": "Getränkeeinstellungen",
+            "cleanup": "Nicht mehr genutzte Sensoren entfernen",
+            "finish": "Fertig"
+          }
+        },
+        "user": {
+          "title": "Nutzereinstellungen",
+          "menu_options": {
+            "free_amount": "Freibetrag setzen",
+            "exclude": "Nutzer ausschließen",
+            "include": "Ausschluss aufheben",
+            "authorize": "Nutzer berechtigen",
+            "unauthorize": "Berechtigung entziehen",
+            "back": "Zurück"
+          }
+        },
+        "drinks": {
+          "title": "Getränkeeinstellungen",
+          "menu_options": {
             "add": "Hinzufügen",
             "remove": "Entfernen",
             "edit": "Bearbeiten",
-            "free_amount": "Freibetrag",
             "currency": "Währung setzen",
-            "exclude": "Ausschließen",
-            "include": "Einschließen",
-            "authorize": "Berechtigen",
-            "unauthorize": "Entziehen",
-            "cleanup": "Nicht mehr genutzte Sensoren entfernen",
-            "finish": "Fertig"
+            "back": "Zurück"
           }
         },
         "add_drink": {
@@ -120,6 +134,8 @@
       },
       "enum": {
         "action": {
+          "user": "Nutzereinstellungen",
+          "drinks": "Getränkeeinstellungen",
           "add": "Hinzufügen",
           "remove": "Entfernen",
           "edit": "Bearbeiten",
@@ -130,7 +146,8 @@
           "authorize": "Berechtigen",
           "unauthorize": "Entziehen",
           "cleanup": "Nicht mehr genutzte Sensoren entfernen",
-          "finish": "Fertig"
+          "finish": "Fertig",
+          "back": "Zurück"
         }
       }
     }

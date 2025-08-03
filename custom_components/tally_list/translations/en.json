@@ -32,19 +32,33 @@
   "options": {
     "step": {
         "menu": {
-          "title": "Manage Drinks",
+          "title": "Tally List Options",
           "menu_options": {
-            "add": "Add drink",
-            "remove": "Remove drink",
-            "edit": "Edit price",
+            "user": "User settings",
+            "drinks": "Drink settings",
+            "cleanup": "Remove unused sensors",
+            "finish": "Done"
+          }
+        },
+        "user": {
+          "title": "User settings",
+          "menu_options": {
             "free_amount": "Set free amount",
-            "currency": "Set currency",
             "exclude": "Exclude user",
             "include": "Include user",
             "authorize": "Authorize user",
             "unauthorize": "Unauthorize user",
-            "cleanup": "Remove unused sensors",
-            "finish": "Done"
+            "back": "Back"
+          }
+        },
+        "drinks": {
+          "title": "Drink settings",
+          "menu_options": {
+            "add": "Add drink",
+            "remove": "Remove drink",
+            "edit": "Edit price",
+            "currency": "Set currency",
+            "back": "Back"
           }
         },
         "add_drink": {
@@ -120,6 +134,8 @@
       },
       "enum": {
         "action": {
+          "user": "User settings",
+          "drinks": "Drink settings",
           "add": "Add drink",
           "remove": "Remove drink",
           "edit": "Edit price",
@@ -130,7 +146,8 @@
           "authorize": "Authorize user",
           "unauthorize": "Unauthorize user",
           "cleanup": "Remove unused sensors",
-          "finish": "Done"
+          "finish": "Done",
+          "back": "Back"
         }
       }
   }
