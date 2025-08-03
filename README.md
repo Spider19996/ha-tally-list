@@ -55,3 +55,7 @@ The response contains the usernames in an array and includes the WebSocket metad
 ```json
 {"id":42,"type":"result","success":true,"result":{"admins":["tablet_dashboard","Test","Test 2"]}}
 ```
+
+## Acknowledgements
+
+This entire script was generated with the help of ChatGPT / Codex.
