@@ -237,19 +237,40 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_menu(
             step_id="menu",
             menu_options=[
-                "add",
-                "remove",
-                "edit",
-                "free_amount",
-                "currency",
-                "exclude",
-                "include",
-                "authorize",
-                "unauthorize",
+                "user",
+                "drinks",
                 "cleanup",
                 "finish",
             ],
         )
+
+    async def async_step_user(self, user_input=None):
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=[
+                "free_amount",
+                "exclude",
+                "include",
+                "authorize",
+                "unauthorize",
+                "back",
+            ],
+        )
+
+    async def async_step_drinks(self, user_input=None):
+        return self.async_show_menu(
+            step_id="drinks",
+            menu_options=[
+                "add",
+                "remove",
+                "edit",
+                "currency",
+                "back",
+            ],
+        )
+
+    async def async_step_back(self, user_input=None):
+        return await self.async_step_menu()
 
     async def async_step_add(self, user_input=None):
         return await self.async_step_add_drink(user_input)
