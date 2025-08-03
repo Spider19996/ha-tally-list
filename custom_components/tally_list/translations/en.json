@@ -44,10 +44,10 @@
           "title": "User settings",
           "menu_options": {
             "free_amount": "Set free amount",
-            "exclude": "Exclude user",
-            "include": "Include user",
-            "authorize": "Authorize user",
-            "unauthorize": "Unauthorize user",
+            "exclude": "Exclude person",
+            "include": "Include person",
+            "authorize": "Grant admin rights",
+            "unauthorize": "Revoke admin rights",
             "back": "Back"
           }
         },
@@ -97,30 +97,30 @@
           }
         },
         "add_excluded_user": {
-          "title": "Exclude User",
+          "title": "Exclude Person",
           "data": {
-            "user": "User",
+            "user": "Person",
             "add_more": "Exclude another"
           }
         },
         "remove_excluded_user": {
-          "title": "Include User",
+          "title": "Include Person",
           "data": {
-            "user": "User",
+            "user": "Person",
             "remove_more": "Include another"
           }
         },
         "add_override_user": {
-          "title": "Authorize User",
+          "title": "Grant Admin Rights",
           "data": {
-            "user": "User",
+            "user": "Person",
             "add_more": "Authorize another"
           }
         },
         "remove_override_user": {
-          "title": "Unauthorize User",
+          "title": "Revoke Admin Rights",
           "data": {
-            "user": "User",
+            "user": "Person",
             "remove_more": "Unauthorize another"
           }
         },
@@ -141,10 +141,10 @@
           "edit": "Edit price",
           "free_amount": "Set free amount",
           "currency": "Set currency",
-          "exclude": "Exclude user",
-          "include": "Include user",
-          "authorize": "Authorize user",
-          "unauthorize": "Unauthorize user",
+          "exclude": "Exclude person",
+          "include": "Include person",
+          "authorize": "Grant admin rights",
+          "unauthorize": "Revoke admin rights",
           "cleanup": "Remove unused sensors",
           "finish": "Done",
           "back": "Back"
