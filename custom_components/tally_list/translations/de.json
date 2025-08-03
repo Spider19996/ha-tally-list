@@ -44,10 +44,10 @@
           "title": "Nutzereinstellungen",
           "menu_options": {
             "free_amount": "Freibetrag setzen",
-            "exclude": "Nutzer ausschließen",
-            "include": "Ausschluss aufheben",
-            "authorize": "Nutzer berechtigen",
-            "unauthorize": "Berechtigung entziehen",
+            "exclude": "Person ausschließen",
+            "include": "Person einschließen",
+            "authorize": "Adminrechte vergeben",
+            "unauthorize": "Adminrechte entziehen",
             "back": "Zurück"
           }
         },
@@ -97,30 +97,30 @@
           }
         },
         "add_excluded_user": {
-          "title": "Nutzer ausschließen",
+          "title": "Person ausschließen",
           "data": {
-            "user": "Nutzer",
+            "user": "Person",
             "add_more": "Weiteren ausschließen"
           }
         },
         "remove_excluded_user": {
-          "title": "Ausschluss aufheben",
+          "title": "Person einschließen",
           "data": {
-            "user": "Nutzer",
+            "user": "Person",
             "remove_more": "Weiteren einschließen"
           }
         },
         "add_override_user": {
-          "title": "Nutzer berechtigen",
+          "title": "Adminrechte vergeben",
           "data": {
-            "user": "Nutzer",
+            "user": "Person",
             "add_more": "Weiteren berechtigen"
           }
         },
         "remove_override_user": {
-          "title": "Berechtigung entziehen",
+          "title": "Adminrechte entziehen",
           "data": {
-            "user": "Nutzer",
+            "user": "Person",
             "remove_more": "Weiteren entziehen"
           }
         },
@@ -141,10 +141,10 @@
           "edit": "Bearbeiten",
           "free_amount": "Freibetrag",
           "currency": "Währung setzen",
-          "exclude": "Ausschließen",
-          "include": "Einschließen",
-          "authorize": "Berechtigen",
-          "unauthorize": "Entziehen",
+          "exclude": "Person ausschließen",
+          "include": "Person einschließen",
+          "authorize": "Adminrechte vergeben",
+          "unauthorize": "Adminrechte entziehen",
           "cleanup": "Nicht mehr genutzte Sensoren entfernen",
           "finish": "Fertig",
           "back": "Zurück"
