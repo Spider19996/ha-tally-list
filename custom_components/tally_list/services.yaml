@@ -43,29 +43,66 @@ export_csv:
   name: Export CSV
   description: Export all amount_due sensors to CSV files
   fields:
-    backup:
-      description: Type of backup to create
-      required: true
-      example: daily
+    daily_enable:
+      description: Enable daily export
+      required: false
+      default: false
       selector:
-        select:
-          options:
-            - daily
-            - weekly
-            - monthly
-            - manual
-    interval:
-      description: Only for monthly backups, export every n-th month
+        boolean:
+    daily_keep_days:
+      description: Days to keep daily exports
+      required: false
+      example: 7
+      selector:
+        number:
+          min: 1
+          step: 1
+    weekly_enable:
+      description: Enable weekly export
+      required: false
+      default: false
+      selector:
+        boolean:
+    weekly_keep_days:
+      description: Days to keep weekly exports
+      required: false
+      example: 30
+      selector:
+        number:
+          min: 1
+          step: 1
+    monthly_enable:
+      description: Enable monthly export
+      required: false
+      default: false
+      selector:
+        boolean:
+    monthly_interval:
+      description: Only export every n-th month
       required: false
       example: 3
       selector:
         number:
           min: 1
           step: 1
-    keep_days:
-      description: Days to keep exports (defaults: daily 7, weekly 30, monthly 365, manual 180)
+    monthly_keep_days:
+      description: Days to keep monthly exports
       required: false
-      example: 7
+      example: 365
+      selector:
+        number:
+          min: 1
+          step: 1
+    manual_enable:
+      description: Enable manual export
+      required: false
+      default: false
+      selector:
+        boolean:
+    manual_keep_days:
+      description: Days to keep manual exports
+      required: false
+      example: 180
       selector:
         number:
           min: 1
