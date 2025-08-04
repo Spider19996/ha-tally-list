@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import csv
+import os
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.exceptions import Unauthorized
+from homeassistant.util.dt import now as dt_now
 
 from .websocket import async_register as async_register_ws
 
@@ -15,6 +19,7 @@ from .const import (
     SERVICE_REMOVE_DRINK,
     SERVICE_ADJUST_COUNT,
     SERVICE_RESET_COUNTERS,
+    SERVICE_EXPORT_CSV,
     ATTR_USER,
     ATTR_DRINK,
     CONF_USER,
@@ -119,6 +124,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
 
+    async def export_csv_service(call):
+        sensors = [
+            state
+            for state in hass.states.async_all("sensor")
+            if state.entity_id.endswith("_amount_due")
+        ]
+        currency = hass.data.get(DOMAIN, {}).get(CONF_CURRENCY, "€")
+        timestamp = dt_now().strftime("%Y-%m-%d_%H-%M")
+        directory = hass.config.path("backup", "tally_list")
+        file_path = os.path.join(directory, f"amount_due_{timestamp}.csv")
+
+        def _write() -> None:
+            os.makedirs(directory, exist_ok=True)
+            with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(["Name", f"Betrag ({currency})"])
+                for state in sensors:
+                    try:
+                        amount = float(state.state)
+                    except (ValueError, TypeError):
+                        amount = 0.0
+                        
+                    writer.writerow([state.name, f"{amount:.2f}"])
+
+        await hass.async_add_executor_job(_write)
+
 
     hass.services.async_register(
         DOMAIN,
@@ -142,6 +173,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_RESET_COUNTERS,
         reset_counters_service,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_EXPORT_CSV,
+        export_csv_service,
     )
 
     await async_register_ws(hass)
