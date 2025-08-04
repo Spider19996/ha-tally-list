@@ -43,66 +43,32 @@ export_csv:
   name: Export CSV
   description: Export all amount_due sensors to CSV files
   fields:
-    daily_enable:
-      description: Enable daily export
-      required: false
-      default: false
+    backup:
+      description: Type of backup to create
+      required: true
       selector:
-        boolean:
-    daily_keep_days:
-      description: Days to keep daily exports
+        select:
+          options:
+            - daily
+            - weekly
+            - monthly
+            - manual
+    interval:
+      description: >-
+        Create a backup every X days, weeks or months depending on the selected
+        backup. Ignored for manual backups.
+      required: false
+      example: 1
+      selector:
+        number:
+          min: 1
+          step: 1
+    keep:
+      description: >-
+        Delete backups older than X days, weeks or months depending on the
+        selected backup. For manual backups keep only the latest X files.
       required: false
       example: 7
-      selector:
-        number:
-          min: 1
-          step: 1
-    weekly_enable:
-      description: Enable weekly export
-      required: false
-      default: false
-      selector:
-        boolean:
-    weekly_keep_days:
-      description: Days to keep weekly exports
-      required: false
-      example: 30
-      selector:
-        number:
-          min: 1
-          step: 1
-    monthly_enable:
-      description: Enable monthly export
-      required: false
-      default: false
-      selector:
-        boolean:
-    monthly_interval:
-      description: Only export every n-th month
-      required: false
-      example: 3
-      selector:
-        number:
-          min: 1
-          step: 1
-    monthly_keep_days:
-      description: Days to keep monthly exports
-      required: false
-      example: 365
-      selector:
-        number:
-          min: 1
-          step: 1
-    manual_enable:
-      description: Enable manual export
-      required: false
-      default: false
-      selector:
-        boolean:
-    manual_keep_days:
-      description: Days to keep manual exports
-      required: false
-      example: 180
       selector:
         number:
           min: 1

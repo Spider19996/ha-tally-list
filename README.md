@@ -38,8 +38,11 @@ Call `tally_list.export_csv` to create CSV snapshots of all `_amount_due` sensor
 - `manual/amount_due_manual_YYYY-MM-DD_HH-MM.csv`
 
 The exported files list each person without the trailing `Amount Due` text.
+The service accepts the following parameters:
 
-All sections are disabled by default and can be toggled from the service call UI via the `daily_enable`, `weekly_enable`, `monthly_enable`, or `manual_enable` options. Optional `*_keep_days` parameters control how long files are retained, and the monthly export supports a `monthly_interval` to only create files every n-th month.
+- `backup`: Required. Choose `daily`, `weekly`, `monthly`, or `manual`.
+- `interval`: Optional. Create a backup only every n-th day, week, or month depending on the selected backup. Ignored for manual backups.
+- `keep`: Optional. For daily backups remove files older than this number of days. For weekly and monthly backups the value is interpreted as weeks or months. Manual backups keep only the latest number of files.
 
 ## Price List and Sensors
 
