@@ -41,4 +41,30 @@ reset_counters:
       required: false
 export_csv:
   name: Export CSV
-  description: Export all amount_due sensors to a CSV file
+  description: Export all amount_due sensors to CSV files
+  fields:
+    daily:
+      description: Daily export configuration
+      required: false
+      example:
+        enable: true
+        keep_days: 7
+    weekly:
+      description: Weekly export configuration
+      required: false
+      example:
+        enable: true
+        keep_days: 30
+    monthly:
+      description: Monthly export configuration
+      required: false
+      example:
+        enable: true
+        interval: 3
+        keep_days: 365
+    manual:
+      description: Manual export configuration
+      required: false
+      example:
+        enable: true
+        keep_days: 180
