@@ -1,8 +1,8 @@
 # Tally List Integration
 
-This custom integration for [Home Assistant](https://www.home-assistant.io/) is distributed via HACS and helps you manage drink tallies for multiple persons. All persons with a linked Home Assistant user account are imported automatically. Drinks are defined once and shared across everyone.
+🇩🇪 [Deutsche Version lesen](README.de.md)
 
-English • [Deutsch](README.de.md)
+This custom integration for [Home Assistant](https://www.home-assistant.io/) is distributed via HACS and helps you manage drink tallies for multiple persons. All persons with a linked Home Assistant user account are imported automatically. Drinks are defined once and shared across everyone.
 
 ## Features
 
@@ -55,7 +55,3 @@ Example response:
 ```json
 {"id":42,"type":"result","success":true,"result":{"admins":["tablet_dashboard","Test","Test 2"]}}
 ```
-
-## Acknowledgements
-
-Thanks to the Home Assistant community.
