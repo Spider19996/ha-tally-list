@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import os
+from datetime import datetime, timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -134,24 +135,107 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             key=lambda state: state.name.casefold(),
         )
         currency = hass.data.get(DOMAIN, {}).get(CONF_CURRENCY, "€")
-        timestamp = dt_now().strftime("%Y-%m-%d_%H-%M")
-        directory = hass.config.path("backup", "tally_list")
-        file_path = os.path.join(directory, f"amount_due_{timestamp}.csv")
+        now = dt_now()
+        base_dir = hass.config.path("backup", "tally_list")
 
-        def _write() -> None:
-            os.makedirs(directory, exist_ok=True)
-        with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(["Name", f"Betrag ({currency})"])
-            for state in sensors:
-                try:
-                    amount = float(state.state)
-                except (ValueError, TypeError):
-                    amount = 0.0
+        def _write_csv(path: str) -> None:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(["Name", f"Betrag ({currency})"])
+                for state in sensors:
+                    try:
+                        amount = float(state.state)
+                    except (ValueError, TypeError):
+                        amount = 0.0
+                    writer.writerow([state.name, f"{amount:.2f}"])
 
-                writer.writerow([state.name, f"{amount:.2f}"])
+        def _cleanup(path: str, keep: int | None) -> None:
+            if keep is None or keep <= 0:
+                return
+            cutoff = now - timedelta(days=keep)
+            if not os.path.isdir(path):
+                return
+            for filename in os.listdir(path):
+                file_path = os.path.join(path, filename)
+                if not os.path.isfile(file_path):
+                    continue
+                mtime = datetime.fromtimestamp(
+                    os.path.getmtime(file_path), tz=now.tzinfo
+                )
+                if mtime < cutoff:
+                    os.remove(file_path)
 
-        await hass.async_add_executor_job(_write)
+        daily_cfg = {
+            "enable": call.data.get("daily_enable", False),
+            "keep_days": call.data.get("daily_keep_days", 7),
+        }
+        if "daily" in call.data:
+            daily_cfg.update(call.data["daily"])
+        weekly_cfg = {
+            "enable": call.data.get("weekly_enable", False),
+            "keep_days": call.data.get("weekly_keep_days", 30),
+        }
+        if "weekly" in call.data:
+            weekly_cfg.update(call.data["weekly"])
+        monthly_cfg = {
+            "enable": call.data.get("monthly_enable", False),
+            "interval": call.data.get("monthly_interval", 3),
+            "keep_days": call.data.get("monthly_keep_days", 365),
+        }
+        if "monthly" in call.data:
+            monthly_cfg.update(call.data["monthly"])
+        manual_cfg = {
+            "enable": call.data.get("manual_enable", False),
+            "keep_days": call.data.get("manual_keep_days", 180),
+        }
+        if "manual" in call.data:
+            manual_cfg.update(call.data["manual"])
+
+        if daily_cfg.get("enable"):
+            file_path = os.path.join(
+                base_dir, "daily", f"amount_due_{now.strftime('%Y-%m-%d_%H-%M')}.csv"
+            )
+            await hass.async_add_executor_job(_write_csv, file_path)
+        await hass.async_add_executor_job(
+            _cleanup, os.path.join(base_dir, "daily"), daily_cfg.get("keep_days")
+        )
+
+        if weekly_cfg.get("enable"):
+            iso_year, iso_week, _ = now.isocalendar()
+            weekly_file = os.path.join(
+                base_dir,
+                "weekly",
+                f"amount_due_week_{iso_year}-{iso_week:02d}.csv",
+            )
+            if not os.path.exists(weekly_file):
+                await hass.async_add_executor_job(_write_csv, weekly_file)
+        await hass.async_add_executor_job(
+            _cleanup, os.path.join(base_dir, "weekly"), weekly_cfg.get("keep_days")
+        )
+
+        if monthly_cfg.get("enable"):
+            interval = monthly_cfg.get("interval", 1) or 1
+            if now.month % interval == 0:
+                monthly_file = os.path.join(
+                    base_dir, "monthly", f"amount_due_{now.strftime('%Y-%m')}.csv"
+                )
+                if not os.path.exists(monthly_file):
+                    await hass.async_add_executor_job(_write_csv, monthly_file)
+        await hass.async_add_executor_job(
+            _cleanup, os.path.join(base_dir, "monthly"), monthly_cfg.get("keep_days")
+        )
+
+        if manual_cfg.get("enable"):
+            manual_file = os.path.join(
+                base_dir,
+                "manual",
+                f"amount_due_manual_{now.strftime('%Y-%m-%d_%H-%M')}.csv",
+            )
+            await hass.async_add_executor_job(_write_csv, manual_file)
+        await hass.async_add_executor_job(
+            _cleanup, os.path.join(base_dir, "manual"), manual_cfg.get("keep_days")
+        )
 
     hass.services.async_register(
         DOMAIN,
