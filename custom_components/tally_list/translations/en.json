@@ -150,5 +150,81 @@
           "back": "Back"
         }
       }
+  },
+  "services": {
+    "add_drink": {
+      "name": "Add drink",
+      "description": "Increment drink counter for a person",
+      "fields": {
+        "user": {
+          "name": "Person name",
+          "description": "Person name"
+        },
+        "drink": {
+          "name": "Drink name",
+          "description": "Drink name"
+        }
+      }
+    },
+    "remove_drink": {
+      "name": "Remove drink",
+      "description": "Decrement drink counter for a person",
+      "fields": {
+        "user": {
+          "name": "Person name",
+          "description": "Person name"
+        },
+        "drink": {
+          "name": "Drink name",
+          "description": "Drink name"
+        }
+      }
+    },
+    "adjust_count": {
+      "name": "Adjust count",
+      "description": "Set drink count for a person",
+      "fields": {
+        "user": {
+          "name": "Person name",
+          "description": "Person name"
+        },
+        "drink": {
+          "name": "Drink name",
+          "description": "Drink name"
+        },
+        "count": {
+          "name": "Count",
+          "description": "Desired drink count"
+        }
+      }
+    },
+    "reset_counters": {
+      "name": "Reset counters",
+      "description": "Reset counters for a person. If no user is specified, reset all.",
+      "fields": {
+        "user": {
+          "name": "Person name",
+          "description": "Person name"
+        }
+      }
+    },
+    "export_csv": {
+      "name": "Export CSV",
+      "description": "Export all amount_due sensors to CSV files",
+      "fields": {
+        "backup": {
+          "name": "Backup type",
+          "description": "Type of backup to create"
+        },
+        "interval": {
+          "name": "Interval",
+          "description": "Create a backup every X days, weeks or months depending on the selected backup. Ignored for manual backups."
+        },
+        "keep": {
+          "name": "Keep",
+          "description": "Delete backups older than X days, weeks or months depending on the selected backup. For manual backups keep only the latest X files."
+        }
+      }
+    }
   }
 }
