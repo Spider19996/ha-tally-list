@@ -148,7 +148,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         amount = float(state.state)
                     except (ValueError, TypeError):
                         amount = 0.0
-                    writer.writerow([state.name, f"{amount:.2f}"])
+                    name = state.name.replace(" Amount Due", "")
+                    writer.writerow([name, f"{amount:.2f}"])
 
         def _cleanup(path: str, keep: int | None) -> None:
             if keep is None or keep <= 0:
@@ -190,7 +191,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             weekly_file = os.path.join(
                 base_dir,
                 "weekly",
-                f"amount_due_week_{iso_year}-{iso_week:02d}.csv",
+                f"amount_due_weekly_{iso_year}-{iso_week:02d}.csv",
             )
             if not os.path.exists(weekly_file):
                 await hass.async_add_executor_job(_write_csv, weekly_file)
