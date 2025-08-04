@@ -14,7 +14,7 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 - Service `tally_list.add_drink` to add a drink for a person.
 - Service `tally_list.remove_drink` to remove a drink for a person.
 - Service `tally_list.adjust_count` to set a drink count to a specific value.
-- Service `tally_list.export_csv` to export all amount_due sensors to CSV files (daily, weekly, monthly or manual), sorted alphabetically by name.
+- Service `tally_list.export_csv` to export all amount_due sensors to a CSV file, sorted alphabetically by name.
 - Counters cannot go below zero when removing drinks.
 - Exclude persons from automatic import via the integration options.
 - Grant override permissions to selected users so they can tally drinks for
@@ -30,14 +30,7 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 ## Usage
 
 When the integration is first set up, all persons with a user account are added and you will be asked to enter the available drinks. All further persons will automatically use this list. Drinks can later be managed from the integration options where you can add, remove or edit their prices. Call the service `tally_list.add_drink` with parameters `user` and `drink` to increment the counter. Use `tally_list.adjust_count` with `count` to set an exact value. To decrement by one call `tally_list.remove_drink` with `user` and `drink`. Only Tally Admins can use the reset button entity to reset all counters. The reset button entity ID follows `button.<person>_reset_tally`, so you can match all reset buttons with `button.*_reset_tally`.
-Call `tally_list.export_csv` to create CSV snapshots of all `_amount_due` sensors sorted alphabetically by name. Depending on the parameters, the service writes files to `/config/backup/tally_list/` in the subfolders `daily`, `weekly`, `monthly` or `manual`:
-
-- `daily/amount_due_YYYY-MM-DD_HH-MM.csv`
-- `weekly/amount_due_week_YYYY-WW.csv`
-- `monthly/amount_due_YYYY-MM.csv`
-- `manual/amount_due_manual_YYYY-MM-DD_HH-MM.csv`
-
-Each section can optionally define a retention period (`keep_days`) and the monthly export supports an `interval` to only create files every n-th month.
+Call `tally_list.export_csv` to create a CSV snapshot of all `_amount_due` sensors sorted alphabetically by name. The file is stored as `amount_due_YYYY-MM-DD_HH-MM.csv` inside `/config/backup/tally_list/`.
 
 ## Price List and Sensors
 
