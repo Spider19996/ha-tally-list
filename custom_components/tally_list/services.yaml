@@ -39,3 +39,6 @@ reset_counters:
       description: Person name
       example: Alice
       required: false
+export_csv:
+  name: Export CSV
+  description: Export all amount_due sensors to a CSV file
