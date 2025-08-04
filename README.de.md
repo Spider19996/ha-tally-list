@@ -55,8 +55,3 @@ Beispielantwort:
 ```json
 {"id":42,"type":"result","success":true,"result":{"admins":["tablet_dashboard","Test","Test 2"]}}
 ```
-
-## Danksagungen
-
-Danke an die Home-Assistant-Community.
-
