@@ -1,70 +1,56 @@
 # Tally List Integration
 
-This is a custom integration for [Home Assistant](https://www.home-assistant.io/) distributed via HACS.
+This custom integration for [Home Assistant](https://www.home-assistant.io/) is distributed via HACS and helps you manage drink tallies for multiple persons. All persons with a linked Home Assistant user account are imported automatically. Drinks are defined once and shared across everyone.
 
-The integration allows you to manage drink tallies for multiple persons from Home Assistant's Person integration. All persons that have a linked Home Assistant user account are imported automatically. Drinks are defined once and shared across all persons. Counters start at zero and can be adjusted using services.
+English • [Deutsch](README.de.md)
 
 ## Features
 
-- Persons with user accounts are added automatically. Drinks are added only once with a name and price and are available for every person.
-- Sensor entities for each drink's count, each drink's price, a free amount sensor, and a sensor showing the total amount a person has to pay.
-- Button entity to reset all counters for a person. Only users with
-  override permissions ("Tally Admins") can press it.
-- Currency symbol is configurable (defaults to €).
-- Service `tally_list.add_drink` to add a drink for a person.
-- Service `tally_list.remove_drink` to remove a drink for a person.
-- Service `tally_list.adjust_count` to set a drink count to a specific value.
-- Service `tally_list.export_csv` to export all amount_due sensors to CSV files (daily, weekly, monthly or manual), sorted alphabetically by name.
+- Automatic import of persons with user accounts.
+- Shared drink list with name and price for every person.
+- Sensor entities for drink counts, drink prices, a free amount, and the total amount due per person.
+- Button entity to reset a person's counters; only users with override permissions ("Tally Admins") can use it.
+- Configurable currency symbol (defaults to €).
+- Services to add, remove, adjust, reset and export tallies.
 - Counters cannot go below zero when removing drinks.
-- Exclude persons from automatic import via the integration options.
-- Grant override permissions to selected users so they can tally drinks for
-  everyone.
+- Option to exclude persons from automatic import.
+- Grant override permissions to selected users so they can tally drinks for everyone.
 
 ## Installation
 
 1. Add this repository to HACS as a custom repository.
 2. Install the **Tally List** integration.
 3. Restart Home Assistant and add the integration via the integrations page.
-   The integration is fully configurable through the UI.
 
 ## Usage
 
-When the integration is first set up, all persons with a user account are added and you will be asked to enter the available drinks. All further persons will automatically use this list. Drinks can later be managed from the integration options where you can add, remove or edit their prices. Call the service `tally_list.add_drink` with parameters `user` and `drink` to increment the counter. Use `tally_list.adjust_count` with `count` to set an exact value. To decrement by one call `tally_list.remove_drink` with `user` and `drink`. Only Tally Admins can use the reset button entity to reset all counters. The reset button entity ID follows `button.<person>_reset_tally`, so you can match all reset buttons with `button.*_reset_tally`.
-Call `tally_list.export_csv` to create CSV snapshots of all `_amount_due` sensors sorted alphabetically by name. Depending on the parameters, the service writes files to `/config/backup/tally_list/` in the subfolders `daily`, `weekly`, `monthly` or `manual`:
+At initial setup you will be asked to enter available drinks. All persons with a user account share this list. Drinks and prices can later be managed from the integration options.
 
-- `daily/amount_due_daily_YYYY-MM-DD_HH-MM.csv`
-- `weekly/amount_due_weekly_YYYY-WW.csv`
-- `monthly/amount_due_monthly_YYYY-MM.csv`
-- `manual/amount_due_manual_YYYY-MM-DD_HH-MM.csv`
+### Services
 
-The exported files list each person without the trailing `Amount Due` text.
-The service accepts the following parameters:
+- `tally_list.add_drink`: increment drink count for a person.
+- `tally_list.remove_drink`: decrement drink count for a person (never below zero).
+- `tally_list.adjust_count`: set a drink count to a specific value.
+- `tally_list.reset_counters`: reset all counters for a person or for everyone if no user is specified.
+- `tally_list.export_csv`: export all `_amount_due` sensors to CSV files (`daily`, `weekly`, `monthly`, or `manual`) saved under `/config/backup/tally_list/<type>/`.
 
-- `backup`: Required. Choose `daily`, `weekly`, `monthly`, or `manual`.
-- `interval`: Optional. Create a backup only every n-th day, week, or month depending on the selected backup. Ignored for manual backups.
-- `keep`: Optional. For daily backups remove files older than this number of days. For weekly and monthly backups the value is interpreted as weeks or months. Manual backups keep only the latest number of files.
+### Reset Button
+
+Each person gets a `button.<person>_reset_tally` entity to reset all their counters. Only Tally Admins can press it.
 
 ## Price List and Sensors
 
-All drinks are stored in a single price list. A dedicated user named
-`Preisliste` is automatically created when the integration is first set up. This user
-exposes one price sensor per drink as well as a free amount sensor while regular
-persons only get count and total amount sensors. The free amount is subtracted from
-each person's total. You can edit the drinks, prices and free amount at any time
-from the integration options.
+All drinks are stored in a single price list. A dedicated user named `Preisliste` exposes one price sensor per drink as well as a free amount sensor, while regular persons only get count and total amount sensors. The free amount is subtracted from each person's total. You can edit drinks, prices and the free amount at any time from the integration options.
 
 ## WebSocket API
 
-The integration exposes a WebSocket command `tally_list/get_admins`. It returns
-all users that currently have override permissions and can be called from a
-Home Assistant frontend or external client. The command requires an
-authenticated Home Assistant user.
+The WebSocket command `tally_list/get_admins` returns all users that currently have override permissions and can be called from the Home Assistant frontend or an external client. The command requires an authenticated Home Assistant user.
 
 ```js
 await this.hass.connection.sendMessagePromise({ type: "tally_list/get_admins" });
 ```
 
-The response contains the usernames in an array and includes the WebSocket metadata:
+Example response:
 
 ```json
 {"id":42,"type":"result","success":true,"result":{"admins":["tablet_dashboard","Test","Test 2"]}}
@@ -72,4 +58,4 @@ The response contains the usernames in an array and includes the WebSocket metad
 
 ## Acknowledgements
 
-This entire script was generated with the help of ChatGPT / Codex.
+Thanks to the Home Assistant community.
