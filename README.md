@@ -32,9 +32,9 @@ The integration allows you to manage drink tallies for multiple persons from Hom
 When the integration is first set up, all persons with a user account are added and you will be asked to enter the available drinks. All further persons will automatically use this list. Drinks can later be managed from the integration options where you can add, remove or edit their prices. Call the service `tally_list.add_drink` with parameters `user` and `drink` to increment the counter. Use `tally_list.adjust_count` with `count` to set an exact value. To decrement by one call `tally_list.remove_drink` with `user` and `drink`. Only Tally Admins can use the reset button entity to reset all counters. The reset button entity ID follows `button.<person>_reset_tally`, so you can match all reset buttons with `button.*_reset_tally`.
 Call `tally_list.export_csv` to create CSV snapshots of all `_amount_due` sensors sorted alphabetically by name. Depending on the parameters, the service writes files to `/config/backup/tally_list/` in the subfolders `daily`, `weekly`, `monthly` or `manual`:
 
-- `daily/amount_due_YYYY-MM-DD_HH-MM.csv`
-- `weekly/amount_due_week_YYYY-WW.csv`
-- `monthly/amount_due_YYYY-MM.csv`
+- `daily/amount_due_daily_YYYY-MM-DD_HH-MM.csv`
+- `weekly/amount_due_weekly_YYYY-WW.csv`
+- `monthly/amount_due_monthly_YYYY-MM.csv`
 - `manual/amount_due_manual_YYYY-MM-DD_HH-MM.csv`
 
 The exported files list each person without the trailing `Amount Due` text.
