@@ -167,26 +167,44 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 if mtime < cutoff:
                     os.remove(file_path)
 
-        backup_type = call.data.get("backup")
-        if backup_type not in {"daily", "weekly", "monthly", "manual"}:
-            return
+        daily_cfg = {
+            "enable": call.data.get("daily_enable", False),
+            "keep_days": call.data.get("daily_keep_days", 7),
+        }
+        if "daily" in call.data:
+            daily_cfg.update(call.data["daily"])
+        weekly_cfg = {
+            "enable": call.data.get("weekly_enable", False),
+            "keep_days": call.data.get("weekly_keep_days", 30),
+        }
+        if "weekly" in call.data:
+            weekly_cfg.update(call.data["weekly"])
+        monthly_cfg = {
+            "enable": call.data.get("monthly_enable", False),
+            "interval": call.data.get("monthly_interval", 3),
+            "keep_days": call.data.get("monthly_keep_days", 365),
+        }
+        if "monthly" in call.data:
+            monthly_cfg.update(call.data["monthly"])
+        manual_cfg = {
+            "enable": call.data.get("manual_enable", False),
+            "keep_days": call.data.get("manual_keep_days", 180),
+        }
+        if "manual" in call.data:
+            manual_cfg.update(call.data["manual"])
 
-        keep_days = call.data.get("keep_days")
-        interval = call.data.get("interval")
-
-        if backup_type == "daily":
-            keep_days = keep_days if keep_days is not None else 7
-            timestamp = now.strftime("%Y-%m-%d_%H-%M")
+        if daily_cfg.get("enable"):
             file_path = os.path.join(
-                base_dir, "daily", f"amount_due_{timestamp}.csv"
+                base_dir,
+                "daily",
+                f"amount_due_daily_{now.strftime('%Y-%m-%d_%H-%M')}.csv",
             )
             await hass.async_add_executor_job(_write_csv, file_path)
-            await hass.async_add_executor_job(
-                _cleanup, os.path.join(base_dir, "daily"), keep_days
-            )
+        await hass.async_add_executor_job(
+            _cleanup, os.path.join(base_dir, "daily"), daily_cfg.get("keep_days")
+        )
 
-        elif backup_type == "weekly":
-            keep_days = keep_days if keep_days is not None else 30
+        if weekly_cfg.get("enable"):
             iso_year, iso_week, _ = now.isocalendar()
             weekly_file = os.path.join(
                 base_dir,
@@ -195,36 +213,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
             if not os.path.exists(weekly_file):
                 await hass.async_add_executor_job(_write_csv, weekly_file)
-            await hass.async_add_executor_job(
-                _cleanup, os.path.join(base_dir, "weekly"), keep_days
-            )
+        await hass.async_add_executor_job(
+            _cleanup, os.path.join(base_dir, "weekly"), weekly_cfg.get("keep_days")
+        )
 
-        elif backup_type == "monthly":
-            keep_days = keep_days if keep_days is not None else 365
-            interval = interval or 3
+        if monthly_cfg.get("enable"):
+            interval = monthly_cfg.get("interval", 1) or 1
             if now.month % interval == 0:
-                month_str = now.strftime("%Y-%m")
                 monthly_file = os.path.join(
-                    base_dir, "monthly", f"amount_due_{month_str}.csv"
+                    base_dir,
+                    "monthly",
+                    f"amount_due_monthly_{now.strftime('%Y-%m')}.csv",
                 )
                 if not os.path.exists(monthly_file):
                     await hass.async_add_executor_job(_write_csv, monthly_file)
-            await hass.async_add_executor_job(
-                _cleanup, os.path.join(base_dir, "monthly"), keep_days
-            )
+        await hass.async_add_executor_job(
+            _cleanup, os.path.join(base_dir, "monthly"), monthly_cfg.get("keep_days")
+        )
 
-        elif backup_type == "manual":
-            keep_days = keep_days if keep_days is not None else 180
-            timestamp = now.strftime("%Y-%m-%d_%H-%M")
+        if manual_cfg.get("enable"):
             manual_file = os.path.join(
                 base_dir,
                 "manual",
-                f"amount_due_manual_{timestamp}.csv",
+                f"amount_due_manual_{now.strftime('%Y-%m-%d_%H-%M')}.csv",
             )
             await hass.async_add_executor_job(_write_csv, manual_file)
-            await hass.async_add_executor_job(
-                _cleanup, os.path.join(base_dir, "manual"), keep_days
-            )
+        await hass.async_add_executor_job(
+            _cleanup, os.path.join(base_dir, "manual"), manual_cfg.get("keep_days")
+        )
 
     hass.services.async_register(
         DOMAIN,
