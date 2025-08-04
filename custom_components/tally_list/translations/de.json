@@ -150,5 +150,81 @@
           "back": "Zurück"
         }
       }
+    },
+  "services": {
+    "add_drink": {
+      "name": "Getränk hinzufügen",
+      "description": "Erhöht den Getränkezähler für eine Person",
+      "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Name der Person"
+        },
+        "drink": {
+          "name": "Getränk",
+          "description": "Name des Getränks"
+        }
+      }
+    },
+    "remove_drink": {
+      "name": "Getränk entfernen",
+      "description": "Verringert den Getränkezähler für eine Person",
+      "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Name der Person"
+        },
+        "drink": {
+          "name": "Getränk",
+          "description": "Name des Getränks"
+        }
+      }
+    },
+    "adjust_count": {
+      "name": "Zähler anpassen",
+      "description": "Setzt den Getränkezähler für eine Person",
+      "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Name der Person"
+        },
+        "drink": {
+          "name": "Getränk",
+          "description": "Name des Getränks"
+        },
+        "count": {
+          "name": "Anzahl",
+          "description": "Gewünschte Anzahl an Getränken"
+        }
+      }
+    },
+    "reset_counters": {
+      "name": "Zähler zurücksetzen",
+      "description": "Setzt die Zähler für eine Person zurück. Wenn keine Person angegeben ist, werden alle zurückgesetzt.",
+      "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Name der Person"
+        }
+      }
+    },
+    "export_csv": {
+      "name": "CSV exportieren",
+      "description": "Exportiert alle amount_due Sensoren in CSV-Dateien",
+      "fields": {
+        "backup": {
+          "name": "Backup-Typ",
+          "description": "Art des zu erstellenden Backups"
+        },
+        "interval": {
+          "name": "Intervall",
+          "description": "Erstelle ein Backup alle X Tage, Wochen oder Monate abhängig vom gewählten Backup. Für manuelle Backups ignoriert."
+        },
+        "keep": {
+          "name": "Aufbewahren",
+          "description": "Lösche Backups älter als X Tage, Wochen oder Monate abhängig vom gewählten Backup. Für manuelle Backups werden nur die letzten X Dateien behalten."
+        }
+      }
     }
   }
+}
