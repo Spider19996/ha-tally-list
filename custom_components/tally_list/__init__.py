@@ -125,11 +125,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     await sensor.async_update_state()
 
     async def export_csv_service(call):
-        sensors = [
-            state
-            for state in hass.states.async_all("sensor")
-            if state.entity_id.endswith("_amount_due")
-        ]
+        sensors = sorted(
+            [
+                state
+                for state in hass.states.async_all("sensor")
+                if state.entity_id.endswith("_amount_due")
+            ],
+            key=lambda state: state.name.casefold(),
+        )
         currency = hass.data.get(DOMAIN, {}).get(CONF_CURRENCY, "€")
         timestamp = dt_now().strftime("%Y-%m-%d_%H-%M")
         directory = hass.config.path("backup", "tally_list")
@@ -137,19 +140,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         def _write() -> None:
             os.makedirs(directory, exist_ok=True)
-            with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerow(["Name", f"Betrag ({currency})"])
-                for state in sensors:
-                    try:
-                        amount = float(state.state)
-                    except (ValueError, TypeError):
-                        amount = 0.0
-                        
-                    writer.writerow([state.name, f"{amount:.2f}"])
+        with open(file_path, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Name", f"Betrag ({currency})"])
+            for state in sensors:
+                try:
+                    amount = float(state.state)
+                except (ValueError, TypeError):
+                    amount = 0.0
+
+                writer.writerow([state.name, f"{amount:.2f}"])
 
         await hass.async_add_executor_job(_write)
-
 
     hass.services.async_register(
         DOMAIN,
