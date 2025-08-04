@@ -194,7 +194,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if daily_cfg.get("enable"):
             file_path = os.path.join(
-                base_dir, "daily", f"amount_due_{now.strftime('%Y-%m-%d_%H-%M')}.csv"
+                base_dir,
+                "daily",
+                f"amount_due_daily_{now.strftime('%Y-%m-%d_%H-%M')}.csv",
             )
             await hass.async_add_executor_job(_write_csv, file_path)
         await hass.async_add_executor_job(
@@ -206,7 +208,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             weekly_file = os.path.join(
                 base_dir,
                 "weekly",
-                f"amount_due_week_{iso_year}-{iso_week:02d}.csv",
+                f"amount_due_weekly_{iso_year}-{iso_week:02d}.csv",
             )
             if not os.path.exists(weekly_file):
                 await hass.async_add_executor_job(_write_csv, weekly_file)
@@ -218,7 +220,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             interval = monthly_cfg.get("interval", 1) or 1
             if now.month % interval == 0:
                 monthly_file = os.path.join(
-                    base_dir, "monthly", f"amount_due_{now.strftime('%Y-%m')}.csv"
+                    base_dir,
+                    "monthly",
+                    f"amount_due_monthly_{now.strftime('%Y-%m')}.csv",
                 )
                 if not os.path.exists(monthly_file):
                     await hass.async_add_executor_job(_write_csv, monthly_file)
