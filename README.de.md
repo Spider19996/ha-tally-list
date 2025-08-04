@@ -1,8 +1,8 @@
 # Tally List Integration
 
-Diese benutzerdefinierte Integration für [Home Assistant](https://www.home-assistant.io/) wird über HACS bereitgestellt und hilft, Getränkezählungen für mehrere Personen zu verwalten. Alle Personen mit einem verknüpften Home-Assistant-Benutzerkonto werden automatisch importiert. Getränke werden einmal definiert und von allen gemeinsam genutzt.
+🇬🇧 [Read English version](README.md)
 
-Deutsch • [English](README.md)
+Diese benutzerdefinierte Integration für [Home Assistant](https://www.home-assistant.io/) wird über HACS bereitgestellt und hilft, Getränkezählungen für mehrere Personen zu verwalten. Alle Personen mit einem verknüpften Home-Assistant-Benutzerkonto werden automatisch importiert. Getränke werden einmal definiert und von allen gemeinsam genutzt.
 
 ## Funktionen
 
