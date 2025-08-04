@@ -148,7 +148,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         amount = float(state.state)
                     except (ValueError, TypeError):
                         amount = 0.0
-                    writer.writerow([state.name, f"{amount:.2f}"])
+                    name = state.name.replace(" Amount Due", "")
+                    writer.writerow([name, f"{amount:.2f}"])
 
         def _cleanup(path: str, keep: int | None) -> None:
             if keep is None or keep <= 0:
