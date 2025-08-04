@@ -5,11 +5,13 @@ add_drink:
     user:
       description: Person name
       example: Alice
+      required: true
       selector:
         text:
     drink:
       description: Drink name
       example: beer
+      required: true
       selector:
         text:
 remove_drink:
@@ -19,11 +21,13 @@ remove_drink:
     user:
       description: Person name
       example: Alice
+      required: true
       selector:
         text:
     drink:
       description: Drink name
       example: beer
+      required: true
       selector:
         text:
 adjust_count:
@@ -33,16 +37,19 @@ adjust_count:
     user:
       description: Person name
       example: Alice
+      required: true
       selector:
         text:
     drink:
       description: Drink name
       example: beer
+      required: true
       selector:
         text:
     count:
       description: Desired drink count
       example: 3
+      required: true
       selector:
         number:
           min: 0
