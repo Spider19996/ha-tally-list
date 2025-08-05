@@ -27,7 +27,7 @@ from .const import (
     CONF_FREE_AMOUNT,
     CONF_EXCLUDED_USERS,
     CONF_OVERRIDE_USERS,
-    PRICE_LIST_USER,
+    PRICE_LIST_USERS,
     CONF_CURRENCY,
 )
 
@@ -384,7 +384,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if unloaded:
         hass.data[DOMAIN].pop(entry.entry_id, None)
-        if entry.data.get(CONF_USER) == PRICE_LIST_USER:
+        if entry.data.get(CONF_USER) in PRICE_LIST_USERS:
             hass.data[DOMAIN].pop("drinks", None)
             hass.data[DOMAIN].pop("free_amount", None)
             hass.data[DOMAIN].pop(CONF_EXCLUDED_USERS, None)

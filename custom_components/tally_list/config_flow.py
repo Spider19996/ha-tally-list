@@ -19,7 +19,8 @@ from .const import (
     CONF_FREE_AMOUNT,
     CONF_EXCLUDED_USERS,
     CONF_OVERRIDE_USERS,
-    PRICE_LIST_USER,
+    PRICE_LIST_USERS,
+    get_price_list_user,
     CONF_CURRENCY,
 )
 
@@ -94,7 +95,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         persons = [
             p
             for p in persons
-            if p not in existing and p not in excluded and p != PRICE_LIST_USER
+            if p not in existing and p not in excluded and p not in PRICE_LIST_USERS
         ]
 
         if not persons:
@@ -105,7 +106,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         entries = self.hass.config_entries.async_entries(DOMAIN)
         has_price_user = any(
-            entry.data.get(CONF_USER) == PRICE_LIST_USER for entry in entries
+            entry.data.get(CONF_USER) in PRICE_LIST_USERS for entry in entries
         )
         for entry in entries:
             if CONF_DRINKS in entry.data:
@@ -118,7 +119,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             DOMAIN,
                             context={"source": config_entries.SOURCE_IMPORT},
                             data={
-                                CONF_USER: PRICE_LIST_USER,
+                                CONF_USER: get_price_list_user(
+                                    getattr(self.hass.config, "language", None)
+                                ),
                                 CONF_FREE_AMOUNT: 0.0,
                             },
                         )
@@ -146,7 +149,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
 
             has_price_user = any(
-                entry.data.get(CONF_USER) == PRICE_LIST_USER
+                entry.data.get(CONF_USER) in PRICE_LIST_USERS
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
             )
             if not has_price_user:
@@ -155,7 +158,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         DOMAIN,
                         context={"source": config_entries.SOURCE_IMPORT},
                         data={
-                            CONF_USER: PRICE_LIST_USER,
+                            CONF_USER: get_price_list_user(
+                                getattr(self.hass.config, "language", None)
+                            ),
                             CONF_FREE_AMOUNT: 0.0,
                         },
                     )
@@ -411,7 +416,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         persons = [
             p
             for p in persons
-            if p not in self._excluded_users and p != PRICE_LIST_USER
+            if p not in self._excluded_users and p not in PRICE_LIST_USERS
         ]
 
         if not persons:
@@ -472,7 +477,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         persons = [
             p
             for p in persons
-            if p not in self._override_users and p != PRICE_LIST_USER
+            if p not in self._override_users and p not in PRICE_LIST_USERS
         ]
 
         if not persons:
