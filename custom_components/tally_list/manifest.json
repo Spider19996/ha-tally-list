@@ -2,6 +2,7 @@
   "domain": "tally_list",
   "name": "Tally List",
   "documentation": "https://github.com/Spider19996/ha-tally-list",
+  "issue_tracker": "https://github.com/Spider19996/ha-tally-list/issues",
   "version": "1.12.2",
   "requirements": [],
   "config_flow": true,
