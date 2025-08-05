@@ -19,4 +19,15 @@ SERVICE_RESET_COUNTERS = "reset_counters"
 SERVICE_EXPORT_CSV = "export_csv"
 
 # Dedicated user name that exposes drink prices
-PRICE_LIST_USER = "Preisliste"
+PRICE_LIST_USER_DE = "Preisliste"
+PRICE_LIST_USER_EN = "Price list"
+# Default name for backward compatibility
+PRICE_LIST_USER = PRICE_LIST_USER_DE
+PRICE_LIST_USERS = {PRICE_LIST_USER_DE, PRICE_LIST_USER_EN}
+
+
+def get_price_list_user(language: str | None) -> str:
+    """Return localized price list user name."""
+    if language and language.lower().startswith("de"):
+        return PRICE_LIST_USER_DE
+    return PRICE_LIST_USER_EN

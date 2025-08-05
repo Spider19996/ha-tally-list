@@ -13,14 +13,14 @@ from .const import (
     SERVICE_RESET_COUNTERS,
     CONF_USER,
     CONF_OVERRIDE_USERS,
-    PRICE_LIST_USER,
+    PRICE_LIST_USERS,
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    if entry.data[CONF_USER] != PRICE_LIST_USER:
+    if entry.data[CONF_USER] not in PRICE_LIST_USERS:
         async_add_entities([ResetButton(hass, entry)])
 
 

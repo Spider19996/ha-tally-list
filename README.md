@@ -40,7 +40,7 @@ Each person gets a `button.<person>_reset_tally` entity to reset all their count
 
 ## Price List and Sensors
 
-All drinks are stored in a single price list. A dedicated user named `Preisliste` exposes one price sensor per drink as well as a free amount sensor, while regular persons only get count and total amount sensors. The free amount is subtracted from each person's total. You can edit drinks, prices and the free amount at any time from the integration options.
+All drinks are stored in a single price list. A dedicated user named `Preisliste` (`Price list` in English) exposes one price sensor per drink as well as a free amount sensor, while regular persons only get count and total amount sensors. The free amount is subtracted from each person's total. You can edit drinks, prices and the free amount at any time from the integration options.
 
 ## WebSocket API
 

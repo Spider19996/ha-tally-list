@@ -40,7 +40,7 @@ Jede Person erhält eine Entität `button.<person>_reset_tally`, um ihre Zähler
 
 ## Preisliste und Sensoren
 
-Alle Getränke werden in einer gemeinsamen Preisliste gespeichert. Ein spezieller Benutzer namens `Preisliste` stellt für jedes Getränk einen Preissensor sowie einen Sensor für den Freibetrag bereit, während normale Personen nur Zähl- und Gesamtbetragssensoren erhalten. Der Freibetrag wird vom Gesamtbetrag jeder Person abgezogen. Getränke, Preise und Freibetrag können jederzeit über die Integrationsoptionen bearbeitet werden.
+Alle Getränke werden in einer gemeinsamen Preisliste gespeichert. Ein spezieller Benutzer namens `Preisliste` (englisch `Price list`) stellt für jedes Getränk einen Preissensor sowie einen Sensor für den Freibetrag bereit, während normale Personen nur Zähl- und Gesamtbetragssensoren erhalten. Der Freibetrag wird vom Gesamtbetrag jeder Person abgezogen. Getränke, Preise und Freibetrag können jederzeit über die Integrationsoptionen bearbeitet werden.
 
 ## WebSocket-API
 
