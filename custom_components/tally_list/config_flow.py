@@ -91,7 +91,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
             }
 
-            excluded = set(self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, []))
+            excluded = set(
+                self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, [])
+            )
             # Preserve already excluded users when the price list user is recreated
             self._excluded_users = list(excluded)
 
@@ -137,7 +139,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_menu(self, user_input=None):
         return self.async_show_menu(
             step_id="menu",
-            menu_options=["user", "drinks", "finish"],
+            menu_options=["user", "drinks", "cleanup", "finish"],
         )
 
     async def async_step_drinks(self, user_input=None):
@@ -239,9 +241,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_menu()
         schema = vol.Schema(
             {
-                vol.Required(CONF_FREE_AMOUNT, default=self._free_amount): vol.Coerce(
-                    float
-                )
+                vol.Required(CONF_FREE_AMOUNT, default=self._free_amount): vol.Coerce(float)
             }
         )
         return self.async_show_form(step_id="set_free_amount", data_schema=schema)
@@ -258,9 +258,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         ]
         persons = [
-            p
-            for p in persons
-            if p not in self._excluded_users and p not in PRICE_LIST_USERS
+            p for p in persons if p not in self._excluded_users and p not in PRICE_LIST_USERS
         ]
         if not persons:
             return await self.async_step_menu()
@@ -308,9 +306,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         ]
         persons = [
-            p
-            for p in persons
-            if p not in self._override_users and p not in PRICE_LIST_USERS
+            p for p in persons if p not in self._override_users and p not in PRICE_LIST_USERS
         ]
         if not persons:
             return await self.async_step_menu()
@@ -345,6 +341,28 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(step_id="remove_override_user", data_schema=schema)
+
+    async def async_step_cleanup(self, user_input=None):
+        errors = {}
+        if user_input is not None:
+            confirmation = user_input.get("confirm", "").strip().upper()
+            if confirmation in {"JA ICH WILL", "YES I WANT"}:
+                removed = await self._cleanup_unused_entities()
+                if removed:
+                    return self.async_show_form(
+                        step_id="cleanup_result",
+                        description_placeholders={"sensors": "\n- ".join(sorted(removed))},
+                    )
+                return self.async_show_form(step_id="cleanup_result_empty")
+            errors["base"] = "invalid_confirmation"
+        schema = vol.Schema({vol.Required("confirm"): str})
+        return self.async_show_form(step_id="cleanup", data_schema=schema, errors=errors)
+
+    async def async_step_cleanup_result(self, user_input=None):
+        return await self.async_step_menu()
+
+    async def async_step_cleanup_result_empty(self, user_input=None):
+        return await self.async_step_menu()
 
     async def async_step_finish(self, user_input=None):
         await self._finalize_setup()
@@ -405,6 +423,60 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         self._pending_users = []
 
+    async def _cleanup_unused_entities(self) -> list[str]:
+        registry = er.async_get(self.hass)
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        entry_ids = {entry.entry_id for entry in entries}
+        active_users = {entry.data.get(CONF_USER) for entry in entries}
+        active_drinks = set(self._drinks.keys())
+        to_remove: list[str] = []
+        for entity_entry in list(registry.entities.values()):
+            if (
+                entity_entry.domain != "sensor" or entity_entry.platform != DOMAIN
+            ):
+                continue
+            if entity_entry.config_entry_id not in entry_ids:
+                to_remove.append(entity_entry.entity_id)
+                continue
+            cfg_entry = next(
+                (e for e in entries if e.entry_id == entity_entry.config_entry_id),
+                None,
+            )
+            if not cfg_entry:
+                to_remove.append(entity_entry.entity_id)
+                continue
+            user = cfg_entry.data.get(CONF_USER)
+            if user not in active_users:
+                to_remove.append(entity_entry.entity_id)
+                continue
+            uid = entity_entry.unique_id or ""
+            prefix = f"{cfg_entry.entry_id}_"
+            if not uid.startswith(prefix):
+                continue
+            if uid.endswith("_count"):
+                drink = uid[len(prefix):-6]
+            elif uid.endswith("_price"):
+                drink = uid[len(prefix):-6]
+            elif uid.endswith("_free_amount"):
+                drink = None
+            elif uid.endswith("_amount_due") or uid.endswith("_reset_tally"):
+                drink = None
+            else:
+                continue
+            if drink is not None and drink not in active_drinks:
+                to_remove.append(entity_entry.entity_id)
+        if to_remove:
+            for entity_id in to_remove:
+                try:
+                    await registry.async_remove(entity_id)
+                except Exception as exc:  # pragma: no cover
+                    _LOGGER.error("Failed to remove %s: %s", entity_id, exc)
+            for entry in entries:
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+            return sorted(to_remove)
+        return []
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -423,8 +495,14 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._currency: str = "€"
 
     async def async_step_init(self, user_input=None):
-        self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
-        self._free_amount = self.hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
+        self._drinks = (
+            self.hass.data.get(DOMAIN, {})
+            .get("drinks", {})
+            .copy()
+        )
+        self._free_amount = self.hass.data.get(DOMAIN, {}).get(
+            "free_amount", 0.0
+        )
         self._excluded_users = (
             self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, [])
         ).copy()
@@ -740,7 +818,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         to_remove: list[str] = []
 
         for entity_entry in list(registry.entities.values()):
-            if entity_entry.domain != "sensor" or entity_entry.platform != DOMAIN:
+            if (
+                entity_entry.domain != "sensor"
+                or entity_entry.platform != DOMAIN
+            ):
                 continue
 
             if entity_entry.config_entry_id not in entry_ids:
@@ -748,7 +829,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 continue
 
             cfg_entry = next(
-                (e for e in entries if e.entry_id == entity_entry.config_entry_id),
+                (
+                    e for e in entries
+                    if e.entry_id == entity_entry.config_entry_id
+                ),
                 None,
             )
 
@@ -767,9 +851,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 continue
 
             if uid.endswith("_count"):
-                drink = uid[len(prefix) : -6]
+                drink = uid[len(prefix):-6]
             elif uid.endswith("_price"):
-                drink = uid[len(prefix) : -6]
+                drink = uid[len(prefix):-6]
             elif uid.endswith("_free_amount"):
                 drink = None
             elif uid.endswith("_amount_due") or uid.endswith("_reset_tally"):
