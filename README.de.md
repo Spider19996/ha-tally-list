@@ -22,6 +22,8 @@ Diese benutzerdefinierte Integration für [Home Assistant](https://www.home-assi
 2. Die **Tally List**-Integration installieren.
 3. Home Assistant neu starten und die Integration über die Oberfläche hinzufügen.
 
+Es ist empfehlenswert, zusätzlich die passende [Tally List Lovelace-Karte](https://github.com/Spider19996/ha-tally-list-lovelace) für eine entsprechende Dashboard-Ansicht zu installieren.
+
 ## Verwendung
 
 Beim ersten Einrichten wirst du nach verfügbaren Getränken gefragt. Alle Personen mit Benutzerkonto teilen sich diese Liste. Getränke und Preise können später über die Integrationsoptionen verwaltet werden.
