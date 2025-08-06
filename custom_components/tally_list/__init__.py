@@ -387,7 +387,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entry.data.get(CONF_USER) in PRICE_LIST_USERS:
             hass.data[DOMAIN].pop("drinks", None)
             hass.data[DOMAIN].pop("free_amount", None)
-            hass.data[DOMAIN].pop(CONF_EXCLUDED_USERS, None)
+            # Keep excluded users so they are not re-created when the price list
+            # user is re-added later
             hass.data[DOMAIN].pop(CONF_OVERRIDE_USERS, None)
             hass.data[DOMAIN].pop(CONF_CURRENCY, None)
         if not any(
