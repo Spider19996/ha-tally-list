@@ -111,7 +111,15 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in entries:
             if CONF_DRINKS in entry.data:
                 self._drinks = entry.data[CONF_DRINKS]
-                self._excluded_users = entry.data.get(CONF_EXCLUDED_USERS, [])
+                self._free_amount = float(
+                    entry.data.get(CONF_FREE_AMOUNT, 0.0)
+                )
+                self._excluded_users = entry.data.get(
+                    CONF_EXCLUDED_USERS, []
+                )
+                self._override_users = entry.data.get(
+                    CONF_OVERRIDE_USERS, []
+                )
                 self._currency = entry.data.get(CONF_CURRENCY, "€")
                 if not has_price_user:
                     self.hass.async_create_task(
@@ -122,7 +130,11 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                 CONF_USER: get_price_list_user(
                                     getattr(self.hass.config, "language", None)
                                 ),
-                                CONF_FREE_AMOUNT: 0.0,
+                                CONF_DRINKS: self._drinks,
+                                CONF_FREE_AMOUNT: self._free_amount,
+                                CONF_EXCLUDED_USERS: self._excluded_users,
+                                CONF_OVERRIDE_USERS: self._override_users,
+                                CONF_CURRENCY: self._currency,
                             },
                         )
                     )
@@ -334,6 +346,28 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             self._drinks[drink] = price
             if user_input.get("add_more"):
                 return await self.async_step_add_drink()
+            self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
+            has_price_user = any(
+                entry.data.get(CONF_USER) in PRICE_LIST_USERS
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+            )
+            if not has_price_user:
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": config_entries.SOURCE_IMPORT},
+                        data={
+                            CONF_USER: get_price_list_user(
+                                getattr(self.hass.config, "language", None)
+                            ),
+                            CONF_DRINKS: self._drinks,
+                            CONF_FREE_AMOUNT: self._free_amount,
+                            CONF_EXCLUDED_USERS: self._excluded_users,
+                            CONF_OVERRIDE_USERS: self._override_users,
+                            CONF_CURRENCY: self._currency,
+                        },
+                    )
+                )
             return await self.async_step_menu()
 
         schema = vol.Schema(
