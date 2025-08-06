@@ -11,6 +11,12 @@ from homeassistant.util import slugify
 from .const import DOMAIN, CONF_USER, PRICE_LIST_USERS, CONF_CURRENCY
 
 
+def _local_suffix(hass: HomeAssistant, en: str, de: str) -> str:
+    """Return language-specific sensor name suffix."""
+    language = (hass.config.language or "").lower()
+    return de if language.startswith("de") else en
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
@@ -45,8 +51,14 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         self._drink = drink
         self._price = price
         self._attr_should_poll = False
-        self._attr_name = f"{entry.data[CONF_USER]} {drink} Count"
+        self._attr_name = (
+            f"{entry.data[CONF_USER]} {drink} "
+            f"{_local_suffix(hass, 'Count', 'Anzahl')}"
+        )
         self._attr_unique_id = f"{entry.entry_id}_{drink}_count"
+        self.entity_id = (
+            f"sensor.{slugify(entry.data[CONF_USER])}_{slugify(drink)}_count"
+        )
         self._attr_native_value = 0
         self._attr_native_unit_of_measurement = None
 
@@ -94,7 +106,10 @@ class DrinkPriceSensor(SensorEntity):
         self._drink = drink
         self._price = price
         self._attr_should_poll = False
-        self._attr_name = f"{entry.data[CONF_USER]} {drink} Price"
+        self._attr_name = (
+            f"{entry.data[CONF_USER]} {drink} "
+            f"{_local_suffix(hass, 'Price', 'Preis')}"
+        )
         self._attr_unique_id = f"{entry.entry_id}_{drink}_price"
         self.entity_id = f"sensor.price_list_{slugify(drink)}_price"
         self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
@@ -122,7 +137,10 @@ class FreeAmountSensor(SensorEntity):
         self._hass = hass
         self._entry = entry
         self._attr_should_poll = False
-        self._attr_name = f"{entry.data[CONF_USER]} Free Amount"
+        self._attr_name = (
+            f"{entry.data[CONF_USER]} "
+            f"{_local_suffix(hass, 'Free amount', 'Freibetrag')}"
+        )
         self._attr_unique_id = f"{entry.entry_id}_free_amount"
         self.entity_id = "sensor.price_list_free_amount"
         self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
@@ -149,8 +167,12 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
         self._hass = hass
         self._entry = entry
         self._attr_should_poll = False
-        self._attr_name = f"{entry.data[CONF_USER]} Amount Due"
+        self._attr_name = (
+            f"{entry.data[CONF_USER]} "
+            f"{_local_suffix(hass, 'Amount due', 'Offener Betrag')}"
+        )
         self._attr_unique_id = f"{entry.entry_id}_amount_due"
+        self.entity_id = f"sensor.{slugify(entry.data[CONF_USER])}_amount_due"
         self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
             CONF_CURRENCY, "€"
         )
