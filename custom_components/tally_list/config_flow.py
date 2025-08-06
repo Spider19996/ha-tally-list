@@ -312,17 +312,24 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_remove_override_user(user_input)
 
     async def async_step_cleanup(self, user_input=None):
+        errors = {}
         if user_input is not None:
-            removed = await self._cleanup_unused_entities()
-            if removed:
-                return self.async_show_form(
-                    step_id="cleanup_result",
-                    description_placeholders={
-                        "sensors": "\n- ".join(sorted(removed))
-                    },
-                )
-            return await self.async_step_menu()
-        return self.async_show_form(step_id="cleanup")
+            confirmation = user_input.get("confirm", "").strip().upper()
+            if confirmation in {"JA ICH WILL", "YES I WANT"}:
+                removed = await self._cleanup_unused_entities()
+                if removed:
+                    return self.async_show_form(
+                        step_id="cleanup_result",
+                        description_placeholders={
+                            "sensors": "\n- ".join(sorted(removed))
+                        },
+                    )
+                return await self.async_step_menu()
+            errors["base"] = "invalid_confirmation"
+        schema = vol.Schema({vol.Required("confirm"): str})
+        return self.async_show_form(
+            step_id="cleanup", data_schema=schema, errors=errors
+        )
 
     async def async_step_cleanup_result(self, user_input=None):
         return await self.async_step_menu()
