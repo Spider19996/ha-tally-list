@@ -280,10 +280,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    hass.data[DOMAIN].setdefault(
-        entry.entry_id,
-        {"entry": entry, "counts": {}},
+    hass.data.setdefault(
+        DOMAIN,
+        {
+            "drinks": {},
+            CONF_EXCLUDED_USERS: [],
+            CONF_OVERRIDE_USERS: [],
+            CONF_CURRENCY: "€",
+        },
     )
+    hass.data[DOMAIN].setdefault(entry.entry_id, {"entry": entry, "counts": {}})
     if not hass.data[DOMAIN].get("drinks") and entry.data.get("drinks"):
         hass.data[DOMAIN]["drinks"] = entry.data["drinks"]
     if hass.data[DOMAIN].get("drinks") and not entry.data.get("drinks"):
