@@ -136,7 +136,11 @@
         },
         "cleanup_result": {
           "title": "Unused sensors removed",
-          "description": "Removed unused sensors:\n- {sensors}\nThis also resets stored 'amount due' values."
+          "description": "Removed unused sensors:\n- {sensors}"
+        },
+        "cleanup_result_empty": {
+          "title": "No unused sensors found",
+          "description": "No unused sensors were found."
         }
       },
       "enum": {

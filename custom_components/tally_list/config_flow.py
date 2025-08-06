@@ -324,7 +324,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                             "sensors": "\n- ".join(sorted(removed))
                         },
                     )
-                return await self.async_step_menu()
+                return self.async_show_form(step_id="cleanup_result_empty")
             errors["base"] = "invalid_confirmation"
         schema = vol.Schema({vol.Required("confirm"): str})
         return self.async_show_form(
@@ -332,6 +332,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_cleanup_result(self, user_input=None):
+        return await self.async_step_menu()
+
+    async def async_step_cleanup_result_empty(self, user_input=None):
         return await self.async_step_menu()
 
     async def async_step_finish(self, user_input=None):

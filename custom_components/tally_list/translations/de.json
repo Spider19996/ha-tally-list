@@ -136,7 +136,11 @@
         },
         "cleanup_result": {
           "title": "Nicht genutzte Sensoren entfernt",
-          "description": "Folgende Sensoren wurden entfernt:\n- {sensors}\nDabei wurden auch gespeicherte 'zu zahlende Betr\u00e4ge' zur\u00fcckgesetzt."
+          "description": "Folgende Sensoren wurden entfernt:\n- {sensors}"
+        },
+        "cleanup_result_empty": {
+          "title": "Keine ungenutzten Sensoren gefunden",
+          "description": "Es wurden keine ungenutzten Sensoren gefunden."
         }
       },
       "enum": {
