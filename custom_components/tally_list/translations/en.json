@@ -5,118 +5,28 @@
       "no_users": "No persons with a user account found"
     },
     "step": {
-      "menu": {
-        "title": "Tally List Options",
-        "menu_options": {
-          "user": "User settings",
-          "drinks": "Drink settings",
-          "cleanup": "Remove unused sensors",
-          "finish": "Done"
-        }
-      },
       "user": {
-        "title": "User settings",
-        "menu_options": {
-          "free_amount": "Set free amount",
-          "exclude": "Exclude person",
-          "include": "Include person",
-          "authorize": "Grant admin rights",
-          "unauthorize": "Revoke admin rights",
-          "back": "Back"
-        }
-      },
-      "drinks": {
-        "title": "Drink settings",
-        "menu_options": {
-          "add": "Add drink",
-          "remove": "Remove drink",
-          "edit": "Edit price",
-          "currency": "Set currency",
-          "back": "Back"
-        }
+        "title": "Configure Tally List",
+        "description": "All persons with a user account are added automatically. Drinks are defined once and shared."
       },
       "add_drink": {
         "title": "Add Drink",
+        "description": "Enter a drink and price. Enable 'Add another' to continue adding drinks.",
         "data": {
           "drink": "Drink name",
           "price": "Price",
           "add_more": "Add another"
         }
       },
-      "remove_drink": {
-        "title": "Remove Drink",
-        "data": {
-          "drink": "Drink",
-          "remove_more": "Remove another"
-        }
-      },
-      "edit_price": {
-        "title": "Edit Price",
-        "data": {
-          "drink": "Drink",
-          "price": "Price",
-          "edit_more": "Edit another"
-        }
-      },
-      "set_free_amount": {
-        "title": "Set Free Amount",
-        "data": {
-          "free_amount": "Free amount"
-        }
-      },
-      "currency": {
+      "set_currency": {
         "title": "Set Currency",
         "data": {
           "currency": "Currency"
         }
-      },
-      "add_excluded_user": {
-        "title": "Exclude Person",
-        "data": {
-          "user": "Person",
-          "add_more": "Exclude another"
-        }
-      },
-      "remove_excluded_user": {
-        "title": "Include Person",
-        "data": {
-          "user": "Person",
-          "remove_more": "Include another"
-        }
-      },
-      "add_override_user": {
-        "title": "Grant Admin Rights",
-        "data": {
-          "user": "Person",
-          "add_more": "Authorize another"
-        }
-      },
-      "remove_override_user": {
-        "title": "Revoke Admin Rights",
-        "data": {
-          "user": "Person",
-          "remove_more": "Unauthorize another"
-        }
-      },
-      "cleanup": {
-        "title": "Remove unused sensors",
-        "description": "This will also remove all open 'amount due' values. Type \"YES I WANT\" to confirm.",
-        "data": {
-          "confirm": "Confirmation"
-        }
-      },
-      "cleanup_result": {
-        "title": "Unused sensors removed",
-        "description": "Removed unused sensors:\n- {sensors}"
-      },
-      "cleanup_result_empty": {
-        "title": "No unused sensors found",
-        "description": "No unused sensors were found."
       }
     },
     "error": {
-      "invalid_drinks": "Invalid drinks format",
-      "invalid_confirmation": "Please type \"YES I WANT\"."
+      "invalid_drinks": "Invalid drinks format"
     }
   },
   "options": {
