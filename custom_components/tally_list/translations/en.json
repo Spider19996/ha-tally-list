@@ -129,7 +129,7 @@
         },
         "cleanup": {
           "title": "Remove unused sensors",
-          "description": "<span style='color:red'>This will also remove all open 'amount due' values. Type \"YES I WANT\" to confirm.</span> The following sensors will be removed:\n- {sensors}",
+          "description": "This will also remove all open 'amount due' values. Type \"YES I WANT\" to confirm.",
           "data": {
             "confirm": "Confirmation"
           }
