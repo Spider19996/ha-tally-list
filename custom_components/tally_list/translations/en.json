@@ -1,333 +1,238 @@
 {
-  "title": "Tally List",
-  "config": {
     "title": "Tally List",
-    "abort": {
-      "no_users": "No persons with a user account found"
-    },
-    "step": {
-      "menu": {
-        "title": "Tally List Options",
-        "menu_options": {
-          "user": "User settings",
-          "drinks": "Drink settings",
-          "cleanup": "Remove unused sensors",
-          "finish": "Done"
-        }
-      },
-      "user": {
-        "title": "User settings",
-        "menu_options": {
-          "free_amount": "Set free amount",
-          "exclude": "Exclude person",
-          "include": "Include person",
-          "authorize": "Grant admin rights",
-          "unauthorize": "Revoke admin rights",
-          "back": "Back"
-        }
-      },
-      "drinks": {
-        "title": "Drink settings",
-        "menu_options": {
-          "add": "Add drink",
-          "remove": "Remove drink",
-          "edit": "Edit price",
-          "currency": "Set currency",
-          "back": "Back"
-        }
-      },
-      "add_drink": {
-        "title": "Add Drink",
-        "data": {
-          "drink": "Drink name",
-          "price": "Price",
-          "add_more": "Add another"
-        }
-      },
-      "remove_drink": {
-        "title": "Remove Drink",
-        "data": {
-          "drink": "Drink",
-          "remove_more": "Remove another"
-        }
-      },
-      "edit_price": {
-        "title": "Edit Price",
-        "data": {
-          "drink": "Drink",
-          "price": "Price",
-          "edit_more": "Edit another"
-        }
-      },
-      "set_free_amount": {
-        "title": "Set Free Amount",
-        "data": {
-          "free_amount": "Free amount"
-        }
-      },
-      "currency": {
-        "title": "Set Currency",
-        "data": {
-          "currency": "Currency"
-        }
-      },
-      "add_excluded_user": {
-        "title": "Exclude Person",
-        "data": {
-          "user": "Person",
-          "add_more": "Exclude another"
-        }
-      },
-      "remove_excluded_user": {
-        "title": "Include Person",
-        "data": {
-          "user": "Person",
-          "remove_more": "Include another"
-        }
-      },
-      "add_override_user": {
-        "title": "Grant Admin Rights",
-        "data": {
-          "user": "Person",
-          "add_more": "Authorize another"
-        }
-      },
-      "remove_override_user": {
-        "title": "Revoke Admin Rights",
-        "data": {
-          "user": "Person",
-          "remove_more": "Unauthorize another"
-        }
-      },
-      "cleanup": {
-        "title": "Remove unused sensors",
-        "description": "This will also remove all open 'amount due' values. Type \"YES I WANT\" to confirm.",
-        "data": {
-          "confirm": "Confirmation"
-        }
-      },
-      "cleanup_result": {
-        "title": "Unused sensors removed",
-        "description": "Removed unused sensors:\n- {sensors}"
-      },
-      "cleanup_result_empty": {
-        "title": "No unused sensors found",
-        "description": "No unused sensors were found."
-      }
-    },
-    "error": {
-      "invalid_drinks": "Invalid drinks format",
-      "invalid_confirmation": "Please type \"YES I WANT\"."
-    }
-  },
-  "options": {
-    "title": "Tally List",
-    "error": {
-      "invalid_confirmation": "Please type \"YES I WANT\"."
-    },
-    "step": {
-        "menu": {
-          "title": "Tally List Options",
-          "menu_options": {
-            "user": "User settings",
-            "drinks": "Drink settings",
-            "cleanup": "Remove unused sensors",
-            "finish": "Done"
-          }
+    "config": {
+        "title": "Tally List",
+        "abort": {"no_users": "No persons with a user account found"},
+        "step": {
+            "menu": {
+                "title": "Tally List Options",
+                "menu_options": {
+                    "user": "User settings",
+                    "drinks": "Drink settings",
+                    "finish": "Done",
+                },
+            },
+            "user": {
+                "title": "User settings",
+                "menu_options": {
+                    "free_amount": "Set free amount",
+                    "exclude": "Exclude person",
+                    "include": "Include person",
+                    "authorize": "Grant admin rights",
+                    "unauthorize": "Revoke admin rights",
+                    "back": "Back",
+                },
+            },
+            "drinks": {
+                "title": "Drink settings",
+                "menu_options": {
+                    "add": "Add drink",
+                    "remove": "Remove drink",
+                    "edit": "Edit price",
+                    "currency": "Set currency",
+                    "back": "Back",
+                },
+            },
+            "add_drink": {
+                "title": "Add Drink",
+                "data": {
+                    "drink": "Drink name",
+                    "price": "Price",
+                    "add_more": "Add another",
+                },
+            },
+            "remove_drink": {
+                "title": "Remove Drink",
+                "data": {"drink": "Drink", "remove_more": "Remove another"},
+            },
+            "edit_price": {
+                "title": "Edit Price",
+                "data": {
+                    "drink": "Drink",
+                    "price": "Price",
+                    "edit_more": "Edit another",
+                },
+            },
+            "set_free_amount": {
+                "title": "Set Free Amount",
+                "data": {"free_amount": "Free amount"},
+            },
+            "currency": {"title": "Set Currency", "data": {"currency": "Currency"}},
+            "add_excluded_user": {
+                "title": "Exclude Person",
+                "data": {"user": "Person", "add_more": "Exclude another"},
+            },
+            "remove_excluded_user": {
+                "title": "Include Person",
+                "data": {"user": "Person", "remove_more": "Include another"},
+            },
+            "add_override_user": {
+                "title": "Grant Admin Rights",
+                "data": {"user": "Person", "add_more": "Authorize another"},
+            },
+            "remove_override_user": {
+                "title": "Revoke Admin Rights",
+                "data": {"user": "Person", "remove_more": "Unauthorize another"},
+            },
         },
-        "user": {
-          "title": "User settings",
-          "menu_options": {
-            "free_amount": "Set free amount",
-            "exclude": "Exclude person",
-            "include": "Include person",
-            "authorize": "Grant admin rights",
-            "unauthorize": "Revoke admin rights",
-            "back": "Back"
-          }
+        "error": {"invalid_drinks": "Invalid drinks format"},
+    },
+    "options": {
+        "title": "Tally List",
+        "error": {"invalid_confirmation": 'Please type "YES I WANT".'},
+        "step": {
+            "menu": {
+                "title": "Tally List Options",
+                "menu_options": {
+                    "user": "User settings",
+                    "drinks": "Drink settings",
+                    "cleanup": "Remove unused sensors",
+                    "finish": "Done",
+                },
+            },
+            "user": {
+                "title": "User settings",
+                "menu_options": {
+                    "free_amount": "Set free amount",
+                    "exclude": "Exclude person",
+                    "include": "Include person",
+                    "authorize": "Grant admin rights",
+                    "unauthorize": "Revoke admin rights",
+                    "back": "Back",
+                },
+            },
+            "drinks": {
+                "title": "Drink settings",
+                "menu_options": {
+                    "add": "Add drink",
+                    "remove": "Remove drink",
+                    "edit": "Edit price",
+                    "currency": "Set currency",
+                    "back": "Back",
+                },
+            },
+            "add_drink": {
+                "title": "Add Drink",
+                "data": {
+                    "drink": "Drink name",
+                    "price": "Price",
+                    "add_more": "Add another",
+                },
+            },
+            "remove_drink": {
+                "title": "Remove Drink",
+                "data": {"drink": "Drink", "remove_more": "Remove another"},
+            },
+            "edit_price": {
+                "title": "Edit Price",
+                "data": {
+                    "drink": "Drink",
+                    "price": "Price",
+                    "edit_more": "Edit another",
+                },
+            },
+            "set_free_amount": {
+                "title": "Set Free Amount",
+                "data": {"free_amount": "Free amount"},
+            },
+            "currency": {"title": "Set Currency", "data": {"currency": "Currency"}},
+            "add_excluded_user": {
+                "title": "Exclude Person",
+                "data": {"user": "Person", "add_more": "Exclude another"},
+            },
+            "remove_excluded_user": {
+                "title": "Include Person",
+                "data": {"user": "Person", "remove_more": "Include another"},
+            },
+            "add_override_user": {
+                "title": "Grant Admin Rights",
+                "data": {"user": "Person", "add_more": "Authorize another"},
+            },
+            "remove_override_user": {
+                "title": "Revoke Admin Rights",
+                "data": {"user": "Person", "remove_more": "Unauthorize another"},
+            },
+            "cleanup": {
+                "title": "Remove unused sensors",
+                "description": "This will also remove all open 'amount due' values. Type \"YES I WANT\" to confirm.",
+                "data": {"confirm": "Confirmation"},
+            },
+            "cleanup_result": {
+                "title": "Unused sensors removed",
+                "description": "Removed unused sensors:\n- {sensors}",
+            },
+            "cleanup_result_empty": {
+                "title": "No unused sensors found",
+                "description": "No unused sensors were found.",
+            },
         },
-        "drinks": {
-          "title": "Drink settings",
-          "menu_options": {
-            "add": "Add drink",
-            "remove": "Remove drink",
-            "edit": "Edit price",
-            "currency": "Set currency",
-            "back": "Back"
-          }
+        "enum": {
+            "action": {
+                "user": "User settings",
+                "drinks": "Drink settings",
+                "add": "Add drink",
+                "remove": "Remove drink",
+                "edit": "Edit price",
+                "free_amount": "Set free amount",
+                "currency": "Set currency",
+                "exclude": "Exclude person",
+                "include": "Include person",
+                "authorize": "Grant admin rights",
+                "unauthorize": "Revoke admin rights",
+                "cleanup": "Remove unused sensors",
+                "finish": "Done",
+                "back": "Back",
+            }
         },
+    },
+    "services": {
         "add_drink": {
-          "title": "Add Drink",
-          "data": {
-            "drink": "Drink name",
-            "price": "Price",
-            "add_more": "Add another"
-          }
+            "name": "Add drink",
+            "description": "Increment drink counter for a person",
+            "fields": {
+                "user": {"name": "Person name", "description": "Person name"},
+                "drink": {"name": "Drink name", "description": "Drink name"},
+            },
         },
         "remove_drink": {
-          "title": "Remove Drink",
-          "data": {
-            "drink": "Drink",
-            "remove_more": "Remove another"
-          }
+            "name": "Remove drink",
+            "description": "Decrement drink counter for a person",
+            "fields": {
+                "user": {"name": "Person name", "description": "Person name"},
+                "drink": {"name": "Drink name", "description": "Drink name"},
+            },
         },
-        "edit_price": {
-          "title": "Edit Price",
-          "data": {
-            "drink": "Drink",
-            "price": "Price",
-            "edit_more": "Edit another"
-          }
+        "adjust_count": {
+            "name": "Adjust count",
+            "description": "Set drink count for a person",
+            "fields": {
+                "user": {"name": "Person name", "description": "Person name"},
+                "drink": {"name": "Drink name", "description": "Drink name"},
+                "count": {"name": "Count", "description": "Desired drink count"},
+            },
         },
-        "set_free_amount": {
-          "title": "Set Free Amount",
-          "data": {
-            "free_amount": "Free amount"
-          }
+        "reset_counters": {
+            "name": "Reset counters",
+            "description": "Reset counters for a person. If no user is specified, reset all.",
+            "fields": {"user": {"name": "Person name", "description": "Person name"}},
         },
-        "currency": {
-          "title": "Set Currency",
-          "data": {
-            "currency": "Currency"
-          }
+        "export_csv": {
+            "name": "Export CSV",
+            "description": "Export all amount_due sensors to CSV files",
+            "fields": {
+                "backup": {
+                    "name": "Backup type",
+                    "description": "Type of backup to create",
+                },
+                "interval": {
+                    "name": "Interval",
+                    "description": "Create a backup every X days, weeks or months depending on the selected backup. Ignored for manual backups.",
+                },
+                "keep": {
+                    "name": "Keep",
+                    "description": "Delete backups older than X days, weeks or months depending on the selected backup. For manual backups keep only the latest X files.",
+                },
+            },
         },
-        "add_excluded_user": {
-          "title": "Exclude Person",
-          "data": {
-            "user": "Person",
-            "add_more": "Exclude another"
-          }
-        },
-        "remove_excluded_user": {
-          "title": "Include Person",
-          "data": {
-            "user": "Person",
-            "remove_more": "Include another"
-          }
-        },
-        "add_override_user": {
-          "title": "Grant Admin Rights",
-          "data": {
-            "user": "Person",
-            "add_more": "Authorize another"
-          }
-        },
-        "remove_override_user": {
-          "title": "Revoke Admin Rights",
-          "data": {
-            "user": "Person",
-            "remove_more": "Unauthorize another"
-          }
-        },
-        "cleanup": {
-          "title": "Remove unused sensors",
-          "description": "This will also remove all open 'amount due' values. Type \"YES I WANT\" to confirm.",
-          "data": {
-            "confirm": "Confirmation"
-          }
-        },
-        "cleanup_result": {
-          "title": "Unused sensors removed",
-          "description": "Removed unused sensors:\n- {sensors}"
-        },
-        "cleanup_result_empty": {
-          "title": "No unused sensors found",
-          "description": "No unused sensors were found."
-        }
-      },
-      "enum": {
-        "action": {
-          "user": "User settings",
-          "drinks": "Drink settings",
-          "add": "Add drink",
-          "remove": "Remove drink",
-          "edit": "Edit price",
-          "free_amount": "Set free amount",
-          "currency": "Set currency",
-          "exclude": "Exclude person",
-          "include": "Include person",
-          "authorize": "Grant admin rights",
-          "unauthorize": "Revoke admin rights",
-          "cleanup": "Remove unused sensors",
-          "finish": "Done",
-          "back": "Back"
-        }
-      }
-  },
-  "services": {
-    "add_drink": {
-      "name": "Add drink",
-      "description": "Increment drink counter for a person",
-      "fields": {
-        "user": {
-          "name": "Person name",
-          "description": "Person name"
-        },
-        "drink": {
-          "name": "Drink name",
-          "description": "Drink name"
-        }
-      }
     },
-    "remove_drink": {
-      "name": "Remove drink",
-      "description": "Decrement drink counter for a person",
-      "fields": {
-        "user": {
-          "name": "Person name",
-          "description": "Person name"
-        },
-        "drink": {
-          "name": "Drink name",
-          "description": "Drink name"
-        }
-      }
-    },
-    "adjust_count": {
-      "name": "Adjust count",
-      "description": "Set drink count for a person",
-      "fields": {
-        "user": {
-          "name": "Person name",
-          "description": "Person name"
-        },
-        "drink": {
-          "name": "Drink name",
-          "description": "Drink name"
-        },
-        "count": {
-          "name": "Count",
-          "description": "Desired drink count"
-        }
-      }
-    },
-    "reset_counters": {
-      "name": "Reset counters",
-      "description": "Reset counters for a person. If no user is specified, reset all.",
-      "fields": {
-        "user": {
-          "name": "Person name",
-          "description": "Person name"
-        }
-      }
-    },
-    "export_csv": {
-      "name": "Export CSV",
-      "description": "Export all amount_due sensors to CSV files",
-      "fields": {
-        "backup": {
-          "name": "Backup type",
-          "description": "Type of backup to create"
-        },
-        "interval": {
-          "name": "Interval",
-          "description": "Create a backup every X days, weeks or months depending on the selected backup. Ignored for manual backups."
-        },
-        "keep": {
-          "name": "Keep",
-          "description": "Delete backups older than X days, weeks or months depending on the selected backup. For manual backups keep only the latest X files."
-        }
-      }
-    }
-  }
 }
