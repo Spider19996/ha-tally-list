@@ -151,6 +151,16 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_add_drink()
             self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
 
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.data.get(CONF_USER) in PRICE_LIST_USERS:
+                    entry_data = dict(entry.data)
+                    entry_data[CONF_DRINKS] = self._drinks
+                    self.hass.config_entries.async_update_entry(
+                        entry, data=entry_data
+                    )
+                    await self.hass.config_entries.async_reload(entry.entry_id)
+                    break
+
             has_price_user = any(
                 entry.data.get(CONF_USER) in PRICE_LIST_USERS
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
@@ -165,6 +175,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                                 getattr(self.hass.config, "language", None)
                             ),
                             CONF_FREE_AMOUNT: 0.0,
+                            CONF_DRINKS: self._drinks,
                         },
                     )
                 )
