@@ -5,118 +5,28 @@
       "no_users": "Keine Personen mit Benutzerkonto gefunden"
     },
     "step": {
-      "menu": {
-        "title": "Strichliste verwalten",
-        "menu_options": {
-          "user": "Nutzereinstellungen",
-          "drinks": "Getränkeeinstellungen",
-          "cleanup": "Nicht mehr genutzte Sensoren entfernen",
-          "finish": "Fertig"
-        }
-      },
       "user": {
-        "title": "Nutzereinstellungen",
-        "menu_options": {
-          "free_amount": "Freibetrag setzen",
-          "exclude": "Person ausschließen",
-          "include": "Person einschließen",
-          "authorize": "Adminrechte vergeben",
-          "unauthorize": "Adminrechte entziehen",
-          "back": "Zurück"
-        }
-      },
-      "drinks": {
-        "title": "Getränkeeinstellungen",
-        "menu_options": {
-          "add": "Hinzufügen",
-          "remove": "Entfernen",
-          "edit": "Bearbeiten",
-          "currency": "Währung setzen",
-          "back": "Zurück"
-        }
+        "title": "Strichliste konfigurieren",
+        "description": "Alle Personen mit Benutzerkonto werden automatisch hinzugefügt. Getränke werden einmalig definiert und geteilt."
       },
       "add_drink": {
         "title": "Getränk hinzufügen",
+        "description": "Getränk und Preis eingeben. 'Weiteres hinzufügen' aktivieren, um weitere Getränke einzutragen.",
         "data": {
           "drink": "Getränk",
           "price": "Preis",
           "add_more": "Weiteres hinzufügen"
         }
       },
-      "remove_drink": {
-        "title": "Getränk entfernen",
-        "data": {
-          "drink": "Getränk",
-          "remove_more": "Weiteres entfernen"
-        }
-      },
-      "edit_price": {
-        "title": "Preis bearbeiten",
-        "data": {
-          "drink": "Getränk",
-          "price": "Preis",
-          "edit_more": "Weiteres bearbeiten"
-        }
-      },
-      "set_free_amount": {
-        "title": "Freibetrag setzen",
-        "data": {
-          "free_amount": "Freibetrag"
-        }
-      },
-      "currency": {
+      "set_currency": {
         "title": "Währung setzen",
         "data": {
           "currency": "Währung"
         }
-      },
-      "add_excluded_user": {
-        "title": "Person ausschließen",
-        "data": {
-          "user": "Person",
-          "add_more": "Weiteren ausschließen"
-        }
-      },
-      "remove_excluded_user": {
-        "title": "Person einschließen",
-        "data": {
-          "user": "Person",
-          "remove_more": "Weiteren einschließen"
-        }
-      },
-      "add_override_user": {
-        "title": "Adminrechte vergeben",
-        "data": {
-          "user": "Person",
-          "add_more": "Weiteren berechtigen"
-        }
-      },
-      "remove_override_user": {
-        "title": "Adminrechte entziehen",
-        "data": {
-          "user": "Person",
-          "remove_more": "Weiteren entziehen"
-        }
-      },
-      "cleanup": {
-        "title": "Nicht mehr genutzte Sensoren entfernen",
-        "description": "Dies löscht auch alle offenen 'zu zahlende Beträge'. Gib zur Bestätigung \"JA ICH WILL\" ein.",
-        "data": {
-          "confirm": "Bestätigung"
-        }
-      },
-      "cleanup_result": {
-        "title": "Nicht genutzte Sensoren entfernt",
-        "description": "Folgende Sensoren wurden entfernt:\n- {sensors}"
-      },
-      "cleanup_result_empty": {
-        "title": "Keine ungenutzten Sensoren gefunden",
-        "description": "Es wurden keine ungenutzten Sensoren gefunden."
       }
     },
     "error": {
-      "invalid_drinks": "Ungültiges Getränkeformat",
-      "invalid_confirmation": "Bitte gib \"JA ICH WILL\" ein."
+      "invalid_drinks": "Ungültiges Getränkeformat"
     }
   },
   "options": {
