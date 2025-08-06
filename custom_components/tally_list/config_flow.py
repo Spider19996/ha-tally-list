@@ -313,22 +313,28 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_cleanup(self, user_input=None):
         errors = {}
+        sensors = await self._find_unused_entities()
+        if not sensors:
+            return self.async_show_form(step_id="cleanup_result_empty")
+
         if user_input is not None:
             confirmation = user_input.get("confirm", "").strip().upper()
             if confirmation in {"JA ICH WILL", "YES I WANT"}:
                 removed = await self._cleanup_unused_entities()
-                if removed:
-                    return self.async_show_form(
-                        step_id="cleanup_result",
-                        description_placeholders={
-                            "sensors": "\n- ".join(sorted(removed))
-                        },
-                    )
-                return self.async_show_form(step_id="cleanup_result_empty")
+                return self.async_show_form(
+                    step_id="cleanup_result",
+                    description_placeholders={
+                        "sensors": "\n- ".join(sorted(removed))
+                    },
+                )
             errors["base"] = "invalid_confirmation"
+
         schema = vol.Schema({vol.Required("confirm"): str})
         return self.async_show_form(
-            step_id="cleanup", data_schema=schema, errors=errors
+            step_id="cleanup",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={"sensors": "\n- ".join(sorted(sensors))},
         )
 
     async def async_step_cleanup_result(self, user_input=None):
@@ -537,7 +543,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=schema,
         )
 
-    async def _cleanup_unused_entities(self) -> list[str]:
+    async def _find_unused_entities(self) -> list[str]:
         registry = er.async_get(self.hass)
         entries = self.hass.config_entries.async_entries(DOMAIN)
         entry_ids = {entry.entry_id for entry in entries}
@@ -593,6 +599,13 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             if drink is not None and drink not in active_drinks:
                 to_remove.append(entity_entry.entity_id)
 
+        return sorted(to_remove)
+
+    async def _cleanup_unused_entities(self) -> list[str]:
+        registry = er.async_get(self.hass)
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        to_remove = await self._find_unused_entities()
+
         if to_remove:
             for entity_id in to_remove:
                 try:
@@ -605,8 +618,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                     self.hass.config_entries.async_reload(entry.entry_id)
                 )
 
-            return sorted(to_remove)
-        return []
+        return to_remove
 
     async def _update_drinks(self):
         # Update global drinks list before reloading entries so that new

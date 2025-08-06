@@ -129,7 +129,7 @@
         },
         "cleanup": {
           "title": "Nicht mehr genutzte Sensoren entfernen",
-          "description": "Dies löscht auch alle offenen 'zu zahlende Beträge'. Gib zur Bestätigung \"JA ICH WILL\" ein.",
+          "description": "<span style='color:red'>Dies löscht auch alle offenen 'zu zahlende Beträge'. Gib zur Bestätigung \"JA ICH WILL\" ein.</span> Folgende Sensoren werden entfernt:\n- {sensors}",
           "data": {
             "confirm": "Bestätigung"
           }
