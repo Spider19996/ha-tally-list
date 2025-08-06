@@ -98,34 +98,35 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if p not in existing and p not in excluded and p not in PRICE_LIST_USERS
         ]
 
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        has_price_user = any(
+            entry.data.get(CONF_USER) in PRICE_LIST_USERS for entry in entries
+        )
+        if not has_price_user:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data={
+                        CONF_USER: get_price_list_user(
+                            getattr(self.hass.config, "language", None)
+                        ),
+                        CONF_FREE_AMOUNT: 0.0,
+                    },
+                )
+            )
+            has_price_user = True
+
         if not persons:
             return self.async_abort(reason="no_users")
 
         self._user = persons[0]
         self._pending_users = persons[1:]
-
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        has_price_user = any(
-            entry.data.get(CONF_USER) in PRICE_LIST_USERS for entry in entries
-        )
         for entry in entries:
             if CONF_DRINKS in entry.data:
                 self._drinks = entry.data[CONF_DRINKS]
                 self._excluded_users = entry.data.get(CONF_EXCLUDED_USERS, [])
                 self._currency = entry.data.get(CONF_CURRENCY, "€")
-                if not has_price_user:
-                    self.hass.async_create_task(
-                        self.hass.config_entries.flow.async_init(
-                            DOMAIN,
-                            context={"source": config_entries.SOURCE_IMPORT},
-                            data={
-                                CONF_USER: get_price_list_user(
-                                    getattr(self.hass.config, "language", None)
-                                ),
-                                CONF_FREE_AMOUNT: 0.0,
-                            },
-                        )
-                    )
                 for p in self._pending_users:
                     self.hass.async_create_task(
                         self.hass.config_entries.flow.async_init(
