@@ -91,6 +91,8 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         excluded = set(
             self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, [])
         )
+        # Preserve already excluded users when the price list user is recreated
+        self._excluded_users = list(excluded)
 
         persons = [
             p
