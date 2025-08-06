@@ -30,6 +30,9 @@
     }
   },
   "options": {
+      "error": {
+        "invalid_confirmation": "Bitte gib \"JA ICH WILL\" ein."
+      },
       "step": {
         "menu": {
           "title": "Strichliste verwalten",
@@ -125,7 +128,11 @@
           }
         },
         "cleanup": {
-          "title": "Nicht mehr genutzte Sensoren entfernen"
+          "title": "Nicht mehr genutzte Sensoren entfernen",
+          "description": "Dies löscht auch alle offenen 'zu zahlende Beträge'. Gib zur Bestätigung \"JA ICH WILL\" ein.",
+          "data": {
+            "confirm": "Bestätigung"
+          }
         },
         "cleanup_result": {
           "title": "Nicht genutzte Sensoren entfernt",
