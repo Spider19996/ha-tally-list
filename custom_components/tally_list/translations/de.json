@@ -23,52 +23,6 @@
         "data": {
           "currency": "Währung"
         }
-      },
-      "menu": {
-        "title": "Strichliste konfigurieren",
-        "menu_options": {
-          "free_amount": "Freibetrag setzen",
-          "exclude": "Person ausschließen",
-          "include": "Person einschließen",
-          "authorize": "Adminrechte vergeben",
-          "unauthorize": "Adminrechte entziehen",
-          "currency": "Währung setzen",
-          "finish": "Fertig"
-        }
-      },
-      "set_free_amount": {
-        "title": "Freibetrag setzen",
-        "data": {
-          "free_amount": "Freibetrag"
-        }
-      },
-      "add_excluded_user": {
-        "title": "Person ausschließen",
-        "data": {
-          "user": "Person",
-          "add_more": "Weiteren ausschließen"
-        }
-      },
-      "remove_excluded_user": {
-        "title": "Person einschließen",
-        "data": {
-          "user": "Person",
-          "remove_more": "Weiteren einschließen"
-        }
-      },
-      "add_override_user": {
-        "title": "Adminrechte vergeben",
-        "data": {
-          "user": "Person",
-          "add_more": "Weiteren berechtigen"
-        }
-      },
-      "remove_override_user": {
-        "title": "Adminrechte entziehen",
-        "data": {
-          "user": "Person",
-          "remove_more": "Weiteren entziehen"
-        }
       }
     },
     "error": {
