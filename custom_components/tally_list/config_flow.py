@@ -267,6 +267,8 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user = user_input[CONF_USER]
             self._excluded_users.append(user)
+            if user in self._pending_users:
+                self._pending_users.remove(user)
             if user_input.get("add_more") and len(persons) > 1:
                 return await self.async_step_add_excluded_user()
             return await self.async_step_menu()
@@ -283,6 +285,8 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user = user_input[CONF_USER]
             if user in self._excluded_users:
                 self._excluded_users.remove(user)
+                if user not in self._pending_users:
+                    self._pending_users.append(user)
             if user_input.get("remove_more") and self._excluded_users:
                 return await self.async_step_remove_excluded_user()
             return await self.async_step_menu()
@@ -396,6 +400,8 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.hass.config_entries.async_reload(entry.entry_id)
                     break
         for p in self._pending_users:
+            if p in self._excluded_users:
+                continue
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
                     DOMAIN,
