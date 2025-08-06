@@ -22,6 +22,8 @@ This custom integration for [Home Assistant](https://www.home-assistant.io/) is 
 2. Install the **Tally List** integration.
 3. Restart Home Assistant and add the integration via the integrations page.
 
+It is recommended to also install the companion [Tally List Lovelace card](https://github.com/Spider19996/ha-tally-list-lovelace) for a matching dashboard interface.
+
 ## Usage
 
 At initial setup you will be asked to enter available drinks. All persons with a user account share this list. Drinks and prices can later be managed from the integration options.
