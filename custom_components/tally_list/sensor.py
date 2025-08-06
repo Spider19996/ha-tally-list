@@ -6,15 +6,8 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.util import slugify
 
-from .const import (
-    DOMAIN,
-    CONF_USER,
-    PRICE_LIST_USERS,
-    CONF_CURRENCY,
-    PRICE_LIST_USER_EN,
-)
+from .const import DOMAIN, CONF_USER, PRICE_LIST_USERS, CONF_CURRENCY
 
 
 async def async_setup_entry(
@@ -100,9 +93,8 @@ class DrinkPriceSensor(SensorEntity):
         self._drink = drink
         self._price = price
         self._attr_should_poll = False
-        self._attr_name = f"{PRICE_LIST_USER_EN} {drink} Price"
+        self._attr_name = f"{entry.data[CONF_USER]} {drink} Price"
         self._attr_unique_id = f"{entry.entry_id}_{drink}_price"
-        self.entity_id = f"sensor.price_list_{slugify(drink)}_price"
         self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
             CONF_CURRENCY, "€"
         )
@@ -128,9 +120,8 @@ class FreeAmountSensor(SensorEntity):
         self._hass = hass
         self._entry = entry
         self._attr_should_poll = False
-        self._attr_name = f"{PRICE_LIST_USER_EN} Free Amount"
+        self._attr_name = f"{entry.data[CONF_USER]} Free Amount"
         self._attr_unique_id = f"{entry.entry_id}_free_amount"
-        self.entity_id = "sensor.price_list_free_amount"
         self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
             CONF_CURRENCY, "€"
         )
