@@ -56,6 +56,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._override_users: list[str] = []
         self._pending_users: list[str] = []
         self._currency: str = "€"
+        self._create_price_user: bool = False
 
     async def async_step_import(self, user_input=None):
         """Handle import of a config entry."""
@@ -101,23 +102,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ]
 
         entries = self.hass.config_entries.async_entries(DOMAIN)
-        has_price_user = any(
+        self._create_price_user = not any(
             entry.data.get(CONF_USER) in PRICE_LIST_USERS for entry in entries
         )
-        if not has_price_user:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data={
-                        CONF_USER: get_price_list_user(
-                            getattr(self.hass.config, "language", None)
-                        ),
-                        CONF_FREE_AMOUNT: 0.0,
-                    },
-                )
-            )
-            has_price_user = True
 
         if not persons:
             return self.async_abort(reason="no_users")
@@ -129,15 +116,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._drinks = entry.data[CONF_DRINKS]
                 self._excluded_users = entry.data.get(CONF_EXCLUDED_USERS, [])
                 self._currency = entry.data.get(CONF_CURRENCY, "€")
-                for p in self._pending_users:
-                    self.hass.async_create_task(
-                        self.hass.config_entries.flow.async_init(
-                            DOMAIN,
-                            context={"source": config_entries.SOURCE_IMPORT},
-                            data={CONF_USER: p},
-                        )
-                    )
-                self._pending_users = []
                 return await self.async_step_set_currency()
 
         return await self.async_step_add_drink()
@@ -149,45 +127,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._drinks[drink] = price
             if user_input.get("add_more"):
                 return await self.async_step_add_drink()
-            self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
-
-            for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data.get(CONF_USER) in PRICE_LIST_USERS:
-                    entry_data = dict(entry.data)
-                    entry_data[CONF_DRINKS] = self._drinks
-                    self.hass.config_entries.async_update_entry(
-                        entry, data=entry_data
-                    )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    break
-
-            has_price_user = any(
-                entry.data.get(CONF_USER) in PRICE_LIST_USERS
-                for entry in self.hass.config_entries.async_entries(DOMAIN)
-            )
-            if not has_price_user:
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": config_entries.SOURCE_IMPORT},
-                        data={
-                            CONF_USER: get_price_list_user(
-                                getattr(self.hass.config, "language", None)
-                            ),
-                            CONF_FREE_AMOUNT: 0.0,
-                            CONF_DRINKS: self._drinks,
-                        },
-                    )
-                )
-            for p in self._pending_users:
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": config_entries.SOURCE_IMPORT},
-                        data={CONF_USER: p},
-                    )
-                )
-            self._pending_users = []
             return await self.async_step_set_currency()
 
         schema = vol.Schema(
@@ -199,9 +138,50 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="add_drink", data_schema=schema)
 
+    async def _finalize_setup(self) -> None:
+        self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
+        self.hass.data[DOMAIN][CONF_EXCLUDED_USERS] = self._excluded_users
+        self.hass.data[DOMAIN][CONF_CURRENCY] = self._currency
+
+        if self._create_price_user:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data={
+                        CONF_USER: get_price_list_user(
+                            getattr(self.hass.config, "language", None)
+                        ),
+                        CONF_FREE_AMOUNT: 0.0,
+                        CONF_DRINKS: self._drinks,
+                        CONF_CURRENCY: self._currency,
+                    },
+                )
+            )
+        else:
+            for entry in self.hass.config_entries.async_entries(DOMAIN):
+                if entry.data.get(CONF_USER) in PRICE_LIST_USERS:
+                    entry_data = dict(entry.data)
+                    entry_data[CONF_DRINKS] = self._drinks
+                    entry_data[CONF_CURRENCY] = self._currency
+                    self.hass.config_entries.async_update_entry(entry, data=entry_data)
+                    await self.hass.config_entries.async_reload(entry.entry_id)
+                    break
+
+        for p in self._pending_users:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data={CONF_USER: p},
+                )
+            )
+        self._pending_users = []
+
     async def async_step_set_currency(self, user_input=None):
         if user_input is not None:
             self._currency = user_input[CONF_CURRENCY]
+            await self._finalize_setup()
             return self.async_create_entry(
                 title=self._user,
                 data={
