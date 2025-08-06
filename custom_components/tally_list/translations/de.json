@@ -11,7 +11,6 @@
         "menu_options": {
           "user": "Nutzereinstellungen",
           "drinks": "Getränkeeinstellungen",
-          "cleanup": "Nicht mehr genutzte Sensoren entfernen",
           "finish": "Fertig"
         }
       },
@@ -98,26 +97,10 @@
           "user": "Person",
           "remove_more": "Weiteren entziehen"
         }
-      },
-      "cleanup": {
-        "title": "Nicht mehr genutzte Sensoren entfernen",
-        "description": "Dies löscht auch alle offenen 'zu zahlende Beträge'. Gib zur Bestätigung \"JA ICH WILL\" ein.",
-        "data": {
-          "confirm": "Bestätigung"
-        }
-      },
-      "cleanup_result": {
-        "title": "Nicht genutzte Sensoren entfernt",
-        "description": "Folgende Sensoren wurden entfernt:\n- {sensors}"
-      },
-      "cleanup_result_empty": {
-        "title": "Keine ungenutzten Sensoren gefunden",
-        "description": "Es wurden keine ungenutzten Sensoren gefunden."
       }
     },
     "error": {
-      "invalid_drinks": "Ungültiges Getränkeformat",
-      "invalid_confirmation": "Bitte gib \"JA ICH WILL\" ein."
+      "invalid_drinks": "Ungültiges Getränkeformat"
     }
   },
   "options": {
