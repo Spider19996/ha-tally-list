@@ -129,7 +129,7 @@
         },
         "cleanup": {
           "title": "Nicht mehr genutzte Sensoren entfernen",
-          "description": "Dies löscht auch alle offenen 'zu zahlende Beträge'. Gib zur Bestätigung \"JA ICH WILL\" ein.",
+          "description": "<ha-alert alert-type=\"error\">Dies löscht auch alle offenen 'zu zahlende Beträge'. Gib zur Bestätigung \"JA ICH WILL\" ein.</ha-alert> Folgende Sensoren werden entfernt:\n- {sensors}",
           "data": {
             "confirm": "Bestätigung"
           }
