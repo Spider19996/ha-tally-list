@@ -3,7 +3,7 @@
   "name": "Tally List",
   "documentation": "https://github.com/Spider19996/ha-tally-list",
   "issue_tracker": "https://github.com/Spider19996/ha-tally-list/issues",
-  "version": "v06.08.2025",
+  "version": "08.08.2025",
   "requirements": [],
   "config_flow": true,
   "codeowners": ["@Spider19996"],
