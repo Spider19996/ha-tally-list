@@ -85,12 +85,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         user = call.data[ATTR_USER]
         await _verify_permissions(call, user)
         drink = call.data[ATTR_DRINK]
+        count = max(0, call.data.get("count", 1))
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
                 continue
             if data["entry"].data.get("user") == user:
                 counts = data.setdefault("counts", {})
-                new_count = counts.get(drink, 0) + 1
+                new_count = counts.get(drink, 0) + count
                 counts[drink] = new_count
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
@@ -100,12 +101,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         user = call.data[ATTR_USER]
         await _verify_permissions(call, user)
         drink = call.data[ATTR_DRINK]
+        count = max(0, call.data.get("count", 1))
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
                 continue
             if data["entry"].data.get("user") == user:
                 counts = data.setdefault("counts", {})
-                new_count = counts.get(drink, 0) - 1
+                new_count = counts.get(drink, 0) - count
                 if new_count < 0:
                     new_count = 0
                 counts[drink] = new_count

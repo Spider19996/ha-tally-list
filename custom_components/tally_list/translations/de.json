@@ -249,6 +249,10 @@
         "drink": {
           "name": "Getränk",
           "description": "Name des Getränks"
+        },
+        "count": {
+          "name": "Anzahl",
+          "description": "Anzahl der hinzuzufügenden Getränke"
         }
       }
     },
@@ -263,6 +267,10 @@
         "drink": {
           "name": "Getränk",
           "description": "Name des Getränks"
+        },
+        "count": {
+          "name": "Anzahl",
+          "description": "Anzahl der zu entfernenden Getränke"
         }
       }
     },

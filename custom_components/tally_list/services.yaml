@@ -14,6 +14,14 @@ add_drink:
       required: true
       selector:
         text:
+    count:
+      description: Number of drinks to add
+      example: 2
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
 remove_drink:
   name: Remove drink
   description: Decrement drink counter for a person
@@ -30,6 +38,14 @@ remove_drink:
       required: true
       selector:
         text:
+    count:
+      description: Number of drinks to remove
+      example: 2
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
 adjust_count:
   name: Adjust count
   description: Set drink count for a person
