@@ -105,6 +105,9 @@
   },
   "options": {
     "title": "Tally List",
+    "abort": {
+      "delete_all": "All sensors and configuration entries have been removed."
+    },
     "error": {
       "invalid_confirmation": "Please type \"YES I WANT\"."
     },
@@ -224,10 +227,6 @@
         "cleanup_result_empty": {
           "title": "No unused sensors found",
           "description": "No unused sensors were found."
-        },
-        "delete_result": {
-          "title": "All entries deleted",
-          "description": "All sensors and configuration entries have been removed."
         }
       },
       "enum": {
