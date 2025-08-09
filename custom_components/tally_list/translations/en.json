@@ -115,6 +115,7 @@
             "user": "User settings",
             "drinks": "Drink settings",
             "cleanup": "Remove unused sensors",
+            "delete": "Delete all entries",
             "finish": "Done"
           }
         },
@@ -209,6 +210,13 @@
             "confirm": "Confirmation"
           }
         },
+        "delete": {
+          "title": "Delete all entries",
+          "description": "This will remove all sensors and configuration entries of this integration. Type \"YES I WANT\" to confirm.",
+          "data": {
+            "confirm": "Confirmation"
+          }
+        },
         "cleanup_result": {
           "title": "Unused sensors removed",
           "description": "Removed unused sensors:\n- {sensors}"
@@ -216,6 +224,10 @@
         "cleanup_result_empty": {
           "title": "No unused sensors found",
           "description": "No unused sensors were found."
+        },
+        "delete_result": {
+          "title": "All entries deleted",
+          "description": "All sensors and configuration entries have been removed."
         }
       },
       "enum": {
@@ -232,6 +244,7 @@
           "authorize": "Grant admin rights",
           "unauthorize": "Revoke admin rights",
           "cleanup": "Remove unused sensors",
+          "delete": "Delete all entries",
           "finish": "Done",
           "back": "Back"
         }

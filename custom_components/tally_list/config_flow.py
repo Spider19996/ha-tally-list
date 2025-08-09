@@ -447,6 +447,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 "user",
                 "drinks",
                 "cleanup",
+                "delete",
                 "finish",
             ],
         )
@@ -535,6 +536,22 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_cleanup_result_empty(self, user_input=None):
         return await self.async_step_menu()
+
+    async def async_step_delete(self, user_input=None):
+        errors = {}
+        if user_input is not None:
+            confirmation = user_input.get("confirm", "").strip().upper()
+            if confirmation in {"JA ICH WILL", "YES I WANT"}:
+                await self._delete_all_entries()
+                return self.async_show_form(step_id="delete_result")
+            errors["base"] = "invalid_confirmation"
+        schema = vol.Schema({vol.Required("confirm"): str})
+        return self.async_show_form(
+            step_id="delete", data_schema=schema, errors=errors
+        )
+
+    async def async_step_delete_result(self, user_input=None):
+        return self.async_abort(reason="delete_all")
 
     async def async_step_finish(self, user_input=None):
         return await self._update_drinks()
@@ -800,6 +817,21 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
             return sorted(to_remove)
         return []
+
+    async def _delete_all_entries(self) -> None:
+        entries = list(self.hass.config_entries.async_entries(DOMAIN))
+        for entry in entries:
+            await self.hass.config_entries.async_remove(entry.entry_id)
+
+        registry = er.async_get(self.hass)
+        for entity_entry in list(registry.entities.values()):
+            if entity_entry.domain == "sensor" and entity_entry.platform == DOMAIN:
+                try:
+                    await registry.async_remove(entity_entry.entity_id)
+                except Exception as exc:  # pragma: no cover - just log
+                    _LOGGER.error("Failed to remove %s: %s", entity_entry.entity_id, exc)
+
+        self.hass.data.pop(DOMAIN, None)
 
     async def _update_drinks(self):
         # Update global drinks list before reloading entries so that new
