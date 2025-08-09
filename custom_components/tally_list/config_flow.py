@@ -551,7 +551,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
     async def async_step_delete_result(self, user_input=None):
-        return self.async_abort(reason="delete_all")
+        return await self.async_step_menu()
 
     async def async_step_finish(self, user_input=None):
         return await self._update_drinks()
