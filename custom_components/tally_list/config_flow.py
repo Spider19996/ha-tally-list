@@ -543,15 +543,12 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             confirmation = user_input.get("confirm", "").strip().upper()
             if confirmation in {"JA ICH WILL", "YES I WANT"}:
                 await self._delete_all_entries()
-                return self.async_show_form(step_id="delete_result")
+                return self.async_abort(reason="delete_all")
             errors["base"] = "invalid_confirmation"
         schema = vol.Schema({vol.Required("confirm"): str})
         return self.async_show_form(
             step_id="delete", data_schema=schema, errors=errors
         )
-
-    async def async_step_delete_result(self, user_input=None):
-        return self.async_abort(reason="delete_all")
 
     async def async_step_finish(self, user_input=None):
         return await self._update_drinks()

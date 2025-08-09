@@ -105,6 +105,9 @@
   },
   "options": {
       "title": "Strichliste",
+      "abort": {
+        "delete_all": "Alle Sensoren und Konfigurationen wurden entfernt."
+      },
       "error": {
         "invalid_confirmation": "Bitte gib \"JA ICH WILL\" ein."
       },
@@ -224,10 +227,6 @@
         "cleanup_result_empty": {
           "title": "Keine ungenutzten Sensoren gefunden",
           "description": "Es wurden keine ungenutzten Sensoren gefunden."
-        },
-        "delete_result": {
-          "title": "Alle Einträge gelöscht",
-          "description": "Alle Sensoren und Konfigurationen wurden entfernt."
         }
       },
       "enum": {
