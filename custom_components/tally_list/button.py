@@ -14,6 +14,8 @@ from .const import (
     CONF_USER,
     CONF_OVERRIDE_USERS,
     PRICE_LIST_USERS,
+    CONF_CASH_USER_NAME,
+    CASH_USER_SLUG,
 )
 
 
@@ -31,7 +33,11 @@ class ResetButton(ButtonEntity):
         user = entry.data[CONF_USER]
         self._attr_name = f"{user} Reset"
         self._attr_unique_id = f"{entry.entry_id}_reset_tally"
-        self.entity_id = f"button.{slugify(user)}_reset_tally"
+        user_slug = slugify(user)
+        cash_name = hass.data.get(DOMAIN, {}).get(CONF_CASH_USER_NAME, "")
+        if user.strip().lower() == cash_name.strip().lower():
+            user_slug = CASH_USER_SLUG
+        self.entity_id = f"button.{user_slug}_reset_tally"
 
     async def async_press(self) -> None:
         user_id = self._context.user_id if self._context else None
