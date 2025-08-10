@@ -29,7 +29,7 @@ add_drink:
         boolean:
     comment:
       description: Comment for free mark
-      required: true
+      required: false
       selector:
         text:
 remove_drink:
