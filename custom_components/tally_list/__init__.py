@@ -15,6 +15,7 @@ from homeassistant.util.dt import now as dt_now
 from homeassistant.util import dt as dt_util
 
 from .websocket import async_register as async_register_ws
+from .sensor import FreeDrinkFeedSensor
 
 from .const import (
     DOMAIN,
@@ -198,9 +199,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.data[DOMAIN]["free_drinks_ledger"] = hass.data[DOMAIN].get(
                 "free_drinks_ledger", 0.0
             ) + price * count
+            tz = dt_util.get_time_zone("Europe/Berlin")
+            year = dt_util.now(tz).year
             await hass.async_add_executor_job(
                 _write_free_drink_log, user, drink, count, comment
             )
+            feed_sensors = hass.data[DOMAIN].setdefault(
+                "free_drink_feed_sensors", {}
+            )
+            sensor = feed_sensors.get(year)
+            if sensor is not None:
+                await sensor.async_update_state()
+            else:
+                add_entities = hass.data[DOMAIN].get("feed_add_entities")
+                if add_entities is not None:
+                    sensor = FreeDrinkFeedSensor(hass, year)
+                    feed_sensors[year] = sensor
+                    add_entities([sensor])
             hass.bus.async_fire(
                 "tally_list_free_drink_created",
                 {"user": user, "drink": drink, "count": count, "comment": comment},
@@ -257,9 +272,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "free_drinks_ledger", 0.0
             ) - price * count
             comment = comment.strip()
+            tz = dt_util.get_time_zone("Europe/Berlin")
+            year = dt_util.now(tz).year
             await hass.async_add_executor_job(
                 _write_free_drink_log, user, drink, -count, comment
             )
+            feed_sensors = hass.data[DOMAIN].setdefault(
+                "free_drink_feed_sensors", {}
+            )
+            sensor = feed_sensors.get(year)
+            if sensor is not None:
+                await sensor.async_update_state()
+            else:
+                add_entities = hass.data[DOMAIN].get("feed_add_entities")
+                if add_entities is not None:
+                    sensor = FreeDrinkFeedSensor(hass, year)
+                    feed_sensors[year] = sensor
+                    add_entities([sensor])
             hass.bus.async_fire(
                 "tally_list_free_drink_reversed",
                 {"user": user, "drink": drink, "count": count, "comment": comment},
@@ -600,6 +629,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, PLATFORMS
     )
     if unloaded:
+        if hass.data[DOMAIN].get("feed_entry_id") == entry.entry_id:
+            unsub = hass.data[DOMAIN].pop("feed_unsub", None)
+            if unsub is not None:
+                unsub()
+            hass.data[DOMAIN].pop("free_drink_feed_sensors", None)
+            hass.data[DOMAIN].pop("feed_add_entities", None)
+            hass.data[DOMAIN].pop("feed_entry_id", None)
         hass.data[DOMAIN].pop(entry.entry_id, None)
         if entry.data.get(CONF_USER) in PRICE_LIST_USERS:
             hass.data[DOMAIN].pop("drinks", None)
