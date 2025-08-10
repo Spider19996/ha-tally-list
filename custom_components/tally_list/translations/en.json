@@ -154,7 +154,7 @@
         },
         "free_marks_confirm": {
           "title": "Disable free marks",
-          "description": "Type \"YES I WANT\" to confirm",
+          "description": "This removes all sensors and configuration of the Free Drinks user. Type \"YES I WANT\" to confirm",
           "data": {
             "confirm": "Confirmation"
           }
