@@ -24,12 +24,12 @@ add_drink:
           step: 1
     free_mark:
       description: Book as free mark
-      required: false
+      required: true
       selector:
         boolean:
     comment:
       description: Comment for free mark
-      required: false
+      required: true
       selector:
         text:
 remove_drink:
