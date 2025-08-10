@@ -1012,9 +1012,8 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             )
             self.hass.data[DOMAIN].pop("free_drink_counts", None)
             self.hass.data[DOMAIN].pop("free_drinks_ledger", None)
-            entries = [e for e in entries if e.entry_id != cash_entry.entry_id]
 
-        for entry in entries:
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
             data = {
                 CONF_USER: entry.data[CONF_USER],
                 CONF_DRINKS: self._drinks,
