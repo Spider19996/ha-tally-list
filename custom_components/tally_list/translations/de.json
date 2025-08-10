@@ -154,7 +154,7 @@
         },
         "free_marks_confirm": {
           "title": "Freimarken deaktivieren",
-          "description": "Gib zur Bestätigung \"JA ICH WILL\" ein",
+          "description": "Dies entfernt alle Sensoren und Konfigurationen des Nutzers Freigetränke. Gib zur Bestätigung \"JA ICH WILL\" ein",
           "data": {
             "confirm": "Bestätigung"
           }
