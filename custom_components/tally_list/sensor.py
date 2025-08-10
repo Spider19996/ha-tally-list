@@ -54,7 +54,11 @@ async def async_setup_entry(
     data.setdefault("sensors", []).extend(sensors)
     async_add_entities(sensors)
 
-    if "feed_add_entities" not in hass.data[DOMAIN]:
+    cash_name = hass.data.get(DOMAIN, {}).get(CONF_CASH_USER_NAME, "")
+    if (
+        user.strip().lower() == cash_name.strip().lower()
+        and "feed_add_entities" not in hass.data[DOMAIN]
+    ):
         hass.data[DOMAIN]["feed_add_entities"] = async_add_entities
         hass.data[DOMAIN]["feed_entry_id"] = entry.entry_id
         feed_sensors: dict[int, FreeDrinkFeedSensor] = {}
@@ -65,9 +69,10 @@ async def async_setup_entry(
                 if not match:
                     continue
                 year = int(match.group(1))
-                feed_sensors[year] = FreeDrinkFeedSensor(hass, year)
+                feed_sensors[year] = FreeDrinkFeedSensor(hass, entry, year)
         if feed_sensors:
             async_add_entities(list(feed_sensors.values()))
+            data.setdefault("sensors", []).extend(feed_sensors.values())
         hass.data[DOMAIN]["free_drink_feed_sensors"] = feed_sensors
 
         async def _periodic_update(_now):
@@ -251,7 +256,9 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
 
 
 class FreeDrinkFeedSensor(SensorEntity):
-    def __init__(self, hass: HomeAssistant, year: int, max_entries: int = 20) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, year: int, max_entries: int = 20
+    ) -> None:
         self._hass = hass
         self._year = year
         self._max_entries = max_entries
@@ -260,6 +267,7 @@ class FreeDrinkFeedSensor(SensorEntity):
             f"{_local_suffix(hass, 'Free drinks feed', 'Freigetränke Feed')} {year}"
         )
         self.entity_id = f"sensor.free_drink_feed_{year}"
+        self._attr_unique_id = f"{entry.entry_id}_free_drink_feed_{year}"
         self._path = hass.config.path(
             "backup", "tally_list", "free_drinks", f"free_drinks_{year}.csv"
         )
