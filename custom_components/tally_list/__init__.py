@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import csv
 import os
-import re
 from datetime import datetime, timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.exceptions import Unauthorized
 from homeassistant.util.dt import now as dt_now
-from homeassistant.util import dt as dt_util
 
 from .websocket import async_register as async_register_ws
 
@@ -31,11 +29,6 @@ from .const import (
     CONF_OVERRIDE_USERS,
     PRICE_LIST_USERS,
     CONF_CURRENCY,
-    CONF_ENABLE_FREE_MARKS,
-    CONF_CASH_USER_NAME,
-    ATTR_FREE_MARK,
-    ATTR_COMMENT,
-    get_cash_user_name,
 )
 
 PLATFORMS: list[str] = ["sensor", "button"]
@@ -50,10 +43,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             CONF_EXCLUDED_USERS: [],
             CONF_OVERRIDE_USERS: [],
             CONF_CURRENCY: "€",
-            CONF_ENABLE_FREE_MARKS: False,
-            CONF_CASH_USER_NAME: get_cash_user_name(hass.config.language),
-            "free_mark_counts": {},
-            "free_marks_ledger": 0.0,
         },
     )
 
@@ -77,47 +66,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if person_name != target_user:
             raise Unauthorized
 
-    def _write_free_mark_log(name: str, drink: str, count: int, comment: str) -> None:
-        tz = dt_util.get_time_zone("Europe/Berlin")
-        ts = dt_util.now(tz).replace(second=0, microsecond=0)
-        base_dir = hass.config.path("backup", "tally_list", "free_marks")
-        os.makedirs(base_dir, exist_ok=True)
-        path = os.path.join(base_dir, f"free_marks_{ts.year}.csv")
-        key_time = ts.strftime("%Y-%m-%dT%H:%M")
-        comment_clean = re.sub(r"[\n\r\t]", " ", comment).strip()[:200]
-        rows: list[list[str]] = []
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8", newline="") as csvfile:
-                rows = list(csv.reader(csvfile, delimiter=";"))
-        if not rows:
-            rows = [["Uhrzeit", "Name", "Getränke mit Anzahl", "Kommentar"]]
-        last_key = None
-        if len(rows) > 1:
-            last = rows[-1]
-            last_key = (last[0], last[1], last[3])
-        key = (key_time, name, comment_clean)
-        if key == last_key:
-            drink_map: dict[str, int] = {}
-            if rows[-1][2]:
-                for part in rows[-1][2].split(","):
-                    part = part.strip()
-                    if not part:
-                        continue
-                    dname, dcount = part.rsplit(" x", 1)
-                    drink_map[dname] = int(dcount)
-            drink_map[drink] = drink_map.get(drink, 0) + count
-            drink_map = {k: v for k, v in drink_map.items() if v != 0}
-            drink_str = ", ".join(
-                f"{k} x{v}" for k, v in sorted(drink_map.items())
-            )
-            rows[-1][2] = drink_str
-        else:
-            drink_str = f"{drink} x{count}"
-            rows.append([key_time, name, drink_str, comment_clean])
-        with open(path, "w", encoding="utf-8", newline="") as csvfile:
-            writer = csv.writer(csvfile, delimiter=";", quoting=csv.QUOTE_MINIMAL)
-            writer.writerows(rows)
-
     async def adjust_count_service(call):
         user = call.data[ATTR_USER]
         await _verify_permissions(call, user)
@@ -138,41 +86,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await _verify_permissions(call, user)
         drink = call.data[ATTR_DRINK]
         count = max(0, call.data.get("count", 1))
-        free_mark = call.data.get(ATTR_FREE_MARK, False)
-        comment = call.data.get(ATTR_COMMENT, "")
-        if free_mark:
-            if not hass.data[DOMAIN].get(CONF_ENABLE_FREE_MARKS):
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="free_marks_disabled",
-                )
-            if not hass.data[DOMAIN].get(CONF_CASH_USER_NAME):
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="cash_user_missing"
-                )
-            comment = comment.strip()
-            if len(comment) < 3 or len(comment) > 200:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="comment_required"
-                )
-            if drink not in hass.data[DOMAIN].get("drinks", {}):
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="drink_unknown"
-                )
-            counts = hass.data[DOMAIN].setdefault("free_mark_counts", {})
-            counts[drink] = counts.get(drink, 0) + count
-            price = hass.data[DOMAIN]["drinks"].get(drink, 0.0)
-            hass.data[DOMAIN]["free_marks_ledger"] = hass.data[DOMAIN].get(
-                "free_marks_ledger", 0.0
-            ) + price * count
-            await hass.async_add_executor_job(
-                _write_free_mark_log, user, drink, count, comment
-            )
-            hass.bus.async_fire(
-                "tally_list_free_mark_created",
-                {"user": user, "drink": drink, "count": count, "comment": comment},
-            )
-            return
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
                 continue
@@ -189,37 +102,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await _verify_permissions(call, user)
         drink = call.data[ATTR_DRINK]
         count = max(0, call.data.get("count", 1))
-        free_mark = call.data.get(ATTR_FREE_MARK, False)
-        comment = call.data.get(ATTR_COMMENT, "")
-        if free_mark:
-            if not hass.data[DOMAIN].get(CONF_ENABLE_FREE_MARKS):
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="free_marks_disabled",
-                )
-            if not hass.data[DOMAIN].get(CONF_CASH_USER_NAME):
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="cash_user_missing"
-                )
-            counts = hass.data[DOMAIN].setdefault("free_mark_counts", {})
-            if drink not in counts or counts[drink] < count:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="cannot_remove_count"
-                )
-            counts[drink] -= count
-            price = hass.data[DOMAIN]["drinks"].get(drink, 0.0)
-            hass.data[DOMAIN]["free_marks_ledger"] = hass.data[DOMAIN].get(
-                "free_marks_ledger", 0.0
-            ) - price * count
-            comment = comment.strip()
-            await hass.async_add_executor_job(
-                _write_free_mark_log, user, drink, -count, comment
-            )
-            hass.bus.async_fire(
-                "tally_list_free_mark_reversed",
-                {"user": user, "drink": drink, "count": count, "comment": comment},
-            )
-            return
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
                 continue
@@ -495,44 +377,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
             CONF_OVERRIDE_USERS: hass.data[DOMAIN].get("override_users", []),
             CONF_CURRENCY: hass.data[DOMAIN][CONF_CURRENCY],
-            CONF_ENABLE_FREE_MARKS: hass.data[DOMAIN].get(CONF_ENABLE_FREE_MARKS, False),
-            CONF_CASH_USER_NAME: hass.data[DOMAIN].get(
-                CONF_CASH_USER_NAME, get_cash_user_name(hass.config.language)
-            ),
-        }
-        if "drinks" in hass.data[DOMAIN]:
-            entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
-        hass.config_entries.async_update_entry(entry, data=entry_data)
-    if (
-        not hass.data[DOMAIN].get(CONF_ENABLE_FREE_MARKS)
-        and entry.data.get(CONF_ENABLE_FREE_MARKS) is not None
-    ):
-        hass.data[DOMAIN][CONF_ENABLE_FREE_MARKS] = entry.data[CONF_ENABLE_FREE_MARKS]
-    if (
-        not hass.data[DOMAIN].get(CONF_CASH_USER_NAME)
-        and entry.data.get(CONF_CASH_USER_NAME) is not None
-    ):
-        hass.data[DOMAIN][CONF_CASH_USER_NAME] = entry.data[CONF_CASH_USER_NAME]
-    if (
-        (hass.data[DOMAIN].get(CONF_ENABLE_FREE_MARKS) is not None
-         and CONF_ENABLE_FREE_MARKS not in entry.data)
-        or (
-            hass.data[DOMAIN].get(CONF_CASH_USER_NAME) is not None
-            and CONF_CASH_USER_NAME not in entry.data
-        )
-    ):
-        entry_data = {
-            "user": entry.data.get("user"),
-            CONF_FREE_AMOUNT: hass.data[DOMAIN].get("free_amount", 0.0),
-            CONF_EXCLUDED_USERS: hass.data[DOMAIN].get("excluded_users", []),
-            CONF_OVERRIDE_USERS: hass.data[DOMAIN].get("override_users", []),
-            CONF_CURRENCY: hass.data[DOMAIN].get(CONF_CURRENCY, "€"),
-            CONF_ENABLE_FREE_MARKS: hass.data[DOMAIN].get(
-                CONF_ENABLE_FREE_MARKS, False
-            ),
-            CONF_CASH_USER_NAME: hass.data[DOMAIN].get(
-                CONF_CASH_USER_NAME, get_cash_user_name(hass.config.language)
-            ),
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
@@ -555,10 +399,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # user is re-added later
             hass.data[DOMAIN].pop(CONF_OVERRIDE_USERS, None)
             hass.data[DOMAIN].pop(CONF_CURRENCY, None)
-            hass.data[DOMAIN].pop(CONF_ENABLE_FREE_MARKS, None)
-            hass.data[DOMAIN].pop(CONF_CASH_USER_NAME, None)
-            hass.data[DOMAIN].pop("free_mark_counts", None)
-            hass.data[DOMAIN].pop("free_marks_ledger", None)
         if not any(
             isinstance(value, dict) and "entry" in value
             for value in hass.data.get(DOMAIN, {}).values()
