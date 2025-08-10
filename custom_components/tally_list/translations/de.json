@@ -120,7 +120,7 @@
             "drinks": "Getränkeeinstellungen",
             "free_marks": "Freimarken",
             "cleanup": "Nicht mehr genutzte Sensoren entfernen",
-            "delete": "Alle Einträge löschen",
+            "delete": "Integration komplett entfernen",
             "finish": "Fertig"
           }
         },
@@ -230,7 +230,7 @@
           }
         },
         "delete": {
-          "title": "Alle Einträge löschen",
+          "title": "Integration komplett entfernen",
           "description": "Dies entfernt alle Sensoren und Konfigurationen dieser Integration. Gib zur Bestätigung \"JA ICH WILL\" ein.",
           "data": {
             "confirm": "Bestätigung"
@@ -260,7 +260,7 @@
           "authorize": "Adminrechte vergeben",
           "unauthorize": "Adminrechte entziehen",
           "cleanup": "Nicht mehr genutzte Sensoren entfernen",
-          "delete": "Alle Einträge löschen",
+          "delete": "Integration komplett entfernen",
           "finish": "Fertig",
           "back": "Zurück"
         }
