@@ -427,21 +427,19 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.hass.data[DOMAIN][CONF_ENABLE_FREE_DRINKS] = self._enable_free_drinks
         self.hass.data[DOMAIN][CONF_CASH_USER_NAME] = self._cash_user_name
         if self._create_price_user:
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data={
-                        CONF_USER: get_price_list_user(
-                            getattr(self.hass.config, "language", None)
-                        ),
-                        CONF_FREE_AMOUNT: self._free_amount,
-                        CONF_DRINKS: self._drinks,
-                        CONF_EXCLUDED_USERS: self._excluded_users,
-                        CONF_OVERRIDE_USERS: self._override_users,
-                        CONF_CURRENCY: self._currency,
-                    },
-                )
+            await self.hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={
+                    CONF_USER: get_price_list_user(
+                        getattr(self.hass.config, "language", None)
+                    ),
+                    CONF_FREE_AMOUNT: self._free_amount,
+                    CONF_DRINKS: self._drinks,
+                    CONF_EXCLUDED_USERS: self._excluded_users,
+                    CONF_OVERRIDE_USERS: self._override_users,
+                    CONF_CURRENCY: self._currency,
+                },
             )
         else:
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -458,12 +456,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for p in self._pending_users:
             if p in self._excluded_users:
                 continue
-            self.hass.async_create_task(
-                self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data={CONF_USER: p},
-                )
+            await self.hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={CONF_USER: p},
             )
         self._pending_users = []
         cash_name = self._cash_user_name.strip()
@@ -478,12 +474,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         if self._enable_free_drinks:
             if cash_entry is None:
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": config_entries.SOURCE_IMPORT},
-                        data={CONF_USER: cash_name},
-                    )
+                await self.hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": config_entries.SOURCE_IMPORT},
+                    data={CONF_USER: cash_name},
                 )
             else:
                 cash_data = self.hass.data.get(DOMAIN, {}).get(cash_entry.entry_id)
@@ -497,9 +491,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 cash_data["counts"] = {}
                 for sensor in cash_data.get("sensors", []):
                     await sensor.async_update_state()
-            self.hass.async_create_task(
-                self.hass.config_entries.async_remove(cash_entry.entry_id)
-            )
+            await self.hass.config_entries.async_remove(cash_entry.entry_id)
             self.hass.data[DOMAIN].pop("free_drink_counts", None)
             self.hass.data[DOMAIN].pop("free_drinks_ledger", None)
 
@@ -1012,8 +1004,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             )
             self.hass.data[DOMAIN].pop("free_drink_counts", None)
             self.hass.data[DOMAIN].pop("free_drinks_ledger", None)
+            self.hass.data[DOMAIN].pop(cash_entry.entry_id, None)
+            entries = [e for e in entries if e.entry_id != cash_entry.entry_id]
 
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for entry in entries:
             data = {
                 CONF_USER: entry.data[CONF_USER],
                 CONF_DRINKS: self._drinks,
@@ -1026,7 +1020,8 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             }
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
-        for value in self.hass.data.get(DOMAIN, {}).values():
+        for entry in entries:
+            value = self.hass.data.get(DOMAIN, {}).get(entry.entry_id)
             if isinstance(value, dict):
                 for sensor in value.get("sensors", []):
                     await sensor.async_update_state()
