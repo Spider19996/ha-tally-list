@@ -1012,8 +1012,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             )
             self.hass.data[DOMAIN].pop("free_drink_counts", None)
             self.hass.data[DOMAIN].pop("free_drinks_ledger", None)
+            self.hass.data[DOMAIN].pop(cash_entry.entry_id, None)
+            entries = [e for e in entries if e.entry_id != cash_entry.entry_id]
 
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
+        for entry in entries:
             data = {
                 CONF_USER: entry.data[CONF_USER],
                 CONF_DRINKS: self._drinks,
@@ -1026,7 +1028,8 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             }
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
-        for value in self.hass.data.get(DOMAIN, {}).values():
+        for entry in entries:
+            value = self.hass.data.get(DOMAIN, {}).get(entry.entry_id)
             if isinstance(value, dict):
                 for sensor in value.get("sensors", []):
                     await sensor.async_update_state()
