@@ -15,6 +15,7 @@ Diese benutzerdefinierte Integration für [Home Assistant](https://www.home-assi
 - Zähler können beim Entfernen eines Getränks nicht unter null fallen.
 - Möglichkeit, Personen vom automatischen Import auszuschließen.
 - Vergabe von Override-Rechten an ausgewählte Nutzer, damit sie für alle Getränke zählen können.
+- Optionaler Freigetränke-Modus mit eigenem Benutzer, Feed-Sensoren und konfigurierbarem Namen.
 
 ## Installation
 
@@ -44,6 +45,20 @@ Jede Person erhält eine Entität `button.<person>_reset_tally`, um ihre Zähler
 
 Alle Getränke werden in einer gemeinsamen Preisliste gespeichert. Ein spezieller Benutzer namens `Preisliste` (englisch `Price list`) stellt für jedes Getränk einen Preissensor sowie einen Sensor für den Freibetrag bereit, während normale Personen nur Zähl- und Gesamtbetragssensoren erhalten. Der Freibetrag wird vom Gesamtbetrag jeder Person abgezogen. Getränke, Preise und Freibetrag können jederzeit über die Integrationsoptionen bearbeitet werden.
 Die Sensoren des Preisliste-Benutzers verwenden immer englische Entitäts-IDs mit dem Präfix `price_list`, z. B. `sensor.price_list_free_amount` oder `sensor.price_list_wasser_price`.
+
+## Freigetränke (Optional)
+
+Wenn in den Integrationsoptionen aktiviert, können Freigetränke separat erfasst werden.
+Ein eigener Benutzer (Standardname `Freigetränke`, konfigurierbar) sammelt alle
+gratis gebuchten Getränke und stellt die gleichen Zähl- und Betragssensoren wie
+normale Nutzer bereit, z. B. `sensor.free_drinks_bier_count` und
+`sensor.free_drinks_amount_due`. Jeder Freigetränke-Eintrag wird in einer CSV-Datei
+unter `/config/backup/tally_list/free_drinks/` protokolliert. Für jedes Jahr
+entsteht ein Feed-Sensor wie `sensor.free_drink_feed_2024`, der den letzten Eintrag
+anzeigt und die jüngsten Freigetränke in seinen Attributen auflistet.
+
+Die Funktion kann in den Integrationsoptionen aktiviert oder deaktiviert und der
+Name des Freigetränke-Benutzers angepasst werden.
 
 ## WebSocket-API
 
