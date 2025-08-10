@@ -118,6 +118,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             writer = csv.writer(csvfile, delimiter=";", quoting=csv.QUOTE_MINIMAL)
             writer.writerows(rows)
 
+    def _find_user_entry(name: str) -> dict | None:
+        for data in hass.data[DOMAIN].values():
+            if (
+                isinstance(data, dict)
+                and "entry" in data
+                and data["entry"].data.get(CONF_USER) == name
+            ):
+                return data
+        return None
+
     async def adjust_count_service(call):
         user = call.data[ATTR_USER]
         await _verify_permissions(call, user)
@@ -140,6 +150,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         count = max(0, call.data.get("count", 1))
         free_mark = call.data.get(ATTR_FREE_MARK, False)
         comment = call.data.get(ATTR_COMMENT, "")
+        entry = _find_user_entry(user)
+        if entry is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="user_unknown"
+            )
         if free_mark:
             if not hass.data[DOMAIN].get(CONF_ENABLE_FREE_MARKS):
                 raise HomeAssistantError(
@@ -191,16 +206,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 {"user": user, "drink": drink, "count": count, "comment": comment},
             )
             return
-        for entry_id, data in hass.data[DOMAIN].items():
-            if not isinstance(data, dict) or "entry" not in data:
-                continue
-            if data["entry"].data.get("user") == user:
-                counts = data.setdefault("counts", {})
-                new_count = counts.get(drink, 0) + count
-                counts[drink] = new_count
-                for sensor in data.get("sensors", []):
-                    await sensor.async_update_state()
-                break
+        counts = entry.setdefault("counts", {})
+        new_count = counts.get(drink, 0) + count
+        counts[drink] = new_count
+        for sensor in entry.get("sensors", []):
+            await sensor.async_update_state()
 
     async def remove_drink_service(call):
         user = call.data[ATTR_USER]

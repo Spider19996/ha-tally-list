@@ -30,7 +30,7 @@ At initial setup you will be asked to enter available drinks. All persons with a
 
 ### Services
 
-- `tally_list.add_drink`: increment drink count for a person (optionally specify amount).
+- `tally_list.add_drink`: increment drink count for a person (fails if the person does not exist; optionally specify amount).
 - `tally_list.remove_drink`: decrement drink count for a person (never below zero; optionally specify amount).
 - `tally_list.adjust_count`: set a drink count to a specific value.
 - `tally_list.reset_counters`: reset all counters for a person or for everyone if no user is specified.
