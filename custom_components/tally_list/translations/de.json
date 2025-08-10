@@ -109,7 +109,8 @@
         "delete_all": "Alle Sensoren und Konfigurationen wurden entfernt."
       },
       "error": {
-        "invalid_confirmation": "Bitte gib \"JA ICH WILL\" ein."
+        "invalid_confirmation": "Bitte gib \"JA ICH WILL\" ein.",
+        "confirmation_required": "Bestätigung erforderlich"
       },
       "step": {
         "menu": {
@@ -117,6 +118,7 @@
           "menu_options": {
             "user": "Nutzereinstellungen",
             "drinks": "Getränkeeinstellungen",
+            "free_marks": "Freimarken",
             "cleanup": "Nicht mehr genutzte Sensoren entfernen",
             "delete": "Alle Einträge löschen",
             "finish": "Fertig"
@@ -141,6 +143,21 @@
             "edit": "Bearbeiten",
             "currency": "Währung setzen",
             "back": "Zurück"
+          }
+        },
+        "free_marks": {
+          "title": "Freimarken",
+          "description": "Freimarken werden auf den Freigetränke-Nutzer gebucht, nicht auf normale Nutzer.",
+          "data": {
+            "enable_free_marks": "Freimarken aktivieren",
+            "cash_user_name": "Name des Freigetränke-Nutzers"
+          }
+        },
+        "free_marks_confirm": {
+          "title": "Freimarken deaktivieren",
+          "description": "Gib zur Bestätigung \"JA ICH WILL\" ein",
+          "data": {
+            "confirm": "Bestätigung"
           }
         },
         "add_drink": {
@@ -233,6 +250,7 @@
         "action": {
           "user": "Nutzereinstellungen",
           "drinks": "Getränkeeinstellungen",
+          "free_marks": "Freimarken",
           "add": "Hinzufügen",
           "remove": "Entfernen",
           "edit": "Bearbeiten",
@@ -249,6 +267,13 @@
         }
       }
     },
+  "exceptions": {
+    "free_marks_disabled": "Freimarken sind deaktiviert",
+    "comment_required": "Kommentar erforderlich",
+    "cash_user_missing": "Freigetränke-Nutzer fehlt",
+    "drink_unknown": "Unbekanntes Getränk",
+    "cannot_remove_count": "Anzahl kann nicht entfernt werden"
+  },
   "services": {
     "add_drink": {
       "name": "Getränk hinzufügen",
@@ -265,6 +290,14 @@
         "count": {
           "name": "Anzahl",
           "description": "Anzahl der hinzuzufügenden Getränke"
+        },
+        "free_mark": {
+          "name": "Freimarke",
+          "description": "Als Freimarke buchen"
+        },
+        "comment": {
+          "name": "Kommentar",
+          "description": "Kommentar für Freimarke"
         }
       }
     },
@@ -283,6 +316,14 @@
         "count": {
           "name": "Anzahl",
           "description": "Anzahl der zu entfernenden Getränke"
+        },
+        "free_mark": {
+          "name": "Freimarke",
+          "description": "Als Freimarke buchen"
+        },
+        "comment": {
+          "name": "Kommentar",
+          "description": "Kommentar für Freimarke"
         }
       }
     },
