@@ -117,7 +117,6 @@
           "menu_options": {
             "user": "Nutzereinstellungen",
             "drinks": "Getränkeeinstellungen",
-            "free_marks": "Freibuchungen",
             "cleanup": "Nicht mehr genutzte Sensoren entfernen",
             "delete": "Alle Einträge löschen",
             "finish": "Fertig"
@@ -142,14 +141,6 @@
             "edit": "Bearbeiten",
             "currency": "Währung setzen",
             "back": "Zurück"
-          }
-        },
-        "free_marks": {
-          "title": "Freibuchungen",
-          "data": {
-            "enable_free_marks": "Freibuchungen aktivieren",
-            "cash_user_name": "Name des Kassen-Nutzers",
-            "confirm": "Bestätigung"
           }
         },
         "add_drink": {
@@ -251,7 +242,6 @@
           "include": "Person einschließen",
           "authorize": "Adminrechte vergeben",
           "unauthorize": "Adminrechte entziehen",
-          "free_marks": "Freibuchungen",
           "cleanup": "Nicht mehr genutzte Sensoren entfernen",
           "delete": "Alle Einträge löschen",
           "finish": "Fertig",
@@ -275,14 +265,6 @@
         "count": {
           "name": "Anzahl",
           "description": "Anzahl der hinzuzufügenden Getränke"
-        },
-        "free_mark": {
-          "name": "Freibuchung",
-          "description": "Getränk als frei buchen"
-        },
-        "comment": {
-          "name": "Kommentar",
-          "description": "Erforderlicher Kommentar bei Freibuchung"
         }
       }
     },
@@ -301,14 +283,6 @@
         "count": {
           "name": "Anzahl",
           "description": "Anzahl der zu entfernenden Getränke"
-        },
-        "free_mark": {
-          "name": "Freibuchung",
-          "description": "Freibuchung beim Kassen-Nutzer entfernen"
-        },
-        "comment": {
-          "name": "Kommentar",
-          "description": "Erforderlicher Kommentar bei Freibuchung"
         }
       }
     },
