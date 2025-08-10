@@ -9,12 +9,12 @@ CONF_EXCLUDED_USERS = "excluded_users"
 CONF_OVERRIDE_USERS = "override_users"
 CONF_CURRENCY = "currency"
 
-CONF_ENABLE_FREE_MARKS = "enable_free_marks"
+CONF_ENABLE_FREE_DRINKS = "enable_free_drinks"
 CONF_CASH_USER_NAME = "cash_user_name"
 
 ATTR_USER = "user"
 ATTR_DRINK = "drink"
-ATTR_FREE_MARK = "free_mark"
+ATTR_FREE_DRINK = "free_drink"
 ATTR_COMMENT = "comment"
 
 SERVICE_ADD_DRINK = "add_drink"

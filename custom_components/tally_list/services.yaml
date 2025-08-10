@@ -22,13 +22,13 @@ add_drink:
         number:
           min: 1
           step: 1
-    free_mark:
-      description: Book as free mark
+    free_drink:
+      description: Book as free drink
       required: true
       selector:
         boolean:
     comment:
-      description: Comment for free mark
+      description: Comment for free drink
       required: false
       selector:
         text:
@@ -56,13 +56,13 @@ remove_drink:
         number:
           min: 1
           step: 1
-    free_mark:
-      description: Book as free mark
+    free_drink:
+      description: Book as free drink
       required: false
       selector:
         boolean:
     comment:
-      description: Comment for free mark
+      description: Comment for free drink
       required: false
       selector:
         text:
