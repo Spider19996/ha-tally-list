@@ -54,7 +54,11 @@ async def async_setup_entry(
     data.setdefault("sensors", []).extend(sensors)
     async_add_entities(sensors)
 
-    if "feed_add_entities" not in hass.data[DOMAIN]:
+    cash_name = hass.data.get(DOMAIN, {}).get(CONF_CASH_USER_NAME, "")
+    if (
+        user.strip().lower() == cash_name.strip().lower()
+        and "feed_add_entities" not in hass.data[DOMAIN]
+    ):
         hass.data[DOMAIN]["feed_add_entities"] = async_add_entities
         hass.data[DOMAIN]["feed_entry_id"] = entry.entry_id
         feed_sensors: dict[int, FreeDrinkFeedSensor] = {}
