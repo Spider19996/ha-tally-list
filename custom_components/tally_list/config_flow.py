@@ -466,18 +466,17 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             )
         self._pending_users = []
+        cash_name = self._cash_user_name.strip()
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        cash_entry = next(
+            (
+                entry
+                for entry in entries
+                if entry.data.get(CONF_USER, "").strip().lower() == cash_name.lower()
+            ),
+            None,
+        )
         if self._enable_free_marks:
-            cash_name = self._cash_user_name.strip()
-            entries = self.hass.config_entries.async_entries(DOMAIN)
-            cash_entry = next(
-                (
-                    entry
-                    for entry in entries
-                    if entry.data.get(CONF_USER, "").strip().lower()
-                    == cash_name.lower()
-                ),
-                None,
-            )
             if cash_entry is None:
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_init(
@@ -492,6 +491,17 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass.data[DOMAIN]["free_mark_counts"] = cash_data.setdefault(
                         "counts", {}
                     )
+        elif cash_entry is not None:
+            cash_data = self.hass.data.get(DOMAIN, {}).get(cash_entry.entry_id)
+            if cash_data is not None:
+                cash_data["counts"] = {}
+                for sensor in cash_data.get("sensors", []):
+                    await sensor.async_update_state()
+            self.hass.async_create_task(
+                self.hass.config_entries.async_remove(cash_entry.entry_id)
+            )
+            self.hass.data[DOMAIN].pop("free_mark_counts", None)
+            self.hass.data[DOMAIN].pop("free_marks_ledger", None)
 
     @staticmethod
     @callback
@@ -998,8 +1008,11 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 cash_data["counts"] = {}
                 for sensor in cash_data.get("sensors", []):
                     await sensor.async_update_state()
-            await self.hass.config_entries.async_remove(cash_entry.entry_id)
+            self.hass.async_create_task(
+                self.hass.config_entries.async_remove(cash_entry.entry_id)
+            )
             self.hass.data[DOMAIN].pop("free_mark_counts", None)
+            self.hass.data[DOMAIN].pop("free_marks_ledger", None)
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             data = {
