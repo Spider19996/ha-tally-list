@@ -22,6 +22,17 @@ add_drink:
         number:
           min: 1
           step: 1
+    free_mark:
+      description: Book as free mark
+      required: false
+      selector:
+        boolean:
+    comment:
+      description: Reason for free mark
+      required: false
+      example: Birthday
+      selector:
+        text:
 remove_drink:
   name: Remove drink
   description: Decrement drink counter for a person
@@ -46,6 +57,16 @@ remove_drink:
         number:
           min: 1
           step: 1
+    free_mark:
+      description: Remove free mark
+      required: false
+      selector:
+        boolean:
+    comment:
+      description: Reason for free mark
+      required: false
+      selector:
+        text:
 adjust_count:
   name: Adjust count
   description: Set drink count for a person
