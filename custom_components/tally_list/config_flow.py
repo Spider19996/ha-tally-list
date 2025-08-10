@@ -22,9 +22,6 @@ from .const import (
     PRICE_LIST_USERS,
     get_price_list_user,
     CONF_CURRENCY,
-    CONF_ENABLE_FREE_MARKS,
-    CONF_CASH_USER_NAME,
-    get_cash_user_name,
 )
 
 
@@ -182,51 +179,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_unauthorize(self, user_input=None):
         return await self.async_step_remove_override_user(user_input)
-
-    async def async_step_free_marks(self, user_input=None):
-        if user_input is not None:
-            enable = user_input.get(CONF_ENABLE_FREE_MARKS, False)
-            name = user_input.get(CONF_CASH_USER_NAME, "").strip()
-            if name:
-                self._cash_user_name = name
-            if enable:
-                self._enable_free_marks = True
-                domain = self.hass.data.setdefault(DOMAIN, {})
-                domain["cash_user"] = {"name": self._cash_user_name, "counts": {}}
-                domain.setdefault("free_ledger", {})
-                domain.setdefault("free_ledger_total", 0.0)
-                return await self._update_drinks()
-            if self._enable_free_marks:
-                return await self.async_step_disable_free_marks()
-            self._enable_free_marks = False
-            return await self._update_drinks()
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_ENABLE_FREE_MARKS, default=self._enable_free_marks
-                ): bool,
-                vol.Optional(
-                    CONF_CASH_USER_NAME, default=self._cash_user_name
-                ): str,
-            }
-        )
-        return self.async_show_form(step_id="free_marks", data_schema=schema)
-
-    async def async_step_disable_free_marks(self, user_input=None):
-        errors = {}
-        if user_input is not None:
-            confirmation = user_input.get("confirm", "").strip().upper()
-            if confirmation in {"JA ICH WILL", "YES I WANT"}:
-                self._enable_free_marks = False
-                domain = self.hass.data.setdefault(DOMAIN, {})
-                domain.pop("cash_user", None)
-                domain.pop("free_ledger", None)
-                return await self._update_drinks()
-            errors["base"] = "invalid_confirmation"
-        schema = vol.Schema({vol.Required("confirm"): str})
-        return self.async_show_form(
-            step_id="disable_free_marks", data_schema=schema, errors=errors
-        )
 
     async def async_step_add_drink(self, user_input=None):
         if user_input is not None:
@@ -418,8 +370,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.hass.data[DOMAIN][CONF_EXCLUDED_USERS] = self._excluded_users
         self.hass.data[DOMAIN][CONF_OVERRIDE_USERS] = self._override_users
         self.hass.data[DOMAIN][CONF_CURRENCY] = self._currency
-        self.hass.data[DOMAIN][CONF_ENABLE_FREE_MARKS] = self._enable_free_marks
-        self.hass.data[DOMAIN][CONF_CASH_USER_NAME] = self._cash_user_name
         if self._create_price_user:
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
@@ -477,8 +427,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._excluded_users: list[str] = []
         self._override_users: list[str] = []
         self._currency: str = "€"
-        self._enable_free_marks: bool = False
-        self._cash_user_name: str = get_cash_user_name(None)
 
     async def async_step_init(self, user_input=None):
         self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
@@ -490,12 +438,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             self.hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
         ).copy()
         self._currency = self.hass.data.get(DOMAIN, {}).get(CONF_CURRENCY, "€")
-        self._enable_free_marks = self.hass.data.get(DOMAIN, {}).get(
-            CONF_ENABLE_FREE_MARKS, False
-        )
-        self._cash_user_name = self.hass.data.get(DOMAIN, {}).get(
-            CONF_CASH_USER_NAME, get_cash_user_name(self.hass.config.language)
-        )
         return await self.async_step_menu()
 
     async def async_step_menu(self, user_input=None):
@@ -504,7 +446,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             menu_options=[
                 "user",
                 "drinks",
-                "free_marks",
                 "cleanup",
                 "delete",
                 "finish",
@@ -906,8 +847,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_EXCLUDED_USERS: self._excluded_users,
                 CONF_OVERRIDE_USERS: self._override_users,
                 CONF_CURRENCY: self._currency,
-                CONF_ENABLE_FREE_MARKS: self._enable_free_marks,
-                CONF_CASH_USER_NAME: self._cash_user_name,
             }
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -923,7 +862,5 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_EXCLUDED_USERS: self._excluded_users,
                 CONF_OVERRIDE_USERS: self._override_users,
                 CONF_CURRENCY: self._currency,
-                CONF_ENABLE_FREE_MARKS: self._enable_free_marks,
-                CONF_CASH_USER_NAME: self._cash_user_name,
             },
         )

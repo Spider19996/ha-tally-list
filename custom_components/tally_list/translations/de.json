@@ -117,7 +117,6 @@
           "menu_options": {
             "user": "Nutzereinstellungen",
             "drinks": "Getränkeeinstellungen",
-            "free_marks": "Freigetränke Einstellungen",
             "cleanup": "Nicht mehr genutzte Sensoren entfernen",
             "delete": "Alle Einträge löschen",
             "finish": "Fertig"
@@ -142,20 +141,6 @@
             "edit": "Bearbeiten",
             "currency": "Währung setzen",
             "back": "Zurück"
-          }
-        },
-        "free_marks": {
-          "title": "Freigetränke Einstellungen",
-          "data": {
-            "enable_free_marks": "Freigetränke aktivieren",
-            "cash_user_name": "Name für Freigetränke"
-          }
-        },
-        "disable_free_marks": {
-          "title": "Freigetränke deaktivieren",
-          "description": "Hierdurch wird der System-Benutzer und alle seine Striche gelöscht. Zum Bestätigen \"JA ICH WILL\" eingeben.",
-          "data": {
-            "confirm": "Bestätigung"
           }
         },
         "add_drink": {
@@ -248,7 +233,6 @@
         "action": {
           "user": "Nutzereinstellungen",
           "drinks": "Getränkeeinstellungen",
-          "free_marks": "Freigetränke Einstellungen",
           "add": "Hinzufügen",
           "remove": "Entfernen",
           "edit": "Bearbeiten",
@@ -281,14 +265,6 @@
         "count": {
           "name": "Anzahl",
           "description": "Anzahl der hinzuzufügenden Getränke"
-        },
-        "free_mark": {
-          "name": "Freigetränk",
-          "description": "Als Freigetränk buchen"
-        },
-        "comment": {
-          "name": "Kommentar",
-          "description": "Grund für das Freigetränk"
         }
       }
     },
@@ -307,14 +283,6 @@
         "count": {
           "name": "Anzahl",
           "description": "Anzahl der zu entfernenden Getränke"
-        },
-        "free_mark": {
-          "name": "Freigetränk",
-          "description": "Freigetränk entfernen"
-        },
-        "comment": {
-          "name": "Kommentar",
-          "description": "Grund für das Freigetränk"
         }
       }
     },

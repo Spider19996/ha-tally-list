@@ -117,7 +117,6 @@
           "menu_options": {
             "user": "User settings",
             "drinks": "Drink settings",
-            "free_marks": "Free drinks settings",
             "cleanup": "Remove unused sensors",
             "delete": "Delete all entries",
             "finish": "Done"
@@ -142,20 +141,6 @@
             "edit": "Edit price",
             "currency": "Set currency",
             "back": "Back"
-          }
-        },
-        "free_marks": {
-          "title": "Free drinks settings",
-          "data": {
-            "enable_free_marks": "Enable free drinks",
-            "cash_user_name": "Cash user name"
-          }
-        },
-        "disable_free_marks": {
-          "title": "Disable free drinks",
-          "description": "This will remove the cash user and all its tallies. Type \"YES I WANT\" to confirm.",
-          "data": {
-            "confirm": "Confirmation"
           }
         },
         "add_drink": {
@@ -248,7 +233,6 @@
         "action": {
           "user": "User settings",
           "drinks": "Drink settings",
-          "free_marks": "Free drinks settings",
           "add": "Add drink",
           "remove": "Remove drink",
           "edit": "Edit price",
@@ -281,14 +265,6 @@
         "count": {
           "name": "Count",
           "description": "Number of drinks to add"
-        },
-        "free_mark": {
-          "name": "Free mark",
-          "description": "Book as free mark"
-        },
-        "comment": {
-          "name": "Comment",
-          "description": "Reason for free mark"
         }
       }
     },
@@ -307,14 +283,6 @@
         "count": {
           "name": "Count",
           "description": "Number of drinks to remove"
-        },
-        "free_mark": {
-          "name": "Free mark",
-          "description": "Remove free mark"
-        },
-        "comment": {
-          "name": "Comment",
-          "description": "Reason for free mark"
         }
       }
     },
