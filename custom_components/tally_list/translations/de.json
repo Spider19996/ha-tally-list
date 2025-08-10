@@ -271,6 +271,7 @@
     "comment_required": "Kommentar erforderlich",
     "cash_user_missing": "Freigetränke-Nutzer fehlt",
     "drink_unknown": "Unbekanntes Getränk",
+    "user_unknown": "Unbekannte Person",
     "cannot_remove_count": "Anzahl kann nicht entfernt werden"
   },
   "services": {

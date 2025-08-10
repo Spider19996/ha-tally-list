@@ -266,13 +266,14 @@
         }
       }
   },
-  "exceptions": {
-    "free_marks_disabled": "Free marks feature is disabled",
-    "comment_required": "Comment required",
-    "cash_user_missing": "Free drinks user missing",
-    "drink_unknown": "Unknown drink",
-    "cannot_remove_count": "Cannot remove count"
-  },
+    "exceptions": {
+        "free_marks_disabled": "Free marks feature is disabled",
+        "comment_required": "Comment required",
+        "cash_user_missing": "Free drinks user missing",
+        "drink_unknown": "Unknown drink",
+        "user_unknown": "Unknown person",
+        "cannot_remove_count": "Cannot remove count"
+    },
   "services": {
     "add_drink": {
       "name": "Add drink",
