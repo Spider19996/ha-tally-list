@@ -212,8 +212,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 await sensor.async_update_state()
             else:
                 add_entities = hass.data[DOMAIN].get("feed_add_entities")
-                if add_entities is not None:
-                    sensor = FreeDrinkFeedSensor(hass, year)
+                feed_entry_id = hass.data[DOMAIN].get("feed_entry_id")
+                entry = (
+                    hass.config_entries.async_get_entry(feed_entry_id)
+                    if feed_entry_id is not None
+                    else None
+                )
+                if add_entities is not None and entry is not None:
+                    sensor = FreeDrinkFeedSensor(hass, entry, year)
                     feed_sensors[year] = sensor
                     add_entities([sensor])
             hass.bus.async_fire(
@@ -285,8 +291,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 await sensor.async_update_state()
             else:
                 add_entities = hass.data[DOMAIN].get("feed_add_entities")
-                if add_entities is not None:
-                    sensor = FreeDrinkFeedSensor(hass, year)
+                feed_entry_id = hass.data[DOMAIN].get("feed_entry_id")
+                entry = (
+                    hass.config_entries.async_get_entry(feed_entry_id)
+                    if feed_entry_id is not None
+                    else None
+                )
+                if add_entities is not None and entry is not None:
+                    sensor = FreeDrinkFeedSensor(hass, entry, year)
                     feed_sensors[year] = sensor
                     add_entities([sensor])
             hass.bus.async_fire(
