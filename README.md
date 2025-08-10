@@ -15,6 +15,7 @@ This custom integration for [Home Assistant](https://www.home-assistant.io/) is 
 - Counters cannot go below zero when removing drinks.
 - Option to exclude persons from automatic import.
 - Grant override permissions to selected users so they can tally drinks for everyone.
+- Optional free drinks mode with a dedicated user, log feed sensors and configurable name.
 
 ## Installation
 
@@ -44,6 +45,20 @@ Each person gets a `button.<person>_reset_tally` entity to reset all their count
 
 All drinks are stored in a single price list. A dedicated user named `Preisliste` (`Price list` in English) exposes one price sensor per drink as well as a free amount sensor, while regular persons only get count and total amount sensors. The free amount is subtracted from each person's total. You can edit drinks, prices and the free amount at any time from the integration options.
 Sensors for the price list user always use English entity IDs prefixed with `price_list`, for example `sensor.price_list_free_amount` or `sensor.price_list_wasser_price`.
+
+## Free Drinks (Optional)
+
+If enabled in the integration options, complimentary drinks are tracked separately.
+A dedicated user (default name `Free Drinks`, configurable) records all free
+drinks and exposes the same count and amount sensors as regular users, for
+example `sensor.free_drinks_beer_count` and `sensor.free_drinks_amount_due`.
+Each free drink entry is written to a CSV log under
+`/config/backup/tally_list/free_drinks/`. For every year a feed sensor such as
+`sensor.free_drink_feed_2024` is created that shows the latest log entry and
+lists recent free drinks in its attributes.
+
+You can activate or deactivate the feature and change the free drinks user name
+from the integration options.
 
 ## WebSocket API
 
