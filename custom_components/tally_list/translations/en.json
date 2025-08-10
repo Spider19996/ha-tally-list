@@ -109,8 +109,7 @@
       "delete_all": "All sensors and configuration entries have been removed."
     },
     "error": {
-      "invalid_confirmation": "Please type \"YES I WANT\".",
-      "confirmation_required": "Confirmation required"
+      "invalid_confirmation": "Please type \"YES I WANT\"."
     },
     "step": {
         "menu": {
@@ -118,7 +117,6 @@
           "menu_options": {
             "user": "User settings",
             "drinks": "Drink settings",
-            "free_marks": "Free marks",
             "cleanup": "Remove unused sensors",
             "delete": "Delete all entries",
             "finish": "Done"
@@ -143,20 +141,6 @@
             "edit": "Edit price",
             "currency": "Set currency",
             "back": "Back"
-          }
-        },
-        "free_marks": {
-          "title": "Free marks",
-          "description": "Free marks are booked to the free drinks user, not to regular users.",
-          "data": {
-            "enable_free_marks": "Enable free marks"
-          }
-        },
-        "free_marks_confirm": {
-          "title": "Disable free marks",
-          "description": "Type \"YES I WANT\" to confirm",
-          "data": {
-            "confirm": "Confirmation"
           }
         },
         "add_drink": {
@@ -249,7 +233,6 @@
         "action": {
           "user": "User settings",
           "drinks": "Drink settings",
-          "free_marks": "Free marks",
           "add": "Add drink",
           "remove": "Remove drink",
           "edit": "Edit price",
@@ -265,13 +248,6 @@
           "back": "Back"
         }
       }
-  },
-  "exceptions": {
-    "free_marks_disabled": "Free marks feature is disabled",
-    "comment_required": "Comment required",
-    "cash_user_missing": "Free drinks user missing",
-    "drink_unknown": "Unknown drink",
-    "cannot_remove_count": "Cannot remove count"
   },
   "services": {
     "add_drink": {
@@ -289,14 +265,6 @@
         "count": {
           "name": "Count",
           "description": "Number of drinks to add"
-        },
-        "free_mark": {
-          "name": "Free mark",
-          "description": "Book as free mark"
-        },
-        "comment": {
-          "name": "Comment",
-          "description": "Comment for free mark"
         }
       }
     },
@@ -315,14 +283,6 @@
         "count": {
           "name": "Count",
           "description": "Number of drinks to remove"
-        },
-        "free_mark": {
-          "name": "Free mark",
-          "description": "Book as free mark"
-        },
-        "comment": {
-          "name": "Comment",
-          "description": "Comment for free mark"
         }
       }
     },
