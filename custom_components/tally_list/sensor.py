@@ -2,7 +2,15 @@
 
 from __future__ import annotations
 
+import csv
+import logging
+import os
+import re
+from collections import deque
+from datetime import datetime, timedelta
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -16,6 +24,8 @@ from .const import (
     CONF_CASH_USER_NAME,
     CASH_USER_SLUG,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _local_suffix(hass: HomeAssistant, en: str, de: str) -> str:
@@ -43,6 +53,30 @@ async def async_setup_entry(
 
     data.setdefault("sensors", []).extend(sensors)
     async_add_entities(sensors)
+
+    if "feed_add_entities" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["feed_add_entities"] = async_add_entities
+        hass.data[DOMAIN]["feed_entry_id"] = entry.entry_id
+        feed_sensors: dict[int, FreeDrinkFeedSensor] = {}
+        base_dir = hass.config.path("backup", "tally_list", "free_drinks")
+        if os.path.isdir(base_dir):
+            for name in os.listdir(base_dir):
+                match = re.match(r"free_drinks_(\d{4})\.csv$", name)
+                if not match:
+                    continue
+                year = int(match.group(1))
+                feed_sensors[year] = FreeDrinkFeedSensor(hass, year)
+        if feed_sensors:
+            async_add_entities(list(feed_sensors.values()))
+        hass.data[DOMAIN]["free_drink_feed_sensors"] = feed_sensors
+
+        async def _periodic_update(_now):
+            for sensor in hass.data[DOMAIN]["free_drink_feed_sensors"].values():
+                await sensor.async_update_state()
+
+        hass.data[DOMAIN]["feed_unsub"] = async_track_time_interval(
+            hass, _periodic_update, timedelta(seconds=60)
+        )
 
 
 class TallyListSensor(RestoreEntity, SensorEntity):
@@ -214,3 +248,77 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
         if total < 0:
             total = 0.0
         return round(total, 2)
+
+
+class FreeDrinkFeedSensor(SensorEntity):
+    def __init__(self, hass: HomeAssistant, year: int, max_entries: int = 20) -> None:
+        self._hass = hass
+        self._year = year
+        self._max_entries = max_entries
+        self._attr_should_poll = False
+        self._attr_name = (
+            f"{_local_suffix(hass, 'Free drinks feed', 'Freigetränke Feed')} {year}"
+        )
+        self.entity_id = f"sensor.free_drink_feed_{year}"
+        self._path = hass.config.path(
+            "backup", "tally_list", "free_drinks", f"free_drinks_{year}.csv"
+        )
+        self._entries: list[dict[str, str]] = []
+        self._attr_native_value = "none"
+
+    async def async_added_to_hass(self) -> None:
+        await self.async_update_state()
+
+    async def async_update_state(self) -> None:
+        try:
+            with open(self._path, "r", encoding="utf-8", newline="") as csvfile:
+                reader = csv.reader(csvfile, delimiter=";")
+                try:
+                    next(reader)
+                except StopIteration:
+                    rows: list[list[str]] = []
+                else:
+                    rows = list(deque(reader, maxlen=self._max_entries))
+        except FileNotFoundError:
+            self._entries = []
+            self._attr_native_value = "none"
+            self.async_write_ha_state()
+            return
+        except OSError as err:
+            _LOGGER.warning("Failed reading free drink log %s: %s", self._path, err)
+            return
+
+        entries: list[dict[str, str]] = []
+        for row in reversed(rows):
+            if len(row) != 4:
+                _LOGGER.warning(
+                    "Skipping malformed free drink row for %s: %s", self._year, row
+                )
+                continue
+            try:
+                dt = datetime.strptime(row[0], "%Y-%m-%dT%H:%M")
+                time_local = dt.strftime("%Y-%m-%d %H:%M")
+            except Exception:
+                _LOGGER.warning(
+                    "Skipping free drink row with bad time for %s: %s", self._year, row
+                )
+                continue
+            entries.append(
+                {
+                    "time_local": time_local,
+                    "name": row[1],
+                    "drinks": row[2].replace(" x", " ×").replace(",", " •"),
+                    "comment": row[3],
+                }
+            )
+
+        self._entries = entries
+        if entries:
+            self._attr_native_value = entries[0]["time_local"]
+        else:
+            self._attr_native_value = "none"
+        self.async_write_ha_state()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, list[dict[str, str]]]:
+        return {"entries": self._entries}
