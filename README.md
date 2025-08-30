@@ -11,10 +11,11 @@ This custom integration for [Home Assistant](https://www.home-assistant.io/) is 
 - Sensor entities for drink counts, drink prices, a free amount, and the total amount due per person.
 - Button entity to reset a person's counters; only users with override permissions ("Tally Admins") can use it.
 - Configurable currency symbol (defaults to €).
-- Services to add, remove, adjust, reset and export tallies.
+- Services to add, remove, adjust, reset and export tallies, and set personal PINs.
 - Counters cannot go below zero when removing drinks.
 - Option to exclude persons from automatic import.
 - Grant override permissions to selected users so they can tally drinks for everyone.
+- Public devices can tally drinks for everyone when the target user's PIN is provided.
 - Optional free drinks mode with a dedicated user, log feed sensors and configurable name.
 
 ## Installation
@@ -36,6 +37,7 @@ At initial setup you will be asked to enter available drinks. All persons with a
 - `tally_list.adjust_count`: set a drink count to a specific value.
 - `tally_list.reset_counters`: reset all counters for a person or for everyone if no user is specified.
 - `tally_list.export_csv`: export all `_amount_due` sensors to CSV files (`daily`, `weekly`, `monthly`, or `manual`) saved under `/config/backup/tally_list/<type>/`.
+- `tally_list.set_pin`: set or clear your personal PIN required for public devices.
 
 ### Reset Button
 
@@ -72,4 +74,16 @@ Example response:
 
 ```json
 {"id":42,"type":"result","success":true,"result":{"admins":["tablet_dashboard","Test","Test 2"]}}
+```
+
+The command `tally_list/is_public_device` returns whether the authenticated user is configured as a public device:
+
+```js
+await this.hass.connection.sendMessagePromise({ type: "tally_list/is_public_device" });
+```
+
+Example response:
+
+```json
+{"id":42,"type":"result","success":true,"result":{"is_public":true}}
 ```

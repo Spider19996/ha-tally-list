@@ -22,6 +22,9 @@
           "include": "Include person",
           "authorize": "Grant admin rights",
           "unauthorize": "Revoke admin rights",
+          "authorize_public": "Grant public device rights",
+          "unauthorize_public": "Revoke public device rights",
+          "set_pin": "Set public device PIN",
           "back": "Back"
         }
       },
@@ -97,6 +100,27 @@
           "user": "Person",
           "remove_more": "Unauthorize another"
         }
+      },
+      "add_public_user": {
+        "title": "Grant Public Device Rights",
+        "data": {
+          "user": "Person",
+          "add_more": "Grant another"
+        }
+      },
+      "remove_public_user": {
+        "title": "Revoke Public Device Rights",
+        "data": {
+          "user": "Person",
+          "remove_more": "Revoke another"
+        }
+      },
+      "set_pin": {
+        "title": "Set Public Device PIN",
+        "description": "Set or clear the PIN required for public devices (leave empty to clear)",
+        "data": {
+          "public_pin": "PIN"
+        }
       }
     },
     "error": {
@@ -113,167 +137,191 @@
       "confirmation_required": "Confirmation required"
     },
     "step": {
-        "menu": {
-          "title": "Tally List Options",
-          "menu_options": {
-            "user": "User settings",
-            "drinks": "Drink settings",
-            "cleanup": "Remove unused sensors",
-            "delete": "Delete all entries",
-            "finish": "Done"
-          }
-        },
-        "user": {
-          "title": "User settings",
-          "menu_options": {
-            "free_amount": "Set free amount",
-            "exclude": "Exclude person",
-            "include": "Include person",
-            "authorize": "Grant admin rights",
-            "unauthorize": "Revoke admin rights",
-            "back": "Back"
-          }
-        },
-        "drinks": {
-          "title": "Drink settings",
-          "menu_options": {
-            "add": "Add drink",
-            "remove": "Remove drink",
-            "edit": "Edit price",
-            "currency": "Set currency",
-            "free_drinks": "Free drinks",
-            "back": "Back"
-          }
-        },
-        "free_drinks": {
-          "title": "Free drinks",
-          "description": "Free drinks are booked to the free drinks user, not to regular users.",
-          "data": {
-            "enable_free_drinks": "Enable free drinks"
-          }
-        },
-        "free_drinks_confirm": {
-          "title": "Disable free drinks",
-          "description": "This removes all sensors and configuration of the Free Drinks user. Type \"YES I WANT\" to confirm",
-          "data": {
-            "confirm": "Confirmation"
-          }
-        },
-        "add_drink": {
-          "title": "Add Drink",
-          "data": {
-            "drink": "Drink name",
-            "price": "Price",
-            "add_more": "Add another"
-          }
-        },
-        "remove_drink": {
-          "title": "Remove Drink",
-          "data": {
-            "drink": "Drink",
-            "remove_more": "Remove another"
-          }
-        },
-        "edit_price": {
-          "title": "Edit Price",
-          "data": {
-            "drink": "Drink",
-            "price": "Price",
-            "edit_more": "Edit another"
-          }
-        },
-        "set_free_amount": {
-          "title": "Set Free Amount",
-          "data": {
-            "free_amount": "Free amount"
-          }
-        },
-        "currency": {
-          "title": "Set Currency",
-          "data": {
-            "currency": "Currency"
-          }
-        },
-        "add_excluded_user": {
-          "title": "Exclude Person",
-          "data": {
-            "user": "Person",
-            "add_more": "Exclude another"
-          }
-        },
-        "remove_excluded_user": {
-          "title": "Include Person",
-          "data": {
-            "user": "Person",
-            "remove_more": "Include another"
-          }
-        },
-        "add_override_user": {
-          "title": "Grant Admin Rights",
-          "data": {
-            "user": "Person",
-            "add_more": "Authorize another"
-          }
-        },
-        "remove_override_user": {
-          "title": "Revoke Admin Rights",
-          "data": {
-            "user": "Person",
-            "remove_more": "Unauthorize another"
-          }
-        },
-        "cleanup": {
-          "title": "Remove unused sensors",
-          "description": "This will also remove all open 'amount due' values. Type \"YES I WANT\" to confirm.",
-          "data": {
-            "confirm": "Confirmation"
-          }
-        },
-        "delete": {
-          "title": "Delete all entries",
-          "description": "This will remove all sensors and configuration entries of this integration. Type \"YES I WANT\" to confirm.",
-          "data": {
-            "confirm": "Confirmation"
-          }
-        },
-        "cleanup_result": {
-          "title": "Unused sensors removed",
-          "description": "Removed unused sensors:\n- {sensors}"
-        },
-        "cleanup_result_empty": {
-          "title": "No unused sensors found",
-          "description": "No unused sensors were found."
-        }
-      },
-      "enum": {
-        "action": {
+      "menu": {
+        "title": "Tally List Options",
+        "menu_options": {
           "user": "User settings",
           "drinks": "Drink settings",
-          "free_drinks": "Free drinks",
-          "add": "Add drink",
-          "remove": "Remove drink",
-          "edit": "Edit price",
+          "cleanup": "Remove unused sensors",
+          "delete": "Delete all entries",
+          "finish": "Done"
+        }
+      },
+      "user": {
+        "title": "User settings",
+        "menu_options": {
           "free_amount": "Set free amount",
-          "currency": "Set currency",
           "exclude": "Exclude person",
           "include": "Include person",
           "authorize": "Grant admin rights",
           "unauthorize": "Revoke admin rights",
-          "cleanup": "Remove unused sensors",
-          "delete": "Delete all entries",
-          "finish": "Done",
+          "authorize_public": "Grant public device rights",
+          "unauthorize_public": "Revoke public device rights",
+          "set_pin": "Set public device PIN",
           "back": "Back"
         }
+      },
+      "drinks": {
+        "title": "Drink settings",
+        "menu_options": {
+          "add": "Add drink",
+          "remove": "Remove drink",
+          "edit": "Edit price",
+          "currency": "Set currency",
+          "free_drinks": "Free drinks",
+          "back": "Back"
+        }
+      },
+      "free_drinks": {
+        "title": "Free drinks",
+        "description": "Free drinks are booked to the free drinks user, not to regular users.",
+        "data": {
+          "enable_free_drinks": "Enable free drinks"
+        }
+      },
+      "free_drinks_confirm": {
+        "title": "Disable free drinks",
+        "description": "This removes all sensors and configuration of the Free Drinks user. Type \"YES I WANT\" to confirm",
+        "data": {
+          "confirm": "Confirmation"
+        }
+      },
+      "add_drink": {
+        "title": "Add Drink",
+        "data": {
+          "drink": "Drink name",
+          "price": "Price",
+          "add_more": "Add another"
+        }
+      },
+      "remove_drink": {
+        "title": "Remove Drink",
+        "data": {
+          "drink": "Drink",
+          "remove_more": "Remove another"
+        }
+      },
+      "edit_price": {
+        "title": "Edit Price",
+        "data": {
+          "drink": "Drink",
+          "price": "Price",
+          "edit_more": "Edit another"
+        }
+      },
+      "set_free_amount": {
+        "title": "Set Free Amount",
+        "data": {
+          "free_amount": "Free amount"
+        }
+      },
+      "currency": {
+        "title": "Set Currency",
+        "data": {
+          "currency": "Currency"
+        }
+      },
+      "add_excluded_user": {
+        "title": "Exclude Person",
+        "data": {
+          "user": "Person",
+          "add_more": "Exclude another"
+        }
+      },
+      "remove_excluded_user": {
+        "title": "Include Person",
+        "data": {
+          "user": "Person",
+          "remove_more": "Include another"
+        }
+      },
+      "add_override_user": {
+        "title": "Grant Admin Rights",
+        "data": {
+          "user": "Person",
+          "add_more": "Authorize another"
+        }
+      },
+      "remove_override_user": {
+        "title": "Revoke Admin Rights",
+        "data": {
+          "user": "Person",
+          "remove_more": "Unauthorize another"
+        }
+      },
+      "cleanup": {
+        "title": "Remove unused sensors",
+        "description": "This will also remove all open 'amount due' values. Type \"YES I WANT\" to confirm.",
+        "data": {
+          "confirm": "Confirmation"
+        }
+      },
+      "delete": {
+        "title": "Delete all entries",
+        "description": "This will remove all sensors and configuration entries of this integration. Type \"YES I WANT\" to confirm.",
+        "data": {
+          "confirm": "Confirmation"
+        }
+      },
+      "cleanup_result": {
+        "title": "Unused sensors removed",
+        "description": "Removed unused sensors:\n- {sensors}"
+      },
+      "cleanup_result_empty": {
+        "title": "No unused sensors found",
+        "description": "No unused sensors were found."
+      },
+      "add_public_user": {
+        "title": "Grant Public Device Rights",
+        "data": {
+          "user": "Person",
+          "add_more": "Grant another"
+        }
+      },
+      "remove_public_user": {
+        "title": "Revoke Public Device Rights",
+        "data": {
+          "user": "Person",
+          "remove_more": "Revoke another"
+        }
+      },
+      "set_pin": {
+        "title": "Set Public Device PIN",
+        "description": "Set or clear the PIN required for public devices (leave empty to clear)",
+        "data": {
+          "public_pin": "PIN"
+        }
       }
-  },
-    "exceptions": {
-        "free_drinks_disabled": "Free drinks feature is disabled",
-        "comment_required": "Comment required",
-        "cash_user_missing": "Free drinks user missing",
-        "drink_unknown": "Unknown drink",
-        "user_unknown": "Unknown person",
-        "cannot_remove_count": "Cannot remove count"
     },
+    "enum": {
+      "action": {
+        "user": "User settings",
+        "drinks": "Drink settings",
+        "free_drinks": "Free drinks",
+        "add": "Add drink",
+        "remove": "Remove drink",
+        "edit": "Edit price",
+        "free_amount": "Set free amount",
+        "currency": "Set currency",
+        "exclude": "Exclude person",
+        "include": "Include person",
+        "authorize": "Grant admin rights",
+        "unauthorize": "Revoke admin rights",
+        "cleanup": "Remove unused sensors",
+        "delete": "Delete all entries",
+        "finish": "Done",
+        "back": "Back"
+      }
+    }
+  },
+  "exceptions": {
+    "free_drinks_disabled": "Free drinks feature is disabled",
+    "comment_required": "Comment required",
+    "cash_user_missing": "Free drinks user missing",
+    "drink_unknown": "Unknown drink",
+    "user_unknown": "Unknown person",
+    "cannot_remove_count": "Cannot remove count"
+  },
   "services": {
     "add_drink": {
       "name": "Add drink",
@@ -298,6 +346,10 @@
         "comment": {
           "name": "Comment",
           "description": "Comment for free drink"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "User PIN"
         }
       }
     },
@@ -324,6 +376,10 @@
         "comment": {
           "name": "Comment",
           "description": "Comment for free drink"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "User PIN"
         }
       }
     },
@@ -342,6 +398,10 @@
         "count": {
           "name": "Count",
           "description": "Desired drink count"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "User PIN"
         }
       }
     },
@@ -352,6 +412,10 @@
         "user": {
           "name": "Person name",
           "description": "Person name"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "User PIN"
         }
       }
     },
@@ -370,6 +434,16 @@
         "keep": {
           "name": "Keep",
           "description": "Delete backups older than X days, weeks or months depending on the selected backup. For manual backups keep only the latest X files."
+        }
+      }
+    },
+    "set_pin": {
+      "name": "Set PIN",
+      "description": "Set or clear your personal PIN",
+      "fields": {
+        "pin": {
+          "name": "PIN",
+          "description": "New PIN (leave empty to clear)"
         }
       }
     }

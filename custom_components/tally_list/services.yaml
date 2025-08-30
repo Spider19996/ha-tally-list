@@ -32,6 +32,11 @@ add_drink:
       required: false
       selector:
         text:
+    pin:
+      description: User PIN
+      required: false
+      selector:
+        text:
 remove_drink:
   name: Remove drink
   description: Decrement drink counter for a person
@@ -66,6 +71,11 @@ remove_drink:
       required: false
       selector:
         text:
+    pin:
+      description: User PIN
+      required: false
+      selector:
+        text:
 adjust_count:
   name: Adjust count
   description: Set drink count for a person
@@ -90,6 +100,11 @@ adjust_count:
         number:
           min: 0
           step: 1
+    pin:
+      description: User PIN
+      required: false
+      selector:
+        text:
 reset_counters:
   name: Reset counters
   description: Reset counters for a person. If no user is specified, reset all.
@@ -97,6 +112,11 @@ reset_counters:
     user:
       description: Person name
       example: Alice
+      required: false
+      selector:
+        text:
+    pin:
+      description: User PIN
       required: false
       selector:
         text:
@@ -134,3 +154,12 @@ export_csv:
         number:
           min: 1
           step: 1
+set_pin:
+  name: Set PIN
+  description: Set or clear your personal PIN
+  fields:
+    pin:
+      description: New PIN (leave empty to clear)
+      required: false
+      selector:
+        text:
