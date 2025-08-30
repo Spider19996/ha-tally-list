@@ -439,8 +439,12 @@
     },
     "set_pin": {
       "name": "PIN setzen",
-      "description": "Persönliche PIN setzen oder löschen",
+      "description": "Persönliche PIN für eine Person setzen oder löschen",
       "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Personenname (nur für Tally-Admins)"
+        },
         "pin": {
           "name": "PIN",
           "description": "Neue PIN (leer lassen zum Löschen)"

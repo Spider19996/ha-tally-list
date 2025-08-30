@@ -158,14 +158,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="user_unknown"
             )
+
+        target_user = call.data.get(ATTR_USER, person_name)
+        if target_user != person_name:
+            override_users = hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
+            if person_name not in override_users:
+                raise Unauthorized
+
         pin = call.data.get(ATTR_PIN)
         user_pins = hass.data[DOMAIN].setdefault(CONF_USER_PINS, {})
         if pin:
-            user_pins[person_name] = pin
+            user_pins[target_user] = pin
         else:
-            user_pins.pop(person_name, None)
+            user_pins.pop(target_user, None)
         for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.data.get(CONF_USER) == person_name:
+            if entry.data.get(CONF_USER) == target_user:
                 entry_data = dict(entry.data)
                 if pin:
                     entry_data[CONF_USER_PIN] = pin

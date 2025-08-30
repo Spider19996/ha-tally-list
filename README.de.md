@@ -11,7 +11,7 @@ Diese benutzerdefinierte Integration für [Home Assistant](https://www.home-assi
 - Sensoren für Getränkezählungen, Getränkepreise, einen Freibetrag und den Gesamtbetrag pro Person.
 - Button-Entität zum Zurücksetzen aller Zähler einer Person; nur Nutzer mit Override-Rechten („Tally Admins") dürfen sie verwenden.
 - Konfigurierbares Währungssymbol (Standard: €).
-- Dienste zum Hinzufügen, Entfernen, Anpassen, Zurücksetzen, Exportieren von Zählern und zum Setzen persönlicher PINs.
+- Dienste zum Hinzufügen, Entfernen, Anpassen, Zurücksetzen, Exportieren von Zählern und zur Verwaltung persönlicher PINs (Tally-Admins können PINs für andere Nutzer setzen).
 - Zähler können beim Entfernen eines Getränks nicht unter null fallen.
 - Möglichkeit, Personen vom automatischen Import auszuschließen.
 - Vergabe von Override-Rechten an ausgewählte Nutzer, damit sie für alle Getränke zählen können.
@@ -37,7 +37,7 @@ Beim ersten Einrichten wirst du nach verfügbaren Getränken gefragt. Alle Perso
 - `tally_list.adjust_count`: setzt die Anzahl eines Getränks auf einen bestimmten Wert.
 - `tally_list.reset_counters`: setzt alle Zähler für eine Person oder – ohne Angabe einer Person – für alle zurück.
 - `tally_list.export_csv`: exportiert alle `_amount_due`-Sensoren als CSV-Dateien (`daily`, `weekly`, `monthly` oder `manual`), gespeichert unter `/config/backup/tally_list/<type>/`.
-- `tally_list.set_pin`: setzt oder entfernt deine persönliche PIN für öffentliche Geräte.
+- `tally_list.set_pin`: setzt oder entfernt eine persönliche PIN für öffentliche Geräte (Admins können PINs für andere Nutzer setzen).
 
 ### Reset-Schalter
 
