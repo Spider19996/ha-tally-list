@@ -67,23 +67,29 @@ from the integration options.
 The WebSocket command `tally_list/get_admins` returns all users that currently have override permissions and can be called from the Home Assistant frontend or an external client. The command requires an authenticated Home Assistant user.
 
 ```js
-await this.hass.connection.sendMessagePromise({ type: "tally_list/get_admins" });
+await this.hass.callWS({ type: "tally_list/get_admins" });
 ```
 
 Example response:
 
 ```json
-{"id":42,"type":"result","success":true,"result":{"admins":["tablet_dashboard","Test","Test 2"]}}
+{"admins":["tablet_dashboard","Test","Test 2"]}
 ```
 
 The command `tally_list/is_public_device` returns whether the authenticated user is configured as a public device:
 
 ```js
-await this.hass.connection.sendMessagePromise({ type: "tally_list/is_public_device" });
+await this.hass.callWS({ type: "tally_list/is_public_device" });
 ```
 
-Example response:
+Example response if the user is configured as a public device:
 
 ```json
-{"id":42,"type":"result","success":true,"result":{"is_public":true}}
+{"is_public": true}
+```
+
+Example response for a regular user:
+
+```json
+{"is_public": false}
 ```
