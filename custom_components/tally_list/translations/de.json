@@ -22,7 +22,10 @@
           "include": "Person einschließen",
           "authorize": "Adminrechte vergeben",
           "unauthorize": "Adminrechte entziehen",
-          "back": "Zurück"
+          "back": "Zurück",
+          "authorize_public": "Öffentliches Gerät berechtigen",
+          "unauthorize_public": "Öffentliches Gerät entziehen",
+          "set_pin": "PIN für öffentliche Geräte setzen"
         }
       },
       "drinks": {
@@ -97,6 +100,26 @@
           "user": "Person",
           "remove_more": "Weiteren entziehen"
         }
+      },
+      "add_public_user": {
+        "title": "Öffentliches Gerät berechtigen",
+        "data": {
+          "user": "Person",
+          "add_more": "Weiteres berechtigen"
+        }
+      },
+      "remove_public_user": {
+        "title": "Öffentliches Gerät entziehen",
+        "data": {
+          "user": "Person",
+          "remove_more": "Weiteres entziehen"
+        }
+      },
+      "set_pin": {
+        "title": "PIN für öffentliche Geräte setzen",
+        "data": {
+          "public_pin": "PIN"
+        }
       }
     },
     "error": {
@@ -104,168 +127,191 @@
     }
   },
   "options": {
-      "title": "Strichliste",
-      "abort": {
-        "delete_all": "Alle Sensoren und Konfigurationen wurden entfernt."
-      },
-      "error": {
-        "invalid_confirmation": "Bitte gib \"JA ICH WILL\" ein.",
-        "confirmation_required": "Bestätigung erforderlich"
-      },
-      "step": {
-        "menu": {
-          "title": "Strichliste verwalten",
-          "menu_options": {
-            "user": "Nutzereinstellungen",
-            "drinks": "Getränkeeinstellungen",
-            "cleanup": "Nicht mehr genutzte Sensoren entfernen",
-            "delete": "Integration komplett entfernen",
-            "finish": "Fertig"
-          }
-        },
-        "user": {
-          "title": "Nutzereinstellungen",
-          "menu_options": {
-            "free_amount": "Freibetrag setzen",
-            "exclude": "Person ausschließen",
-            "include": "Person einschließen",
-            "authorize": "Adminrechte vergeben",
-            "unauthorize": "Adminrechte entziehen",
-            "back": "Zurück"
-          }
-        },
-        "drinks": {
-          "title": "Getränkeeinstellungen",
-          "menu_options": {
-            "add": "Hinzufügen",
-            "remove": "Entfernen",
-            "edit": "Bearbeiten",
-            "currency": "Währung setzen",
-            "free_drinks": "Freigetränke",
-            "back": "Zurück"
-          }
-        },
-        "free_drinks": {
-          "title": "Freigetränke",
-          "description": "Freigetränke werden auf den Freigetränke-Nutzer gebucht, nicht auf normale Nutzer.",
-          "data": {
-            "enable_free_drinks": "Freigetränke aktivieren"
-          }
-        },
-        "free_drinks_confirm": {
-          "title": "Freigetränke deaktivieren",
-          "description": "Dies entfernt alle Sensoren und Konfigurationen des Nutzers Freigetränke. Gib zur Bestätigung \"JA ICH WILL\" ein",
-          "data": {
-            "confirm": "Bestätigung"
-          }
-        },
-        "add_drink": {
-          "title": "Getränk hinzufügen",
-          "data": {
-            "drink": "Getränk",
-            "price": "Preis",
-            "add_more": "Weiteres hinzufügen"
-          }
-        },
-        "remove_drink": {
-          "title": "Getränk entfernen",
-          "data": {
-            "drink": "Getränk",
-            "remove_more": "Weiteres entfernen"
-          }
-        },
-        "edit_price": {
-          "title": "Preis bearbeiten",
-          "data": {
-            "drink": "Getränk",
-            "price": "Preis",
-            "edit_more": "Weiteres bearbeiten"
-          }
-        },
-        "set_free_amount": {
-          "title": "Freibetrag setzen",
-          "data": {
-            "free_amount": "Freibetrag"
-          }
-        },
-        "currency": {
-          "title": "Währung setzen",
-          "data": {
-            "currency": "Währung"
-          }
-        },
-        "add_excluded_user": {
-          "title": "Person ausschließen",
-          "data": {
-            "user": "Person",
-            "add_more": "Weiteren ausschließen"
-          }
-        },
-        "remove_excluded_user": {
-          "title": "Person einschließen",
-          "data": {
-            "user": "Person",
-            "remove_more": "Weiteren einschließen"
-          }
-        },
-        "add_override_user": {
-          "title": "Adminrechte vergeben",
-          "data": {
-            "user": "Person",
-            "add_more": "Weiteren berechtigen"
-          }
-        },
-        "remove_override_user": {
-          "title": "Adminrechte entziehen",
-          "data": {
-            "user": "Person",
-            "remove_more": "Weiteren entziehen"
-          }
-        },
-        "cleanup": {
-          "title": "Nicht mehr genutzte Sensoren entfernen",
-          "description": "Dies löscht auch alle offenen 'zu zahlende Beträge'. Gib zur Bestätigung \"JA ICH WILL\" ein.",
-          "data": {
-            "confirm": "Bestätigung"
-          }
-        },
-        "delete": {
-          "title": "Integration komplett entfernen",
-          "description": "Dies entfernt alle Sensoren und Konfigurationen dieser Integration. Gib zur Bestätigung \"JA ICH WILL\" ein.",
-          "data": {
-            "confirm": "Bestätigung"
-          }
-        },
-        "cleanup_result": {
-          "title": "Nicht genutzte Sensoren entfernt",
-          "description": "Folgende Sensoren wurden entfernt:\n- {sensors}"
-        },
-        "cleanup_result_empty": {
-          "title": "Keine ungenutzten Sensoren gefunden",
-          "description": "Es wurden keine ungenutzten Sensoren gefunden."
-        }
-      },
-      "enum": {
-        "action": {
+    "title": "Strichliste",
+    "abort": {
+      "delete_all": "Alle Sensoren und Konfigurationen wurden entfernt."
+    },
+    "error": {
+      "invalid_confirmation": "Bitte gib \"JA ICH WILL\" ein.",
+      "confirmation_required": "Bestätigung erforderlich"
+    },
+    "step": {
+      "menu": {
+        "title": "Strichliste verwalten",
+        "menu_options": {
           "user": "Nutzereinstellungen",
           "drinks": "Getränkeeinstellungen",
-          "free_drinks": "Freigetränke",
-          "add": "Hinzufügen",
-          "remove": "Entfernen",
-          "edit": "Bearbeiten",
-          "free_amount": "Freibetrag",
-          "currency": "Währung setzen",
+          "cleanup": "Nicht mehr genutzte Sensoren entfernen",
+          "delete": "Integration komplett entfernen",
+          "finish": "Fertig"
+        }
+      },
+      "user": {
+        "title": "Nutzereinstellungen",
+        "menu_options": {
+          "free_amount": "Freibetrag setzen",
           "exclude": "Person ausschließen",
           "include": "Person einschließen",
           "authorize": "Adminrechte vergeben",
           "unauthorize": "Adminrechte entziehen",
-          "cleanup": "Nicht mehr genutzte Sensoren entfernen",
-          "delete": "Integration komplett entfernen",
-          "finish": "Fertig",
+          "back": "Zurück",
+          "authorize_public": "Öffentliches Gerät berechtigen",
+          "unauthorize_public": "Öffentliches Gerät entziehen",
+          "set_pin": "PIN für öffentliche Geräte setzen"
+        }
+      },
+      "drinks": {
+        "title": "Getränkeeinstellungen",
+        "menu_options": {
+          "add": "Hinzufügen",
+          "remove": "Entfernen",
+          "edit": "Bearbeiten",
+          "currency": "Währung setzen",
+          "free_drinks": "Freigetränke",
           "back": "Zurück"
+        }
+      },
+      "free_drinks": {
+        "title": "Freigetränke",
+        "description": "Freigetränke werden auf den Freigetränke-Nutzer gebucht, nicht auf normale Nutzer.",
+        "data": {
+          "enable_free_drinks": "Freigetränke aktivieren"
+        }
+      },
+      "free_drinks_confirm": {
+        "title": "Freigetränke deaktivieren",
+        "description": "Dies entfernt alle Sensoren und Konfigurationen des Nutzers Freigetränke. Gib zur Bestätigung \"JA ICH WILL\" ein",
+        "data": {
+          "confirm": "Bestätigung"
+        }
+      },
+      "add_drink": {
+        "title": "Getränk hinzufügen",
+        "data": {
+          "drink": "Getränk",
+          "price": "Preis",
+          "add_more": "Weiteres hinzufügen"
+        }
+      },
+      "remove_drink": {
+        "title": "Getränk entfernen",
+        "data": {
+          "drink": "Getränk",
+          "remove_more": "Weiteres entfernen"
+        }
+      },
+      "edit_price": {
+        "title": "Preis bearbeiten",
+        "data": {
+          "drink": "Getränk",
+          "price": "Preis",
+          "edit_more": "Weiteres bearbeiten"
+        }
+      },
+      "set_free_amount": {
+        "title": "Freibetrag setzen",
+        "data": {
+          "free_amount": "Freibetrag"
+        }
+      },
+      "currency": {
+        "title": "Währung setzen",
+        "data": {
+          "currency": "Währung"
+        }
+      },
+      "add_excluded_user": {
+        "title": "Person ausschließen",
+        "data": {
+          "user": "Person",
+          "add_more": "Weiteren ausschließen"
+        }
+      },
+      "remove_excluded_user": {
+        "title": "Person einschließen",
+        "data": {
+          "user": "Person",
+          "remove_more": "Weiteren einschließen"
+        }
+      },
+      "add_override_user": {
+        "title": "Adminrechte vergeben",
+        "data": {
+          "user": "Person",
+          "add_more": "Weiteren berechtigen"
+        }
+      },
+      "remove_override_user": {
+        "title": "Adminrechte entziehen",
+        "data": {
+          "user": "Person",
+          "remove_more": "Weiteren entziehen"
+        }
+      },
+      "cleanup": {
+        "title": "Nicht mehr genutzte Sensoren entfernen",
+        "description": "Dies löscht auch alle offenen 'zu zahlende Beträge'. Gib zur Bestätigung \"JA ICH WILL\" ein.",
+        "data": {
+          "confirm": "Bestätigung"
+        }
+      },
+      "delete": {
+        "title": "Integration komplett entfernen",
+        "description": "Dies entfernt alle Sensoren und Konfigurationen dieser Integration. Gib zur Bestätigung \"JA ICH WILL\" ein.",
+        "data": {
+          "confirm": "Bestätigung"
+        }
+      },
+      "cleanup_result": {
+        "title": "Nicht genutzte Sensoren entfernt",
+        "description": "Folgende Sensoren wurden entfernt:\n- {sensors}"
+      },
+      "cleanup_result_empty": {
+        "title": "Keine ungenutzten Sensoren gefunden",
+        "description": "Es wurden keine ungenutzten Sensoren gefunden."
+      },
+      "add_public_user": {
+        "title": "Öffentliches Gerät berechtigen",
+        "data": {
+          "user": "Person",
+          "add_more": "Weiteres berechtigen"
+        }
+      },
+      "remove_public_user": {
+        "title": "Öffentliches Gerät entziehen",
+        "data": {
+          "user": "Person",
+          "remove_more": "Weiteres entziehen"
+        }
+      },
+      "set_pin": {
+        "title": "PIN für öffentliche Geräte setzen",
+        "data": {
+          "public_pin": "PIN"
         }
       }
     },
+    "enum": {
+      "action": {
+        "user": "Nutzereinstellungen",
+        "drinks": "Getränkeeinstellungen",
+        "free_drinks": "Freigetränke",
+        "add": "Hinzufügen",
+        "remove": "Entfernen",
+        "edit": "Bearbeiten",
+        "free_amount": "Freibetrag",
+        "currency": "Währung setzen",
+        "exclude": "Person ausschließen",
+        "include": "Person einschließen",
+        "authorize": "Adminrechte vergeben",
+        "unauthorize": "Adminrechte entziehen",
+        "cleanup": "Nicht mehr genutzte Sensoren entfernen",
+        "delete": "Integration komplett entfernen",
+        "finish": "Fertig",
+        "back": "Zurück"
+      }
+    }
+  },
   "exceptions": {
     "free_drinks_disabled": "Freigetränke sind deaktiviert",
     "comment_required": "Kommentar erforderlich",
@@ -298,6 +344,10 @@
         "comment": {
           "name": "Kommentar",
           "description": "Kommentar für Freigetränk"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "PIN für öffentliche Geräte"
         }
       }
     },
@@ -324,6 +374,10 @@
         "comment": {
           "name": "Kommentar",
           "description": "Kommentar für Freigetränk"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "PIN für öffentliche Geräte"
         }
       }
     },
@@ -342,6 +396,10 @@
         "count": {
           "name": "Anzahl",
           "description": "Gewünschte Anzahl an Getränken"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "PIN für öffentliche Geräte"
         }
       }
     },
@@ -352,6 +410,10 @@
         "user": {
           "name": "Person",
           "description": "Name der Person"
+        },
+        "pin": {
+          "name": "PIN",
+          "description": "PIN für öffentliche Geräte"
         }
       }
     },
@@ -370,6 +432,16 @@
         "keep": {
           "name": "Aufbewahren",
           "description": "Lösche Backups älter als X Tage, Wochen oder Monate abhängig vom gewählten Backup. Für manuelle Backups werden nur die letzten X Dateien behalten."
+        }
+      }
+    },
+    "set_pin": {
+      "name": "PIN setzen",
+      "description": "PIN für öffentliche Geräte setzen oder löschen",
+      "fields": {
+        "pin": {
+          "name": "PIN",
+          "description": "Neue PIN (leer lassen zum Löschen)"
         }
       }
     }
