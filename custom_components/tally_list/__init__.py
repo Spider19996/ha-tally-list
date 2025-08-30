@@ -75,6 +75,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         override_users = hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
         public_devices = hass.data.get(DOMAIN, {}).get(CONF_PUBLIC_DEVICES, [])
         user_pins = hass.data.get(DOMAIN, {}).get(CONF_USER_PINS, {})
+        sessions = hass.data.get(DOMAIN, {}).get("sessions", {})
         person_name = None
         for state in hass.states.async_all("person"):
             if state.attributes.get("user_id") == hass_user.id:
@@ -85,6 +86,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if person_name in public_devices and target_user:
             user_pin = user_pins.get(target_user)
             if user_pin and call.data.get(ATTR_PIN) == user_pin:
+                return
+            if sessions.get(user_id) == target_user:
                 return
         if target_user is None:
             raise Unauthorized
