@@ -320,7 +320,8 @@
     "cash_user_missing": "Free drinks user missing",
     "drink_unknown": "Unknown drink",
     "user_unknown": "Unknown person",
-    "cannot_remove_count": "Cannot remove count"
+    "cannot_remove_count": "Cannot remove count",
+    "pin_invalid": "PIN must be exactly 4 digits"
   },
   "services": {
     "add_drink": {
@@ -349,7 +350,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "User PIN"
+          "description": "4-digit user PIN"
         }
       }
     },
@@ -379,7 +380,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "User PIN"
+          "description": "4-digit user PIN"
         }
       }
     },
@@ -401,7 +402,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "User PIN"
+          "description": "4-digit user PIN"
         }
       }
     },
@@ -415,7 +416,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "User PIN"
+          "description": "4-digit user PIN"
         }
       }
     },
@@ -439,7 +440,7 @@
     },
     "set_pin": {
       "name": "Set PIN",
-      "description": "Set or clear a personal PIN",
+      "description": "Set or clear a personal 4-digit PIN",
       "fields": {
         "user": {
           "name": "Person",
@@ -447,7 +448,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "New PIN (leave empty to clear)"
+          "description": "New 4-digit PIN (leave empty to clear)"
         }
       }
     }
