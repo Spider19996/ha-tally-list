@@ -156,7 +156,7 @@ export_csv:
           step: 1
 set_pin:
   name: Set PIN
-  description: Set or clear a personal 4-digit PIN
+  description: Set or clear a personal PIN
   fields:
     user:
       description: Person name (admin only)
@@ -164,7 +164,7 @@ set_pin:
       selector:
         text:
     pin:
-      description: New 4-digit PIN (leave empty to clear)
+      description: New PIN (leave empty to clear)
       required: false
       selector:
         text:
