@@ -62,6 +62,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             CONF_CASH_USER_NAME: get_cash_user_name(hass.config.language),
             "free_drink_counts": {},
             "free_drinks_ledger": 0.0,
+            "logins": {},
         },
     )
 
@@ -75,6 +76,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         override_users = hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
         public_devices = hass.data.get(DOMAIN, {}).get(CONF_PUBLIC_DEVICES, [])
         user_pins = hass.data.get(DOMAIN, {}).get(CONF_USER_PINS, {})
+        logins = hass.data.get(DOMAIN, {}).get("logins", {})
         person_name = None
         for state in hass.states.async_all("person"):
             if state.attributes.get("user_id") == hass_user.id:
@@ -84,7 +86,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         if person_name in public_devices and target_user:
             user_pin = user_pins.get(target_user)
-            if user_pin and call.data.get(ATTR_PIN) == user_pin:
+            if user_pin and (
+                call.data.get(ATTR_PIN) == user_pin
+                or logins.get(user_id) == target_user
+            ):
                 return
         if target_user is None:
             raise Unauthorized

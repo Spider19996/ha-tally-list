@@ -93,3 +93,21 @@ Beispielantwort für einen normalen Benutzer:
 ```json
 {"is_public": false}
 ```
+
+Öffentliche Geräte können einen Benutzer einmalig über den Befehl `tally_list/login` authentifizieren, damit nachfolgende Dienstaufrufe keinen `pin`-Parameter mehr benötigen:
+
+```js
+await this.hass.callWS({ type: "tally_list/login", user: "Alice", pin: "1234" });
+```
+
+Beispielantwort bei Erfolg:
+
+```json
+{"success": true}
+```
+
+Zum Beenden der Sitzung `tally_list/logout` aufrufen:
+
+```js
+await this.hass.callWS({ type: "tally_list/logout" });
+```
