@@ -168,6 +168,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         pin = call.data.get(ATTR_PIN)
         user_pins = hass.data[DOMAIN].setdefault(CONF_USER_PINS, {})
         if pin:
+            if not re.fullmatch(r"\d{4}", pin):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="pin_invalid"
+                )
             user_pins[target_user] = pin
         else:
             user_pins.pop(target_user, None)
