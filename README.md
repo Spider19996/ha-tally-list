@@ -37,7 +37,7 @@ At initial setup you will be asked to enter available drinks. All persons with a
 - `tally_list.adjust_count`: set a drink count to a specific value.
 - `tally_list.reset_counters`: reset all counters for a person or for everyone if no user is specified.
 - `tally_list.export_csv`: export all `_amount_due` sensors to CSV files (`daily`, `weekly`, `monthly`, or `manual`) saved under `/config/backup/tally_list/<type>/`.
-- `tally_list.set_pin`: set or clear a personal 4-digit numeric PIN required for public devices (admins can set PINs for others).
+- `tally_list.set_pin`: set or clear a personal PIN required for public devices (admins can set PINs for others).
 
 ### Reset Button
 

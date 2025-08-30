@@ -320,8 +320,7 @@
     "cash_user_missing": "Free drinks user missing",
     "drink_unknown": "Unknown drink",
     "user_unknown": "Unknown person",
-    "cannot_remove_count": "Cannot remove count",
-    "invalid_pin": "PIN must consist of exactly four digits"
+    "cannot_remove_count": "Cannot remove count"
   },
   "services": {
     "add_drink": {
@@ -440,7 +439,7 @@
     },
     "set_pin": {
       "name": "Set PIN",
-      "description": "Set or clear a personal 4-digit PIN",
+      "description": "Set or clear a personal PIN",
       "fields": {
         "user": {
           "name": "Person",
@@ -448,7 +447,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "New 4-digit PIN (leave empty to clear)"
+          "description": "New PIN (leave empty to clear)"
         }
       }
     }
