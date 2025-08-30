@@ -439,8 +439,12 @@
     },
     "set_pin": {
       "name": "Set PIN",
-      "description": "Set or clear your personal PIN",
+      "description": "Set or clear a personal PIN",
       "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Person name (admin only)"
+        },
         "pin": {
           "name": "PIN",
           "description": "New PIN (leave empty to clear)"
