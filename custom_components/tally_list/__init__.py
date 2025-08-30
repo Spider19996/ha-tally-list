@@ -24,18 +24,23 @@ from .const import (
     SERVICE_ADJUST_COUNT,
     SERVICE_RESET_COUNTERS,
     SERVICE_EXPORT_CSV,
+    SERVICE_SET_PIN,
     ATTR_USER,
     ATTR_DRINK,
     CONF_USER,
     CONF_FREE_AMOUNT,
     CONF_EXCLUDED_USERS,
     CONF_OVERRIDE_USERS,
+    CONF_PUBLIC_DEVICES,
+    CONF_USER_PIN,
+    CONF_USER_PINS,
     PRICE_LIST_USERS,
     CONF_CURRENCY,
     CONF_ENABLE_FREE_DRINKS,
     CONF_CASH_USER_NAME,
     ATTR_FREE_DRINK,
     ATTR_COMMENT,
+    ATTR_PIN,
     get_cash_user_name,
 )
 
@@ -50,6 +55,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "drinks": {},
             CONF_EXCLUDED_USERS: [],
             CONF_OVERRIDE_USERS: [],
+            CONF_PUBLIC_DEVICES: [],
+            CONF_USER_PINS: {},
             CONF_CURRENCY: "€",
             CONF_ENABLE_FREE_DRINKS: False,
             CONF_CASH_USER_NAME: get_cash_user_name(hass.config.language),
@@ -66,6 +73,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if hass_user is None:
             return
         override_users = hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
+        public_devices = hass.data.get(DOMAIN, {}).get(CONF_PUBLIC_DEVICES, [])
+        user_pins = hass.data.get(DOMAIN, {}).get(CONF_USER_PINS, {})
         person_name = None
         for state in hass.states.async_all("person"):
             if state.attributes.get("user_id") == hass_user.id:
@@ -73,6 +82,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 break
         if person_name in override_users:
             return
+        if person_name in public_devices and target_user:
+            user_pin = user_pins.get(target_user)
+            if user_pin and call.data.get(ATTR_PIN) == user_pin:
+                return
         if target_user is None:
             raise Unauthorized
         if person_name != target_user:
@@ -128,6 +141,38 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ):
                 return data
         return None
+
+    async def set_pin_service(call):
+        user_id = call.context.user_id
+        if user_id is None:
+            raise Unauthorized
+        hass_user = await hass.auth.async_get_user(user_id)
+        if hass_user is None:
+            raise Unauthorized
+        person_name = None
+        for state in hass.states.async_all("person"):
+            if state.attributes.get("user_id") == hass_user.id:
+                person_name = state.name
+                break
+        if person_name is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="user_unknown"
+            )
+        pin = call.data.get(ATTR_PIN)
+        user_pins = hass.data[DOMAIN].setdefault(CONF_USER_PINS, {})
+        if pin:
+            user_pins[person_name] = pin
+        else:
+            user_pins.pop(person_name, None)
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.data.get(CONF_USER) == person_name:
+                entry_data = dict(entry.data)
+                if pin:
+                    entry_data[CONF_USER_PIN] = pin
+                else:
+                    entry_data.pop(CONF_USER_PIN, None)
+                hass.config_entries.async_update_entry(entry, data=entry_data)
+                break
 
     async def adjust_count_service(call):
         user = call.data[ATTR_USER]
@@ -479,6 +524,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         export_csv_service,
     )
 
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_PIN,
+        set_pin_service,
+    )
+
     await async_register_ws(hass)
 
     return True
@@ -631,6 +682,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
         hass.config_entries.async_update_entry(entry, data=entry_data)
+    if entry.data.get(CONF_PUBLIC_DEVICES) is not None:
+        hass.data[DOMAIN][CONF_PUBLIC_DEVICES] = entry.data[CONF_PUBLIC_DEVICES]
+    elif hass.data[DOMAIN].get(CONF_PUBLIC_DEVICES) is not None:
+        entry_data = dict(entry.data)
+        entry_data[CONF_PUBLIC_DEVICES] = hass.data[DOMAIN][CONF_PUBLIC_DEVICES]
+        hass.config_entries.async_update_entry(entry, data=entry_data)
+    user_name = entry.data.get(CONF_USER)
+    if user_name and entry.data.get(CONF_USER_PIN) is not None:
+        hass.data[DOMAIN].setdefault(CONF_USER_PINS, {})[user_name] = entry.data[CONF_USER_PIN]
+    elif user_name:
+        pin = hass.data[DOMAIN].get(CONF_USER_PINS, {}).get(user_name)
+        if pin is not None and CONF_USER_PIN not in entry.data:
+            entry_data = dict(entry.data)
+            entry_data[CONF_USER_PIN] = pin
+            hass.config_entries.async_update_entry(entry, data=entry_data)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -649,7 +715,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN].pop("feed_add_entities", None)
             hass.data[DOMAIN].pop("feed_entry_id", None)
         hass.data[DOMAIN].pop(entry.entry_id, None)
-        if entry.data.get(CONF_USER) in PRICE_LIST_USERS:
+        user_name = entry.data.get(CONF_USER)
+        if user_name:
+            hass.data[DOMAIN].get(CONF_USER_PINS, {}).pop(user_name, None)
+        if user_name in PRICE_LIST_USERS:
             hass.data[DOMAIN].pop("drinks", None)
             hass.data[DOMAIN].pop("free_amount", None)
             # Keep excluded users so they are not re-created when the price list
