@@ -167,17 +167,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         pin = call.data.get(ATTR_PIN)
         user_pins = hass.data[DOMAIN].setdefault(CONF_USER_PINS, {})
-        if pin:
-            user_pins[target_user] = pin
-        else:
+        if pin in (None, ""):
             user_pins.pop(target_user, None)
+        else:
+            pin_str = str(pin)
+            if not re.fullmatch(r"\d{4}", pin_str):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="pin_invalid"
+                )
+            user_pins[target_user] = pin_str
         for entry in hass.config_entries.async_entries(DOMAIN):
             if entry.data.get(CONF_USER) == target_user:
                 entry_data = dict(entry.data)
-                if pin:
-                    entry_data[CONF_USER_PIN] = pin
-                else:
+                if pin in (None, ""):
                     entry_data.pop(CONF_USER_PIN, None)
+                else:
+                    entry_data[CONF_USER_PIN] = str(pin)
                 hass.config_entries.async_update_entry(entry, data=entry_data)
                 break
 
