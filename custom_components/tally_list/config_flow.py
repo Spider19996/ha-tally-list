@@ -19,8 +19,6 @@ from .const import (
     CONF_FREE_AMOUNT,
     CONF_EXCLUDED_USERS,
     CONF_OVERRIDE_USERS,
-    CONF_PUBLIC_DEVICES,
-    CONF_PUBLIC_PIN,
     PRICE_LIST_USERS,
     get_price_list_user,
     CONF_CURRENCY,
@@ -59,8 +57,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._free_amount: float = 0.0
         self._excluded_users: list[str] = []
         self._override_users: list[str] = []
-        self._public_devices: list[str] = []
-        self._public_pin: str | None = None
         self._pending_users: list[str] = []
         self._currency: str = "€"
         self._create_price_user: bool = False
@@ -77,8 +73,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._free_amount = float(user_input.get(CONF_FREE_AMOUNT, 0.0))
         self._excluded_users = user_input.get(CONF_EXCLUDED_USERS, [])
         self._override_users = user_input.get(CONF_OVERRIDE_USERS, [])
-        self._public_devices = user_input.get(CONF_PUBLIC_DEVICES, [])
-        self._public_pin = user_input.get(CONF_PUBLIC_PIN)
         self._currency = user_input.get(CONF_CURRENCY, "€")
         self._enable_free_drinks = user_input.get(CONF_ENABLE_FREE_DRINKS, False)
         self._cash_user_name = get_cash_user_name(
@@ -89,8 +83,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if CONF_ENABLE_FREE_DRINKS not in user_input:
             user_input[CONF_ENABLE_FREE_DRINKS] = self._enable_free_drinks
         user_input[CONF_CASH_USER_NAME] = self._cash_user_name
-        user_input[CONF_PUBLIC_DEVICES] = self._public_devices
-        user_input[CONF_PUBLIC_PIN] = self._public_pin
         return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
@@ -159,9 +151,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "include",
                 "authorize",
                 "unauthorize",
-                "authorize_public",
-                "unauthorize_public",
-                "set_pin",
                 "back",
             ],
         )
@@ -413,71 +402,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="remove_override_user", data_schema=schema)
 
-    async def async_step_add_public_user(self, user_input=None):
-        registry = er.async_get(self.hass)
-        persons = [
-            entry.original_name or entry.name or entry.entity_id
-            for entry in registry.entities.values()
-            if entry.domain == "person"
-            and (
-                (state := self.hass.states.get(entry.entity_id))
-                and state.attributes.get("user_id")
-            )
-        ]
-        persons = [
-            p
-            for p in persons
-            if p not in self._public_devices and p not in PRICE_LIST_USERS
-        ]
-        if not persons:
-            return await self.async_step_menu()
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            self._public_devices.append(user)
-            if user_input.get("add_more") and len(persons) > 1:
-                return await self.async_step_add_public_user()
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(persons),
-                vol.Optional("add_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="add_public_user", data_schema=schema)
-
-    async def async_step_remove_public_user(self, user_input=None):
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            if user in self._public_devices:
-                self._public_devices.remove(user)
-            if user_input.get("remove_more") and self._public_devices:
-                return await self.async_step_remove_public_user()
-            return await self.async_step_menu()
-        if not self._public_devices:
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(list(self._public_devices)),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="remove_public_user", data_schema=schema)
-
-    async def async_step_authorize_public(self, user_input=None):
-        return await self.async_step_add_public_user(user_input)
-
-    async def async_step_unauthorize_public(self, user_input=None):
-        return await self.async_step_remove_public_user(user_input)
-
-    async def async_step_set_pin(self, user_input=None):
-        if user_input is not None:
-            self._public_pin = user_input.get(CONF_PUBLIC_PIN)
-            return await self.async_step_user()
-        schema = vol.Schema(
-            {vol.Required(CONF_PUBLIC_PIN, default=self._public_pin or ""): str}
-        )
-        return self.async_show_form(step_id="set_pin", data_schema=schema)
-
     async def async_step_finish(self, user_input=None):
         await self._finalize_setup()
         return self.async_create_entry(
@@ -488,8 +412,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_FREE_AMOUNT: self._free_amount,
                 CONF_EXCLUDED_USERS: self._excluded_users,
                 CONF_OVERRIDE_USERS: self._override_users,
-                CONF_PUBLIC_DEVICES: self._public_devices,
-                CONF_PUBLIC_PIN: self._public_pin,
                 CONF_CURRENCY: self._currency,
                 CONF_ENABLE_FREE_DRINKS: self._enable_free_drinks,
                 CONF_CASH_USER_NAME: self._cash_user_name,
@@ -501,8 +423,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.hass.data[DOMAIN]["free_amount"] = self._free_amount
         self.hass.data[DOMAIN][CONF_EXCLUDED_USERS] = self._excluded_users
         self.hass.data[DOMAIN][CONF_OVERRIDE_USERS] = self._override_users
-        self.hass.data[DOMAIN][CONF_PUBLIC_DEVICES] = self._public_devices
-        self.hass.data[DOMAIN][CONF_PUBLIC_PIN] = self._public_pin
         self.hass.data[DOMAIN][CONF_CURRENCY] = self._currency
         self.hass.data[DOMAIN][CONF_ENABLE_FREE_DRINKS] = self._enable_free_drinks
         self.hass.data[DOMAIN][CONF_CASH_USER_NAME] = self._cash_user_name
@@ -518,8 +438,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_DRINKS: self._drinks,
                     CONF_EXCLUDED_USERS: self._excluded_users,
                     CONF_OVERRIDE_USERS: self._override_users,
-                    CONF_PUBLIC_DEVICES: self._public_devices,
-                    CONF_PUBLIC_PIN: self._public_pin,
                     CONF_CURRENCY: self._currency,
                 },
             )
@@ -531,8 +449,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     entry_data[CONF_FREE_AMOUNT] = self._free_amount
                     entry_data[CONF_EXCLUDED_USERS] = self._excluded_users
                     entry_data[CONF_OVERRIDE_USERS] = self._override_users
-                    entry_data[CONF_PUBLIC_DEVICES] = self._public_devices
-                    entry_data[CONF_PUBLIC_PIN] = self._public_pin
                     entry_data[CONF_CURRENCY] = self._currency
                     self.hass.config_entries.async_update_entry(entry, data=entry_data)
                     await self.hass.config_entries.async_reload(entry.entry_id)
@@ -594,8 +510,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._free_amount: float = 0.0
         self._excluded_users: list[str] = []
         self._override_users: list[str] = []
-        self._public_devices: list[str] = []
-        self._public_pin: str | None = None
         self._currency: str = "€"
         self._enable_free_drinks: bool = False
         self._cash_user_name: str = get_cash_user_name(None)
@@ -609,10 +523,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._override_users = (
             self.hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
         ).copy()
-        self._public_devices = (
-            self.hass.data.get(DOMAIN, {}).get(CONF_PUBLIC_DEVICES, [])
-        ).copy()
-        self._public_pin = self.hass.data.get(DOMAIN, {}).get(CONF_PUBLIC_PIN)
         self._currency = self.hass.data.get(DOMAIN, {}).get(CONF_CURRENCY, "€")
         self._enable_free_drinks = self.hass.data.get(DOMAIN, {}).get(
             CONF_ENABLE_FREE_DRINKS, False
@@ -641,9 +551,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 "include",
                 "authorize",
                 "unauthorize",
-                "authorize_public",
-                "unauthorize_public",
-                "set_pin",
                 "back",
             ],
         )
@@ -972,71 +879,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             data_schema=schema,
         )
 
-    async def async_step_add_public_user(self, user_input=None):
-        registry = er.async_get(self.hass)
-        persons = [
-            entry.original_name or entry.name or entry.entity_id
-            for entry in registry.entities.values()
-            if entry.domain == "person"
-            and (
-                (state := self.hass.states.get(entry.entity_id))
-                and state.attributes.get("user_id")
-            )
-        ]
-        persons = [
-            p
-            for p in persons
-            if p not in self._public_devices and p not in PRICE_LIST_USERS
-        ]
-        if not persons:
-            return await self.async_step_menu()
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            self._public_devices.append(user)
-            if user_input.get("add_more") and len(persons) > 1:
-                return await self.async_step_add_public_user()
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(persons),
-                vol.Optional("add_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="add_public_user", data_schema=schema)
-
-    async def async_step_remove_public_user(self, user_input=None):
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            if user in self._public_devices:
-                self._public_devices.remove(user)
-            if user_input.get("remove_more") and self._public_devices:
-                return await self.async_step_remove_public_user()
-            return await self.async_step_menu()
-        if not self._public_devices:
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(list(self._public_devices)),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="remove_public_user", data_schema=schema)
-
-    async def async_step_authorize_public(self, user_input=None):
-        return await self.async_step_add_public_user(user_input)
-
-    async def async_step_unauthorize_public(self, user_input=None):
-        return await self.async_step_remove_public_user(user_input)
-
-    async def async_step_set_pin(self, user_input=None):
-        if user_input is not None:
-            self._public_pin = user_input.get(CONF_PUBLIC_PIN)
-            return await self.async_step_user()
-        schema = vol.Schema(
-            {vol.Required(CONF_PUBLIC_PIN, default=self._public_pin or ""): str}
-        )
-        return self.async_show_form(step_id="set_pin", data_schema=schema)
-
     async def _cleanup_unused_entities(self) -> list[str]:
         registry = er.async_get(self.hass)
         entries = self.hass.config_entries.async_entries(DOMAIN)
@@ -1124,8 +966,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self.hass.data[DOMAIN]["free_amount"] = self._free_amount
         self.hass.data[DOMAIN][CONF_EXCLUDED_USERS] = self._excluded_users
         self.hass.data[DOMAIN][CONF_OVERRIDE_USERS] = self._override_users
-        self.hass.data[DOMAIN][CONF_PUBLIC_DEVICES] = self._public_devices
-        self.hass.data[DOMAIN][CONF_PUBLIC_PIN] = self._public_pin
         self.hass.data[DOMAIN][CONF_CURRENCY] = self._currency
         self.hass.data[DOMAIN][CONF_CASH_USER_NAME] = self._cash_user_name
         cash_name = self._cash_user_name.strip()
@@ -1174,8 +1014,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_FREE_AMOUNT: self._free_amount,
                 CONF_EXCLUDED_USERS: self._excluded_users,
                 CONF_OVERRIDE_USERS: self._override_users,
-                CONF_PUBLIC_DEVICES: self._public_devices,
-                CONF_PUBLIC_PIN: self._public_pin,
                 CONF_CURRENCY: self._currency,
                 CONF_ENABLE_FREE_DRINKS: self._enable_free_drinks,
                 CONF_CASH_USER_NAME: self._cash_user_name,
@@ -1194,8 +1032,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_FREE_AMOUNT: self._free_amount,
                 CONF_EXCLUDED_USERS: self._excluded_users,
                 CONF_OVERRIDE_USERS: self._override_users,
-                CONF_PUBLIC_DEVICES: self._public_devices,
-                CONF_PUBLIC_PIN: self._public_pin,
                 CONF_CURRENCY: self._currency,
                 CONF_ENABLE_FREE_DRINKS: self._enable_free_drinks,
                 CONF_CASH_USER_NAME: self._cash_user_name,
