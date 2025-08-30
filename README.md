@@ -93,21 +93,3 @@ Example response for a regular user:
 ```json
 {"is_public": false}
 ```
-
-Public devices can authenticate a user once via the `tally_list/login` command so that subsequent service calls no longer need the `pin` parameter:
-
-```js
-await this.hass.callWS({ type: "tally_list/login", user: "Alice", pin: "1234" });
-```
-
-Example success response:
-
-```json
-{"success": true}
-```
-
-To end the session call `tally_list/logout`:
-
-```js
-await this.hass.callWS({ type: "tally_list/logout" });
-```
