@@ -320,8 +320,7 @@
     "cash_user_missing": "Freigetränke-Nutzer fehlt",
     "drink_unknown": "Unbekanntes Getränk",
     "user_unknown": "Unbekannte Person",
-    "cannot_remove_count": "Anzahl kann nicht entfernt werden",
-    "pin_invalid": "PIN muss genau vierstellig sein"
+    "cannot_remove_count": "Anzahl kann nicht entfernt werden"
   },
   "services": {
     "add_drink": {
@@ -350,7 +349,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "vierstellige Benutzer-PIN"
+          "description": "Benutzer-PIN"
         }
       }
     },
@@ -380,7 +379,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "vierstellige Benutzer-PIN"
+          "description": "Benutzer-PIN"
         }
       }
     },
@@ -402,7 +401,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "vierstellige Benutzer-PIN"
+          "description": "Benutzer-PIN"
         }
       }
     },
@@ -416,7 +415,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "vierstellige Benutzer-PIN"
+          "description": "Benutzer-PIN"
         }
       }
     },
@@ -440,7 +439,7 @@
     },
     "set_pin": {
       "name": "PIN setzen",
-      "description": "Persönliche vierstellige PIN für eine Person setzen oder löschen",
+      "description": "Persönliche PIN für eine Person setzen oder löschen",
       "fields": {
         "user": {
           "name": "Person",
@@ -448,7 +447,7 @@
         },
         "pin": {
           "name": "PIN",
-          "description": "Neue vierstellige PIN (leer lassen zum Löschen)"
+          "description": "Neue PIN (leer lassen zum Löschen)"
         }
       }
     }
