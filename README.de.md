@@ -67,23 +67,29 @@ Name des Freigetränke-Benutzers angepasst werden.
 Der WebSocket-Befehl `tally_list/get_admins` gibt alle Benutzer mit Override-Rechten zurück und kann aus dem Home-Assistant-Frontend oder einem externen Client aufgerufen werden. Der Befehl erfordert einen authentifizierten Home-Assistant-Benutzer.
 
 ```js
-await this.hass.connection.sendMessagePromise({ type: "tally_list/get_admins" });
+await this.hass.callWS({ type: "tally_list/get_admins" });
 ```
 
 Beispielantwort:
 
 ```json
-{"id":42,"type":"result","success":true,"result":{"admins":["tablet_dashboard","Test","Test 2"]}}
+{"admins":["tablet_dashboard","Test","Test 2"]}
 ```
 
 Der Befehl `tally_list/is_public_device` liefert zurück, ob der authentifizierte Benutzer als öffentliches Gerät konfiguriert ist:
 
 ```js
-await this.hass.connection.sendMessagePromise({ type: "tally_list/is_public_device" });
+await this.hass.callWS({ type: "tally_list/is_public_device" });
 ```
 
-Beispielantwort:
+Beispielantwort, wenn der Benutzer als öffentliches Gerät konfiguriert ist:
 
 ```json
-{"id":42,"type":"result","success":true,"result":{"is_public":true}}
+{"is_public": true}
+```
+
+Beispielantwort für einen normalen Benutzer:
+
+```json
+{"is_public": false}
 ```
