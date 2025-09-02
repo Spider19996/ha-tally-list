@@ -31,8 +31,6 @@ SERVICE_SET_PIN = "set_pin"
 # Dedicated user name that exposes drink prices
 PRICE_LIST_USER_DE = "Preisliste"
 PRICE_LIST_USER_EN = "Price list"
-# Default name for backward compatibility
-PRICE_LIST_USER = PRICE_LIST_USER_DE
 PRICE_LIST_USERS = {PRICE_LIST_USER_DE, PRICE_LIST_USER_EN}
 
 CASH_USER_DE = "Freigetränke"
