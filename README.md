@@ -4,7 +4,7 @@
 
 This custom integration for [Home Assistant](https://www.home-assistant.io/) is distributed via HACS and helps you manage drink tallies for multiple persons. All persons with a linked Home Assistant user account are imported automatically. Drinks are defined once and shared across everyone.
 
-## Features
+## Features 
 
 - Automatic import of persons with user accounts.
 - Shared drink list with name and price for every person.
