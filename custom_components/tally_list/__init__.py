@@ -96,13 +96,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if person_name in public_devices and target_user:
             user_pin = user_pins.get(target_user)
             provided_pin = call.data.get(ATTR_PIN)
-            if user_pin and (
-                (
-                    provided_pin is not None
-                    and verify_pin(str(provided_pin), user_pin)
-                )
-                or logins.get(user_id) == target_user
-            ):
+            verified = (
+                provided_pin is not None
+                and user_pin is not None
+                and verify_pin(str(provided_pin), user_pin)
+            )
+            if user_pin and (verified or logins.get(user_id) == target_user):
+                if verified and user_pin.count("$") == 1:
+                    user_pins[target_user] = hash_pin(str(provided_pin))
+                    await hass.data[DOMAIN]["pins_store"].async_save(user_pins)
                 return
         if target_user is None:
             raise Unauthorized
