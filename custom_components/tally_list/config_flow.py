@@ -3,67 +3,43 @@
 from __future__ import annotations
 
 import logging
-import voluptuous as vol
-
-from homeassistant.helpers import entity_registry as er
-
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
-    DOMAIN,
-    CONF_USER,
+    CONF_CASH_USER_NAME,
+    CONF_CURRENCY,
     CONF_DRINKS,
-    CONF_DRINK,
-    CONF_PRICE,
-    CONF_FREE_AMOUNT,
+    CONF_ENABLE_FREE_DRINKS,
     CONF_EXCLUDED_USERS,
+    CONF_FREE_AMOUNT,
     CONF_OVERRIDE_USERS,
     CONF_PUBLIC_DEVICES,
+    CONF_USER,
+    DOMAIN,
     PRICE_LIST_USERS,
-    get_price_list_user,
-    CONF_CURRENCY,
-    CONF_ENABLE_FREE_DRINKS,
-    CONF_CASH_USER_NAME,
     get_cash_user_name,
+    get_price_list_user,
 )
-
+from .base_flow import TallyListFlowHandler
+from .flow_helpers import Step
+from .options_flow import TallyListOptionsFlowHandler
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _parse_drinks(value: str) -> dict[str, float]:
-    drinks: dict[str, float] = {}
-    if not value:
-        return drinks
-    for part in value.split(","):
-        part = part.strip()
-        if not part:
-            continue
-        if "=" not in part:
-            raise ValueError
-        name, price = part.split("=", 1)
-        drinks[name.strip()] = float(price)
-    return drinks
-
-
-class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TallyListConfigFlow(config_entries.ConfigFlow, TallyListFlowHandler, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
 
     def __init__(self) -> None:
+        super().__init__()
         self._user: str | None = None
-        self._drinks: dict[str, float] = {}
-        self._free_amount: float = 0.0
-        self._excluded_users: list[str] = []
-        self._override_users: list[str] = []
-        self._public_devices: list[str] = []
         self._pending_users: list[str] = []
-        self._currency: str = "€"
         self._create_price_user: bool = False
         self._user_selected: bool = False
-        self._enable_free_drinks: bool = False
         self._cash_user_name: str = get_cash_user_name(None)
 
     async def async_step_import(self, user_input=None):
@@ -78,9 +54,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._public_devices = user_input.get(CONF_PUBLIC_DEVICES, [])
         self._currency = user_input.get(CONF_CURRENCY, "€")
         self._enable_free_drinks = user_input.get(CONF_ENABLE_FREE_DRINKS, False)
-        self._cash_user_name = get_cash_user_name(
-            getattr(self.hass.config, "language", None)
-        )
+        self._cash_user_name = get_cash_user_name(getattr(self.hass.config, "language", None))
         if CONF_CURRENCY not in user_input:
             user_input[CONF_CURRENCY] = self._currency
         if CONF_ENABLE_FREE_DRINKS not in user_input:
@@ -91,9 +65,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         if not self._user_selected:
-            self._cash_user_name = get_cash_user_name(
-                getattr(self.hass.config, "language", None)
-            )
+            self._cash_user_name = get_cash_user_name(getattr(self.hass.config, "language", None))
             registry = er.async_get(self.hass)
             persons = [
                 entry.original_name or entry.name or entry.entity_id
@@ -104,30 +76,23 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     and state.attributes.get("user_id")
                 )
             ]
-
             existing = {
                 entry.data.get(CONF_USER)
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
             }
-
             excluded = set(self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, []))
-            # Preserve already excluded users when the price list user is recreated
             self._excluded_users = list(excluded)
-
             persons = [
                 p
                 for p in persons
                 if p not in existing and p not in excluded and p not in PRICE_LIST_USERS
             ]
-
             entries = self.hass.config_entries.async_entries(DOMAIN)
             self._create_price_user = not any(
                 entry.data.get(CONF_USER) in PRICE_LIST_USERS for entry in entries
             )
-
             if not persons:
                 return self.async_abort(reason="no_users")
-
             self._user = persons[0]
             self._pending_users = persons[1:]
             for entry in entries:
@@ -137,332 +102,25 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._override_users = entry.data.get(CONF_OVERRIDE_USERS, [])
                     self._free_amount = float(entry.data.get(CONF_FREE_AMOUNT, 0.0))
                     self._currency = entry.data.get(CONF_CURRENCY, "€")
-                    self._enable_free_drinks = entry.data.get(
-                        CONF_ENABLE_FREE_DRINKS, False
-                    )
-                    self._cash_user_name = get_cash_user_name(
-                        getattr(self.hass.config, "language", None)
-                    )
+                    self._enable_free_drinks = entry.data.get(CONF_ENABLE_FREE_DRINKS, False)
+                    self._cash_user_name = get_cash_user_name(getattr(self.hass.config, "language", None))
                     break
             self._user_selected = True
             return await self.async_step_menu()
 
         return self.async_show_menu(
-            step_id="user",
+            step_id=Step.USER,
             menu_options=[
-                "free_amount",
-                "exclude",
-                "include",
-                "authorize",
-                "unauthorize",
-                "authorize_public",
-                "unauthorize_public",
-                "back",
+                Step.FREE_AMOUNT.value,
+                Step.EXCLUDE.value,
+                Step.INCLUDE.value,
+                Step.AUTHORIZE.value,
+                Step.UNAUTHORIZE.value,
+                Step.AUTHORIZE_PUBLIC.value,
+                Step.UNAUTHORIZE_PUBLIC.value,
+                Step.BACK.value,
             ],
         )
-
-    async def async_step_menu(self, user_input=None):
-        return self.async_show_menu(
-            step_id="menu",
-            menu_options=["user", "drinks", "finish"],
-        )
-
-    async def async_step_drinks(self, user_input=None):
-        return self.async_show_menu(
-            step_id="drinks",
-            menu_options=["add", "remove", "edit", "currency", "back"],
-        )
-
-    async def async_step_back(self, user_input=None):
-        return await self.async_step_menu()
-
-    async def async_step_add(self, user_input=None):
-        return await self.async_step_add_drink(user_input)
-
-    async def async_step_remove(self, user_input=None):
-        return await self.async_step_remove_drink(user_input)
-
-    async def async_step_edit(self, user_input=None):
-        return await self.async_step_edit_price(user_input)
-
-    async def async_step_free_amount(self, user_input=None):
-        return await self.async_step_set_free_amount(user_input)
-
-    async def async_step_currency(self, user_input=None):
-        if user_input is not None:
-            self._currency = user_input[CONF_CURRENCY]
-            return await self.async_step_menu()
-        schema = vol.Schema({vol.Required(CONF_CURRENCY, default=self._currency): str})
-        return self.async_show_form(step_id="currency", data_schema=schema)
-
-    async def async_step_free_drinks(self, user_input=None):
-        if user_input is not None:
-            enable = user_input[CONF_ENABLE_FREE_DRINKS]
-            if self._enable_free_drinks and not enable:
-                return await self.async_step_free_drinks_confirm()
-            self._enable_free_drinks = enable
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_ENABLE_FREE_DRINKS, default=self._enable_free_drinks
-                ): bool
-            }
-        )
-        return self.async_show_form(
-            step_id="free_drinks", data_schema=schema
-        )
-
-    async def async_step_free_drinks_confirm(self, user_input=None):
-        errors = {}
-        if user_input is not None:
-            confirmation = user_input.get("confirm", "").strip().upper()
-            if confirmation in {"JA ICH WILL", "YES I WANT"}:
-                self._enable_free_drinks = False
-                return await self.async_step_menu()
-            errors["base"] = "confirmation_required"
-        schema = vol.Schema({vol.Required("confirm"): str})
-        return self.async_show_form(
-            step_id="free_drinks_confirm", data_schema=schema, errors=errors
-        )
-
-    async def async_step_exclude(self, user_input=None):
-        return await self.async_step_add_excluded_user(user_input)
-
-    async def async_step_include(self, user_input=None):
-        return await self.async_step_remove_excluded_user(user_input)
-
-    async def async_step_authorize(self, user_input=None):
-        return await self.async_step_add_override_user(user_input)
-
-    async def async_step_unauthorize(self, user_input=None):
-        return await self.async_step_remove_override_user(user_input)
-
-    async def async_step_add_drink(self, user_input=None):
-        if user_input is not None:
-            drink = user_input[CONF_DRINK]
-            price = float(user_input[CONF_PRICE])
-            self._drinks[drink] = price
-            if user_input.get("add_more"):
-                return await self.async_step_add_drink()
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_DRINK): str,
-                vol.Required(CONF_PRICE): vol.Coerce(float),
-                vol.Optional("add_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="add_drink", data_schema=schema)
-
-    async def async_step_remove_drink(self, user_input=None):
-        if user_input is not None:
-            drink = user_input[CONF_DRINK]
-            self._drinks.pop(drink, None)
-            if user_input.get("remove_more") and self._drinks:
-                return await self.async_step_remove_drink()
-            return await self.async_step_menu()
-        if not self._drinks:
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="remove_drink", data_schema=schema)
-
-    async def async_step_edit_price(self, user_input=None):
-        if user_input is not None:
-            drink = user_input[CONF_DRINK]
-            price = float(user_input[CONF_PRICE])
-            self._drinks[drink] = price
-            if user_input.get("edit_more") and self._drinks:
-                return await self.async_step_edit_price()
-            return await self.async_step_menu()
-        if not self._drinks:
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
-                vol.Required(CONF_PRICE): vol.Coerce(float),
-                vol.Optional("edit_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="edit_price", data_schema=schema)
-
-    async def async_step_set_free_amount(self, user_input=None):
-        if user_input is not None:
-            self._free_amount = float(user_input[CONF_FREE_AMOUNT])
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_FREE_AMOUNT, default=self._free_amount): vol.Coerce(
-                    float
-                )
-            }
-        )
-        return self.async_show_form(step_id="set_free_amount", data_schema=schema)
-
-    async def async_step_add_excluded_user(self, user_input=None):
-        registry = er.async_get(self.hass)
-        persons = [
-            entry.original_name or entry.name or entry.entity_id
-            for entry in registry.entities.values()
-            if entry.domain == "person"
-            and (
-                (state := self.hass.states.get(entry.entity_id))
-                and state.attributes.get("user_id")
-            )
-        ]
-        persons = [
-            p
-            for p in persons
-            if p not in self._excluded_users and p not in PRICE_LIST_USERS
-        ]
-        if not persons:
-            return await self.async_step_menu()
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            self._excluded_users.append(user)
-            if user in self._pending_users:
-                self._pending_users.remove(user)
-            if user_input.get("add_more") and len(persons) > 1:
-                return await self.async_step_add_excluded_user()
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(persons),
-                vol.Optional("add_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="add_excluded_user", data_schema=schema)
-
-    async def async_step_remove_excluded_user(self, user_input=None):
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            if user in self._excluded_users:
-                self._excluded_users.remove(user)
-                if user not in self._pending_users:
-                    self._pending_users.append(user)
-            if user_input.get("remove_more") and self._excluded_users:
-                return await self.async_step_remove_excluded_user()
-            return await self.async_step_menu()
-        if not self._excluded_users:
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(list(self._excluded_users)),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="remove_excluded_user", data_schema=schema)
-
-    async def async_step_add_override_user(self, user_input=None):
-        registry = er.async_get(self.hass)
-        persons = [
-            entry.original_name or entry.name or entry.entity_id
-            for entry in registry.entities.values()
-            if entry.domain == "person"
-            and (
-                (state := self.hass.states.get(entry.entity_id))
-                and state.attributes.get("user_id")
-            )
-        ]
-        persons = [
-            p
-            for p in persons
-            if p not in self._override_users and p not in PRICE_LIST_USERS
-        ]
-        if not persons:
-            return await self.async_step_menu()
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            self._override_users.append(user)
-            if user_input.get("add_more") and len(persons) > 1:
-                return await self.async_step_add_override_user()
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(persons),
-                vol.Optional("add_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="add_override_user", data_schema=schema)
-
-    async def async_step_remove_override_user(self, user_input=None):
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            if user in self._override_users:
-                self._override_users.remove(user)
-            if user_input.get("remove_more") and self._override_users:
-                return await self.async_step_remove_override_user()
-            return await self.async_step_menu()
-        if not self._override_users:
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(list(self._override_users)),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="remove_override_user", data_schema=schema)
-
-    async def async_step_add_public_user(self, user_input=None):
-        registry = er.async_get(self.hass)
-        persons = [
-            entry.original_name or entry.name or entry.entity_id
-            for entry in registry.entities.values()
-            if entry.domain == "person"
-            and (
-                (state := self.hass.states.get(entry.entity_id))
-                and state.attributes.get("user_id")
-            )
-        ]
-        persons = [
-            p
-            for p in persons
-            if p not in self._public_devices and p not in PRICE_LIST_USERS
-        ]
-        if not persons:
-            return await self.async_step_menu()
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            self._public_devices.append(user)
-            if user_input.get("add_more") and len(persons) > 1:
-                return await self.async_step_add_public_user()
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(persons),
-                vol.Optional("add_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="add_public_user", data_schema=schema)
-
-    async def async_step_remove_public_user(self, user_input=None):
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            if user in self._public_devices:
-                self._public_devices.remove(user)
-            if user_input.get("remove_more") and self._public_devices:
-                return await self.async_step_remove_public_user()
-            return await self.async_step_menu()
-        if not self._public_devices:
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(list(self._public_devices)),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="remove_public_user", data_schema=schema)
-
-    async def async_step_authorize_public(self, user_input=None):
-        return await self.async_step_add_public_user(user_input)
-
-    async def async_step_unauthorize_public(self, user_input=None):
-        return await self.async_step_remove_public_user(user_input)
 
     async def async_step_finish(self, user_input=None):
         await self._finalize_setup()
@@ -495,9 +153,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
                 data={
-                    CONF_USER: get_price_list_user(
-                        getattr(self.hass.config, "language", None)
-                    ),
+                    CONF_USER: get_price_list_user(getattr(self.hass.config, "language", None)),
                     CONF_FREE_AMOUNT: self._free_amount,
                     CONF_DRINKS: self._drinks,
                     CONF_EXCLUDED_USERS: self._excluded_users,
@@ -528,643 +184,8 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={CONF_USER: p},
             )
         self._pending_users = []
-        cash_name = self._cash_user_name.strip()
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        cash_entry = next(
-            (
-                entry
-                for entry in entries
-                if entry.data.get(CONF_USER, "").strip().lower() == cash_name.lower()
-            ),
-            None,
-        )
-        if self._enable_free_drinks:
-            if cash_entry is None:
-                await self.hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data={CONF_USER: cash_name},
-                )
-            else:
-                cash_data = self.hass.data.get(DOMAIN, {}).get(cash_entry.entry_id)
-                if cash_data is not None:
-                    self.hass.data[DOMAIN]["free_drink_counts"] = cash_data.setdefault(
-                        "counts", {}
-                    )
-        elif cash_entry is not None:
-            cash_data = self.hass.data.get(DOMAIN, {}).get(cash_entry.entry_id)
-            if cash_data is not None:
-                cash_data["counts"] = {}
-                for sensor in cash_data.get("sensors", []):
-                    await sensor.async_update_state()
-            await self.hass.config_entries.async_remove(cash_entry.entry_id)
-            self.hass.data[DOMAIN].pop("free_drink_counts", None)
-            self.hass.data[DOMAIN].pop("free_drinks_ledger", None)
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
         return TallyListOptionsFlowHandler(config_entry)
-
-
-class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle options."""
-
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
-        self._drinks: dict[str, float] = {}
-        self._free_amount: float = 0.0
-        self._excluded_users: list[str] = []
-        self._override_users: list[str] = []
-        self._public_devices: list[str] = []
-        self._currency: str = "€"
-        self._enable_free_drinks: bool = False
-        self._cash_user_name: str = get_cash_user_name(None)
-
-    async def async_step_init(self, user_input=None):
-        self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
-        self._free_amount = self.hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
-        self._excluded_users = (
-            self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, [])
-        ).copy()
-        self._override_users = (
-            self.hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
-        ).copy()
-        self._public_devices = (
-            self.hass.data.get(DOMAIN, {}).get(CONF_PUBLIC_DEVICES, [])
-        ).copy()
-        self._currency = self.hass.data.get(DOMAIN, {}).get(CONF_CURRENCY, "€")
-        self._enable_free_drinks = self.hass.data.get(DOMAIN, {}).get(
-            CONF_ENABLE_FREE_DRINKS, False
-        )
-        self._cash_user_name = get_cash_user_name(self.hass.config.language)
-        return await self.async_step_menu()
-
-    async def async_step_menu(self, user_input=None):
-        return self.async_show_menu(
-            step_id="menu",
-            menu_options=[
-                "user",
-                "drinks",
-                "cleanup",
-                "delete",
-                "finish",
-            ],
-        )
-
-    async def async_step_user(self, user_input=None):
-        return self.async_show_menu(
-            step_id="user",
-            menu_options=[
-                "free_amount",
-                "exclude",
-                "include",
-                "authorize",
-                "unauthorize",
-                "authorize_public",
-                "unauthorize_public",
-                "back",
-            ],
-        )
-
-    async def async_step_drinks(self, user_input=None):
-        return self.async_show_menu(
-            step_id="drinks",
-            menu_options=[
-                "add",
-                "remove",
-                "edit",
-                "currency",
-                "free_drinks",
-                "back",
-            ],
-        )
-
-    async def async_step_back(self, user_input=None):
-        return await self.async_step_menu()
-
-    async def async_step_add(self, user_input=None):
-        return await self.async_step_add_drink(user_input)
-
-    async def async_step_remove(self, user_input=None):
-        return await self.async_step_remove_drink(user_input)
-
-    async def async_step_edit(self, user_input=None):
-        return await self.async_step_edit_price(user_input)
-
-    async def async_step_free_amount(self, user_input=None):
-        return await self.async_step_set_free_amount(user_input)
-
-    async def async_step_currency(self, user_input=None):
-        if user_input is not None:
-            self._currency = user_input[CONF_CURRENCY]
-            return await self.async_step_menu()
-        schema = vol.Schema({vol.Required(CONF_CURRENCY, default=self._currency): str})
-        return self.async_show_form(step_id="currency", data_schema=schema)
-
-    async def async_step_free_drinks(self, user_input=None):
-        if user_input is not None:
-            enable = user_input[CONF_ENABLE_FREE_DRINKS]
-            if self._enable_free_drinks and not enable:
-                return await self.async_step_free_drinks_confirm()
-            self._enable_free_drinks = enable
-            return await self.async_step_drinks()
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_ENABLE_FREE_DRINKS, default=self._enable_free_drinks
-                ): bool
-            }
-        )
-        return self.async_show_form(step_id="free_drinks", data_schema=schema)
-
-    async def async_step_free_drinks_confirm(self, user_input=None):
-        errors = {}
-        if user_input is not None:
-            confirmation = user_input.get("confirm", "").strip().upper()
-            if confirmation in {"JA ICH WILL", "YES I WANT"}:
-                self._enable_free_drinks = False
-                return self.async_show_menu(
-                    step_id="menu",
-                    menu_options=[
-                        "user",
-                        "drinks",
-                        "cleanup",
-                        "delete",
-                        "finish",
-                    ],
-                )
-            errors["base"] = "confirmation_required"
-        schema = vol.Schema({vol.Required("confirm"): str})
-        return self.async_show_form(
-            step_id="free_drinks_confirm", data_schema=schema, errors=errors
-        )
-
-    async def async_step_exclude(self, user_input=None):
-        return await self.async_step_add_excluded_user(user_input)
-
-    async def async_step_include(self, user_input=None):
-        return await self.async_step_remove_excluded_user(user_input)
-
-    async def async_step_authorize(self, user_input=None):
-        return await self.async_step_add_override_user(user_input)
-
-    async def async_step_unauthorize(self, user_input=None):
-        return await self.async_step_remove_override_user(user_input)
-
-    async def async_step_cleanup(self, user_input=None):
-        errors = {}
-        if user_input is not None:
-            confirmation = user_input.get("confirm", "").strip().upper()
-            if confirmation in {"JA ICH WILL", "YES I WANT"}:
-                removed = await self._cleanup_unused_entities()
-                if removed:
-                    return self.async_show_form(
-                        step_id="cleanup_result",
-                        description_placeholders={
-                            "sensors": "\n- ".join(sorted(removed))
-                        },
-                    )
-                return self.async_show_form(step_id="cleanup_result_empty")
-            errors["base"] = "invalid_confirmation"
-        schema = vol.Schema({vol.Required("confirm"): str})
-        return self.async_show_form(
-            step_id="cleanup", data_schema=schema, errors=errors
-        )
-
-    async def async_step_cleanup_result(self, user_input=None):
-        return await self.async_step_menu()
-
-    async def async_step_cleanup_result_empty(self, user_input=None):
-        return await self.async_step_menu()
-
-    async def async_step_delete(self, user_input=None):
-        errors = {}
-        if user_input is not None:
-            confirmation = user_input.get("confirm", "").strip().upper()
-            if confirmation in {"JA ICH WILL", "YES I WANT"}:
-                await self._delete_all_entries()
-                return self.async_abort(reason="delete_all")
-            errors["base"] = "invalid_confirmation"
-        schema = vol.Schema({vol.Required("confirm"): str})
-        return self.async_show_form(
-            step_id="delete", data_schema=schema, errors=errors
-        )
-
-    async def async_step_finish(self, user_input=None):
-        return await self._update_drinks()
-
-    async def async_step_add_drink(self, user_input=None):
-        if user_input is not None:
-            drink = user_input[CONF_DRINK]
-            price = float(user_input[CONF_PRICE])
-            self._drinks[drink] = price
-            if user_input.get("add_more"):
-                return await self.async_step_add_drink()
-            return await self.async_step_menu()
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_DRINK): str,
-                vol.Required(CONF_PRICE): vol.Coerce(float),
-                vol.Optional("add_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="add_drink", data_schema=schema)
-
-    async def async_step_remove_drink(self, user_input=None):
-        if user_input is not None:
-            drink = user_input[CONF_DRINK]
-            self._drinks.pop(drink, None)
-            if user_input.get("remove_more") and self._drinks:
-                return await self.async_step_remove_drink()
-            return await self.async_step_menu()
-
-        if not self._drinks:
-            return await self.async_step_menu()
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="remove_drink", data_schema=schema)
-
-    async def async_step_edit_price(self, user_input=None):
-        if user_input is not None:
-            drink = user_input[CONF_DRINK]
-            price = float(user_input[CONF_PRICE])
-            self._drinks[drink] = price
-            if user_input.get("edit_more") and self._drinks:
-                return await self.async_step_edit_price()
-            return await self.async_step_menu()
-
-        if not self._drinks:
-            return await self.async_step_menu()
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
-                vol.Required(CONF_PRICE): vol.Coerce(float),
-                vol.Optional("edit_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="edit_price", data_schema=schema)
-
-    async def async_step_set_free_amount(self, user_input=None):
-        if user_input is not None:
-            self._free_amount = float(user_input[CONF_FREE_AMOUNT])
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_FREE_AMOUNT,
-                    default=self._free_amount,
-                ): vol.Coerce(float)
-            }
-        )
-        return self.async_show_form(
-            step_id="set_free_amount",
-            data_schema=schema,
-        )
-
-    async def async_step_add_excluded_user(self, user_input=None):
-        registry = er.async_get(self.hass)
-        persons = [
-            entry.original_name or entry.name or entry.entity_id
-            for entry in registry.entities.values()
-            if entry.domain == "person"
-            and (
-                (state := self.hass.states.get(entry.entity_id))
-                and state.attributes.get("user_id")
-            )
-        ]
-        persons = [
-            p
-            for p in persons
-            if p not in self._excluded_users and p not in PRICE_LIST_USERS
-        ]
-
-        if not persons:
-            return await self.async_step_menu()
-
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            self._excluded_users.append(user)
-            if user_input.get("add_more") and len(persons) > 1:
-                return await self.async_step_add_excluded_user()
-            return await self.async_step_menu()
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(persons),
-                vol.Optional("add_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(
-            step_id="add_excluded_user",
-            data_schema=schema,
-        )
-
-    async def async_step_remove_excluded_user(self, user_input=None):
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            if user in self._excluded_users:
-                self._excluded_users.remove(user)
-            if user_input.get("remove_more") and self._excluded_users:
-                return await self.async_step_remove_excluded_user()
-            return await self.async_step_menu()
-
-        if not self._excluded_users:
-            return await self.async_step_menu()
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(list(self._excluded_users)),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(
-            step_id="remove_excluded_user",
-            data_schema=schema,
-        )
-
-    async def async_step_add_override_user(self, user_input=None):
-        registry = er.async_get(self.hass)
-        persons = [
-            entry.original_name or entry.name or entry.entity_id
-            for entry in registry.entities.values()
-            if entry.domain == "person"
-            and (
-                (state := self.hass.states.get(entry.entity_id))
-                and state.attributes.get("user_id")
-            )
-        ]
-        persons = [
-            p
-            for p in persons
-            if p not in self._override_users and p not in PRICE_LIST_USERS
-        ]
-
-        if not persons:
-            return await self.async_step_menu()
-
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            self._override_users.append(user)
-            if user_input.get("add_more") and len(persons) > 1:
-                return await self.async_step_add_override_user()
-            return await self.async_step_menu()
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(persons),
-                vol.Optional("add_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(
-            step_id="add_override_user",
-            data_schema=schema,
-        )
-
-    async def async_step_remove_override_user(self, user_input=None):
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            if user in self._override_users:
-                self._override_users.remove(user)
-            if user_input.get("remove_more") and self._override_users:
-                return await self.async_step_remove_override_user()
-            return await self.async_step_menu()
-
-        if not self._override_users:
-            return await self.async_step_menu()
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(list(self._override_users)),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(
-            step_id="remove_override_user",
-            data_schema=schema,
-        )
-
-    async def async_step_add_public_user(self, user_input=None):
-        registry = er.async_get(self.hass)
-        persons = [
-            entry.original_name or entry.name or entry.entity_id
-            for entry in registry.entities.values()
-            if entry.domain == "person"
-            and (
-                (state := self.hass.states.get(entry.entity_id))
-                and state.attributes.get("user_id")
-            )
-        ]
-        persons = [
-            p
-            for p in persons
-            if p not in self._public_devices and p not in PRICE_LIST_USERS
-        ]
-        if not persons:
-            return await self.async_step_menu()
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            self._public_devices.append(user)
-            if user_input.get("add_more") and len(persons) > 1:
-                return await self.async_step_add_public_user()
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(persons),
-                vol.Optional("add_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="add_public_user", data_schema=schema)
-
-    async def async_step_remove_public_user(self, user_input=None):
-        if user_input is not None:
-            user = user_input[CONF_USER]
-            if user in self._public_devices:
-                self._public_devices.remove(user)
-            if user_input.get("remove_more") and self._public_devices:
-                return await self.async_step_remove_public_user()
-            return await self.async_step_menu()
-        if not self._public_devices:
-            return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_USER): vol.In(list(self._public_devices)),
-                vol.Optional("remove_more", default=False): bool,
-            }
-        )
-        return self.async_show_form(step_id="remove_public_user", data_schema=schema)
-
-    async def async_step_authorize_public(self, user_input=None):
-        return await self.async_step_add_public_user(user_input)
-
-    async def async_step_unauthorize_public(self, user_input=None):
-        return await self.async_step_remove_public_user(user_input)
-
-    async def _cleanup_unused_entities(self) -> list[str]:
-        registry = er.async_get(self.hass)
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        entry_ids = {entry.entry_id for entry in entries}
-        active_users = {entry.data.get(CONF_USER) for entry in entries}
-        active_drinks = set(self._drinks.keys())
-
-        to_remove: list[str] = []
-
-        for entity_entry in list(registry.entities.values()):
-            if entity_entry.domain != "sensor" or entity_entry.platform != DOMAIN:
-                continue
-
-            if entity_entry.config_entry_id not in entry_ids:
-                to_remove.append(entity_entry.entity_id)
-                continue
-
-            cfg_entry = next(
-                (e for e in entries if e.entry_id == entity_entry.config_entry_id),
-                None,
-            )
-
-            if not cfg_entry:
-                to_remove.append(entity_entry.entity_id)
-                continue
-
-            user = cfg_entry.data.get(CONF_USER)
-            if user not in active_users:
-                to_remove.append(entity_entry.entity_id)
-                continue
-
-            uid = entity_entry.unique_id or ""
-            prefix = f"{cfg_entry.entry_id}_"
-            if not uid.startswith(prefix):
-                continue
-
-            if uid.endswith("_count"):
-                drink = uid[len(prefix) : -6]
-            elif uid.endswith("_price"):
-                drink = uid[len(prefix) : -6]
-            elif uid.endswith("_free_amount"):
-                drink = None
-            elif uid.endswith("_amount_due") or uid.endswith("_reset_tally"):
-                drink = None
-            else:
-                continue
-
-            if drink is not None and drink not in active_drinks:
-                to_remove.append(entity_entry.entity_id)
-
-        if to_remove:
-            for entity_id in to_remove:
-                try:
-                    await registry.async_remove(entity_id)
-                except Exception as exc:  # pragma: no cover - just log
-                    _LOGGER.error("Failed to remove %s: %s", entity_id, exc)
-
-            for entry in entries:
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
-
-            return sorted(to_remove)
-        return []
-
-    async def _delete_all_entries(self) -> None:
-        entries = list(self.hass.config_entries.async_entries(DOMAIN))
-        for entry in entries:
-            await self.hass.config_entries.async_remove(entry.entry_id)
-
-        registry = er.async_get(self.hass)
-        for entity_entry in list(registry.entities.values()):
-            if entity_entry.domain == "sensor" and entity_entry.platform == DOMAIN:
-                try:
-                    await registry.async_remove(entity_entry.entity_id)
-                except Exception as exc:  # pragma: no cover - just log
-                    _LOGGER.error("Failed to remove %s: %s", entity_entry.entity_id, exc)
-
-        self.hass.data.pop(DOMAIN, None)
-
-    async def _update_drinks(self):
-        # Update global drinks list before reloading entries so that new
-        # sensors are created with the latest values during setup.
-        self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
-        self.hass.data[DOMAIN]["free_amount"] = self._free_amount
-        self.hass.data[DOMAIN][CONF_EXCLUDED_USERS] = self._excluded_users
-        self.hass.data[DOMAIN][CONF_OVERRIDE_USERS] = self._override_users
-        self.hass.data[DOMAIN][CONF_PUBLIC_DEVICES] = self._public_devices
-        self.hass.data[DOMAIN][CONF_CURRENCY] = self._currency
-        self.hass.data[DOMAIN][CONF_CASH_USER_NAME] = self._cash_user_name
-        cash_name = self._cash_user_name.strip()
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        cash_entry = next(
-            (
-                e
-                for e in entries
-                if e.data.get(CONF_USER, "").strip().lower() == cash_name.lower()
-            ),
-            None,
-        )
-        if self._enable_free_drinks:
-            if cash_entry is None:
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": config_entries.SOURCE_IMPORT},
-                        data={CONF_USER: cash_name},
-                    )
-                )
-            else:
-                cash_data = self.hass.data.get(DOMAIN, {}).get(cash_entry.entry_id)
-                if cash_data is not None:
-                    self.hass.data[DOMAIN]["free_drink_counts"] = cash_data.setdefault(
-                        "counts", {}
-                    )
-        elif cash_entry is not None:
-            cash_data = self.hass.data.get(DOMAIN, {}).get(cash_entry.entry_id)
-            if cash_data is not None:
-                cash_data["counts"] = {}
-                for sensor in cash_data.get("sensors", []):
-                    await sensor.async_update_state()
-            self.hass.async_create_task(
-                self.hass.config_entries.async_remove(cash_entry.entry_id)
-            )
-            self.hass.data[DOMAIN].pop("free_drink_counts", None)
-            self.hass.data[DOMAIN].pop("free_drinks_ledger", None)
-            self.hass.data[DOMAIN].pop(cash_entry.entry_id, None)
-            entries = [e for e in entries if e.entry_id != cash_entry.entry_id]
-
-        for entry in entries:
-            data = {
-                CONF_USER: entry.data[CONF_USER],
-                CONF_DRINKS: self._drinks,
-                CONF_FREE_AMOUNT: self._free_amount,
-                CONF_EXCLUDED_USERS: self._excluded_users,
-                CONF_OVERRIDE_USERS: self._override_users,
-                CONF_PUBLIC_DEVICES: self._public_devices,
-                CONF_CURRENCY: self._currency,
-                CONF_ENABLE_FREE_DRINKS: self._enable_free_drinks,
-                CONF_CASH_USER_NAME: self._cash_user_name,
-            }
-            self.hass.config_entries.async_update_entry(entry, data=data)
-            await self.hass.config_entries.async_reload(entry.entry_id)
-        for entry in entries:
-            value = self.hass.data.get(DOMAIN, {}).get(entry.entry_id)
-            if isinstance(value, dict):
-                for sensor in value.get("sensors", []):
-                    await sensor.async_update_state()
-        return self.async_create_entry(
-            title="",
-            data={
-                CONF_DRINKS: self._drinks,
-                CONF_FREE_AMOUNT: self._free_amount,
-                CONF_EXCLUDED_USERS: self._excluded_users,
-                CONF_OVERRIDE_USERS: self._override_users,
-                CONF_PUBLIC_DEVICES: self._public_devices,
-                CONF_CURRENCY: self._currency,
-                CONF_ENABLE_FREE_DRINKS: self._enable_free_drinks,
-                CONF_CASH_USER_NAME: self._cash_user_name,
-            },
-        )
