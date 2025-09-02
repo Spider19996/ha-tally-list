@@ -19,20 +19,12 @@ def hash_pin(pin: str) -> str:
 
 
 def verify_pin(pin: str, stored: str) -> bool:
-    """Verify a PIN against a stored hash.
-
-    Stored hashes may be in the new ``<salt>$<hash>`` format or in the legacy
-    ``sha256$<hash>`` format used by previous versions.
-    """
+    """Verify a PIN against a stored hash."""
     if "$" not in stored:
         return False
-    algo, hashed = stored.split("$", 1)
-    if algo == "sha256":
-        return hmac.compare_digest(
-            hashlib.sha256(pin.encode()).hexdigest(), hashed
-        )
+    salt_hex, hashed = stored.split("$", 1)
     try:
-        salt = bytes.fromhex(algo)
+        salt = bytes.fromhex(salt_hex)
     except ValueError:
         return False
     key = hashlib.pbkdf2_hmac("sha256", pin.encode(), salt, PBKDF2_ITERATIONS)

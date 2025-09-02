@@ -73,20 +73,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     store = Store(hass, PINS_STORAGE_VERSION, PINS_STORAGE_KEY, private=True)
     hass.data[DOMAIN]["pins_store"] = store
     stored_pins = await store.async_load() or {}
-    migrated = False
-    for user, pin in list(stored_pins.items()):
-        if not pin:
-            continue
-        # Convert plain text or legacy SHA256 pins to new storage format
-        if "$" not in str(pin):
-            pin_str = str(pin)
-            if len(pin_str) == 64:
-                stored_pins[user] = f"sha256${pin_str}"
-            else:
-                stored_pins[user] = hash_pin(pin_str)
-            migrated = True
-    if migrated:
-        await store.async_save(stored_pins)
     hass.data[DOMAIN][CONF_USER_PINS] = stored_pins
 
     async def _verify_permissions(call, target_user: str | None) -> None:
@@ -727,15 +713,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     user_name = entry.data.get(CONF_USER)
     if user_name and entry.data.get(CONF_USER_PIN) is not None:
         pin = entry.data[CONF_USER_PIN]
-        if "$" not in str(pin):
-            pin_str = str(pin)
-            if len(pin_str) == 64:
-                pin = f"sha256${pin_str}"
-            else:
-                pin = hash_pin(pin_str)
-            entry_data = dict(entry.data)
-            entry_data[CONF_USER_PIN] = pin
-            hass.config_entries.async_update_entry(entry, data=entry_data)
         hass.data[DOMAIN][CONF_USER_PINS][user_name] = pin
         await hass.data[DOMAIN]["pins_store"].async_save(
             hass.data[DOMAIN][CONF_USER_PINS]
