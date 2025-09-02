@@ -716,6 +716,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await hass.data[DOMAIN]["pins_store"].async_save(
             hass.data[DOMAIN][CONF_USER_PINS]
         )
+        entry_data = dict(entry.data)
+        entry_data.pop(CONF_USER_PIN, None)
+        hass.config_entries.async_update_entry(entry, data=entry_data)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
