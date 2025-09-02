@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import csv
 import os
 import re
@@ -45,6 +46,8 @@ from .const import (
     ATTR_PIN,
     get_cash_user_name,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[str] = ["sensor", "button"]
 PINS_STORAGE_VERSION = 1
@@ -184,6 +187,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         pin = call.data.get(ATTR_PIN)
         user_pins = hass.data[DOMAIN].setdefault(CONF_USER_PINS, {})
+        old_value = user_pins.get(target_user)
         if pin is not None and pin != "":
             pin = str(pin)
             if not re.fullmatch(r"\d{4}", pin):
@@ -193,7 +197,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             user_pins[target_user] = hash_pin(pin)
         else:
             user_pins.pop(target_user, None)
-        await hass.data[DOMAIN]["pins_store"].async_save(user_pins)
+        try:
+            await hass.data[DOMAIN]["pins_store"].async_save(user_pins)
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error("Failed to save PIN for %s: %s", target_user, err)
+            if old_value is None:
+                user_pins.pop(target_user, None)
+            else:
+                user_pins[target_user] = old_value
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="pin_save_failed"
+            ) from err
 
     async def adjust_count_service(call):
         user = call.data[ATTR_USER]
