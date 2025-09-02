@@ -6,9 +6,8 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import Unauthorized
-from homeassistant.util import slugify
 
-from .utils import get_person_name
+from .utils import get_person_name, get_user_slug
 
 from .const import (
     DOMAIN,
@@ -16,8 +15,6 @@ from .const import (
     CONF_USER,
     CONF_OVERRIDE_USERS,
     PRICE_LIST_USERS,
-    CONF_CASH_USER_NAME,
-    CASH_USER_SLUG,
 )
 
 
@@ -35,10 +32,7 @@ class ResetButton(ButtonEntity):
         user = entry.data[CONF_USER]
         self._attr_name = f"{user} Reset"
         self._attr_unique_id = f"{entry.entry_id}_reset_tally"
-        user_slug = slugify(user)
-        cash_name = hass.data.get(DOMAIN, {}).get(CONF_CASH_USER_NAME, "")
-        if user.strip().lower() == cash_name.strip().lower():
-            user_slug = CASH_USER_SLUG
+        user_slug = get_user_slug(hass, user)
         self.entity_id = f"button.{user_slug}_reset_tally"
 
     async def async_press(self) -> None:
