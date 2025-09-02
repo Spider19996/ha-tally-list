@@ -8,6 +8,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.util import slugify
 
+from .utils import get_person_name
+
 from .const import (
     DOMAIN,
     SERVICE_RESET_COUNTERS,
@@ -48,11 +50,7 @@ class ResetButton(ButtonEntity):
                     CONF_OVERRIDE_USERS,
                     [],
                 )
-                person_name = None
-                for state in self._hass.states.async_all("person"):
-                    if state.attributes.get("user_id") == hass_user.id:
-                        person_name = state.name
-                        break
+                person_name = get_person_name(self._hass, hass_user.id)
                 if person_name not in override_users:
                     raise Unauthorized
 

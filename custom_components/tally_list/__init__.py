@@ -19,6 +19,7 @@ from homeassistant.helpers.storage import Store
 from .websocket import async_register as async_register_ws
 from .sensor import FreeDrinkFeedSensor
 from .security import hash_pin, verify_pin
+from .utils import get_person_name
 
 from .const import (
     DOMAIN,
@@ -89,11 +90,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         public_devices = hass.data.get(DOMAIN, {}).get(CONF_PUBLIC_DEVICES, [])
         user_pins = hass.data.get(DOMAIN, {}).get(CONF_USER_PINS, {})
         logins = hass.data.get(DOMAIN, {}).get("logins", {})
-        person_name = None
-        for state in hass.states.async_all("person"):
-            if state.attributes.get("user_id") == hass_user.id:
-                person_name = state.name
-                break
+        person_name = get_person_name(hass, hass_user.id)
         if person_name in override_users:
             return
         if person_name in public_devices and target_user:
@@ -169,11 +166,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass_user = await hass.auth.async_get_user(user_id)
         if hass_user is None:
             raise Unauthorized
-        person_name = None
-        for state in hass.states.async_all("person"):
-            if state.attributes.get("user_id") == hass_user.id:
-                person_name = state.name
-                break
+        person_name = get_person_name(hass, hass_user.id)
         if person_name is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="user_unknown"
