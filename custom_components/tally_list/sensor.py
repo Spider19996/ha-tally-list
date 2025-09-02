@@ -16,13 +16,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.util import slugify
 
+from .utils import get_user_slug
+
 from .const import (
     DOMAIN,
     CONF_USER,
     PRICE_LIST_USERS,
     CONF_CURRENCY,
     CONF_CASH_USER_NAME,
-    CASH_USER_SLUG,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,10 +103,7 @@ class TallyListSensor(RestoreEntity, SensorEntity):
             f"{_local_suffix(hass, 'Count', 'Anzahl')}"
         )
         self._attr_unique_id = f"{entry.entry_id}_{drink}_count"
-        user_slug = slugify(entry.data[CONF_USER])
-        cash_name = hass.data.get(DOMAIN, {}).get(CONF_CASH_USER_NAME, "")
-        if entry.data[CONF_USER].strip().lower() == cash_name.strip().lower():
-            user_slug = CASH_USER_SLUG
+        user_slug = get_user_slug(hass, entry.data[CONF_USER])
         self.entity_id = f"sensor.{user_slug}_{slugify(drink)}_count"
         self._attr_native_value = 0
         self._attr_native_unit_of_measurement = None
@@ -220,10 +218,7 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
             f"{_local_suffix(hass, 'Amount due', 'Offener Betrag')}"
         )
         self._attr_unique_id = f"{entry.entry_id}_amount_due"
-        user_slug = slugify(entry.data[CONF_USER])
-        cash_name = hass.data.get(DOMAIN, {}).get(CONF_CASH_USER_NAME, "")
-        if entry.data[CONF_USER].strip().lower() == cash_name.strip().lower():
-            user_slug = CASH_USER_SLUG
+        user_slug = get_user_slug(hass, entry.data[CONF_USER])
         self.entity_id = f"sensor.{user_slug}_amount_due"
         self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
             CONF_CURRENCY, "€"
