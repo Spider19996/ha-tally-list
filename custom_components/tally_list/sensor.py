@@ -139,7 +139,28 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         return counts.get(self._drink, 0)
 
 
-class DrinkPriceSensor(SensorEntity):
+class CurrencySensor(SensorEntity):
+    """Base class for sensors that use the configured currency."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        self._hass = hass
+        self._attr_should_poll = False
+        self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
+            CONF_CURRENCY, "€"
+        )
+
+    async def async_added_to_hass(self) -> None:  # pragma: no cover - simple forwarding
+        await super().async_added_to_hass()
+        await self.async_update_state()
+
+    async def async_update_state(self):
+        self._attr_native_unit_of_measurement = self._hass.data.get(
+            DOMAIN, {}
+        ).get(CONF_CURRENCY, "€")
+        self.async_write_ha_state()
+
+
+class DrinkPriceSensor(CurrencySensor):
     def __init__(
         self,
         hass: HomeAssistant,
@@ -147,30 +168,17 @@ class DrinkPriceSensor(SensorEntity):
         drink: str,
         price: float,
     ) -> None:
-        self._hass = hass
+        super().__init__(hass)
         self._entry = entry
         self._drink = drink
         self._price = price
-        self._attr_should_poll = False
         self._attr_name = (
             f"{entry.data[CONF_USER]} {drink} "
             f"{_local_suffix(hass, 'Price', 'Preis')}"
         )
         self._attr_unique_id = f"{entry.entry_id}_{drink}_price"
         self.entity_id = f"sensor.price_list_{slugify(drink)}_price"
-        self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
-            CONF_CURRENCY, "€"
-        )
         self._attr_suggested_display_precision = 2
-
-    async def async_added_to_hass(self) -> None:
-        await self.async_update_state()
-
-    async def async_update_state(self):
-        self._attr_native_unit_of_measurement = self._hass.data.get(
-            DOMAIN, {}
-        ).get(CONF_CURRENCY, "€")
-        self.async_write_ha_state()
 
     @property
     def native_value(self):
@@ -178,41 +186,27 @@ class DrinkPriceSensor(SensorEntity):
         return round(drinks.get(self._drink, self._price), 2)
 
 
-class FreeAmountSensor(SensorEntity):
+class FreeAmountSensor(CurrencySensor):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        self._hass = hass
+        super().__init__(hass)
         self._entry = entry
-        self._attr_should_poll = False
         self._attr_name = (
             f"{entry.data[CONF_USER]} "
             f"{_local_suffix(hass, 'Free amount', 'Freibetrag')}"
         )
         self._attr_unique_id = f"{entry.entry_id}_free_amount"
         self.entity_id = "sensor.price_list_free_amount"
-        self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
-            CONF_CURRENCY, "€"
-        )
         self._attr_suggested_display_precision = 2
-
-    async def async_added_to_hass(self) -> None:
-        await self.async_update_state()
-
-    async def async_update_state(self):
-        self._attr_native_unit_of_measurement = self._hass.data.get(
-            DOMAIN, {}
-        ).get(CONF_CURRENCY, "€")
-        self.async_write_ha_state()
 
     @property
     def native_value(self):
         return round(self._hass.data.get(DOMAIN, {}).get("free_amount", 0.0), 2)
 
 
-class TotalAmountSensor(RestoreEntity, SensorEntity):
+class TotalAmountSensor(CurrencySensor, RestoreEntity):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        self._hass = hass
+        super().__init__(hass)
         self._entry = entry
-        self._attr_should_poll = False
         self._attr_name = (
             f"{entry.data[CONF_USER]} "
             f"{_local_suffix(hass, 'Amount due', 'Offener Betrag')}"
@@ -220,20 +214,8 @@ class TotalAmountSensor(RestoreEntity, SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_amount_due"
         user_slug = get_user_slug(hass, entry.data[CONF_USER])
         self.entity_id = f"sensor.{user_slug}_amount_due"
-        self._attr_native_unit_of_measurement = hass.data.get(DOMAIN, {}).get(
-            CONF_CURRENCY, "€"
-        )
         self._attr_native_value = 0
         self._attr_suggested_display_precision = 2
-
-    async def async_added_to_hass(self) -> None:
-        await self.async_update_state()
-
-    async def async_update_state(self):
-        self._attr_native_unit_of_measurement = self._hass.data.get(
-            DOMAIN, {}
-        ).get(CONF_CURRENCY, "€")
-        self.async_write_ha_state()
 
     @property
     def native_value(self):
