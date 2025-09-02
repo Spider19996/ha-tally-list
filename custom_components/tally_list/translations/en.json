@@ -321,7 +321,8 @@
     "drink_unknown": "Unknown drink",
     "user_unknown": "Unknown person",
     "cannot_remove_count": "Cannot remove count",
-    "invalid_pin": "PIN must consist of exactly four digits"
+    "invalid_pin": "PIN must consist of exactly four digits",
+    "pin_save_failed": "Failed to save PIN"
   },
   "services": {
     "add_drink": {

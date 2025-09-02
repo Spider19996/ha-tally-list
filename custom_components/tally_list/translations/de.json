@@ -321,7 +321,8 @@
     "drink_unknown": "Unbekanntes Getränk",
     "user_unknown": "Unbekannte Person",
     "cannot_remove_count": "Anzahl kann nicht entfernt werden",
-    "invalid_pin": "PIN muss genau vier Ziffern haben"
+    "invalid_pin": "PIN muss genau vier Ziffern haben",
+    "pin_save_failed": "Speichern der PIN ist fehlgeschlagen"
   },
   "services": {
     "add_drink": {
