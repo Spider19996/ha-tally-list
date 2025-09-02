@@ -13,6 +13,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.util.dt import now as dt_now
 from homeassistant.util import dt as dt_util
+from homeassistant.helpers.storage import Store
 
 from .websocket import async_register as async_register_ws
 from .sensor import FreeDrinkFeedSensor
@@ -45,6 +46,8 @@ from .const import (
 )
 
 PLATFORMS: list[str] = ["sensor", "button"]
+PINS_STORAGE_VERSION = 1
+PINS_STORAGE_KEY = f"{DOMAIN}_pins"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -65,6 +68,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "logins": {},
         },
     )
+
+    store = Store(hass, PINS_STORAGE_VERSION, PINS_STORAGE_KEY)
+    hass.data[DOMAIN]["pins_store"] = store
+    stored_pins = await store.async_load() or {}
+    hass.data[DOMAIN][CONF_USER_PINS] = stored_pins
 
     async def _verify_permissions(call, target_user: str | None) -> None:
         user_id = call.context.user_id
@@ -181,15 +189,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             user_pins[target_user] = pin
         else:
             user_pins.pop(target_user, None)
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.data.get(CONF_USER) == target_user:
-                entry_data = dict(entry.data)
-                if pin:
-                    entry_data[CONF_USER_PIN] = pin
-                else:
-                    entry_data.pop(CONF_USER_PIN, None)
-                hass.config_entries.async_update_entry(entry, data=entry_data)
-                break
+        await hass.data[DOMAIN]["pins_store"].async_save(user_pins)
 
     async def adjust_count_service(call):
         user = call.data[ATTR_USER]
@@ -707,13 +707,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, data=entry_data)
     user_name = entry.data.get(CONF_USER)
     if user_name and entry.data.get(CONF_USER_PIN) is not None:
-        hass.data[DOMAIN].setdefault(CONF_USER_PINS, {})[user_name] = entry.data[CONF_USER_PIN]
-    elif user_name:
-        pin = hass.data[DOMAIN].get(CONF_USER_PINS, {}).get(user_name)
-        if pin is not None and CONF_USER_PIN not in entry.data:
-            entry_data = dict(entry.data)
-            entry_data[CONF_USER_PIN] = pin
-            hass.config_entries.async_update_entry(entry, data=entry_data)
+        hass.data[DOMAIN][CONF_USER_PINS][user_name] = entry.data[CONF_USER_PIN]
+        await hass.data[DOMAIN]["pins_store"].async_save(hass.data[DOMAIN][CONF_USER_PINS])
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -735,6 +730,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         user_name = entry.data.get(CONF_USER)
         if user_name:
             hass.data[DOMAIN].get(CONF_USER_PINS, {}).pop(user_name, None)
+            await hass.data[DOMAIN]["pins_store"].async_save(hass.data[DOMAIN][CONF_USER_PINS])
         if user_name in PRICE_LIST_USERS:
             hass.data[DOMAIN].pop("drinks", None)
             hass.data[DOMAIN].pop("free_amount", None)
