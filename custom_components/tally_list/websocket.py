@@ -5,6 +5,7 @@ from __future__ import annotations
 from homeassistant.core import HomeAssistant
 from homeassistant.components import websocket_api
 from homeassistant.exceptions import Unauthorized
+import hashlib
 import voluptuous as vol
 
 from .const import (
@@ -13,6 +14,11 @@ from .const import (
     CONF_PUBLIC_DEVICES,
     CONF_USER_PINS,
 )
+
+
+def _hash_pin(pin: str) -> str:
+    """Return a SHA256 hash for the given PIN string."""
+    return hashlib.sha256(pin.encode()).hexdigest()
 
 
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/get_admins"})
@@ -79,7 +85,7 @@ async def websocket_login(
     if person_name not in public_devices:
         raise Unauthorized
 
-    if user_pins.get(msg["user"]) == str(msg["pin"]):
+    if user_pins.get(msg["user"]) == _hash_pin(str(msg["pin"])):
         hass.data[DOMAIN].setdefault("logins", {})[
             connection.user.id
         ] = msg["user"]
