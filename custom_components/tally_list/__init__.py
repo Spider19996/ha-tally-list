@@ -55,6 +55,26 @@ PINS_STORAGE_VERSION = 1
 PINS_STORAGE_KEY = f"{DOMAIN}_pins"
 
 
+async def _async_update_feed_sensor(hass: HomeAssistant, year: int) -> None:
+    """Create or update the free drink feed sensor for the given year."""
+    feed_sensors = hass.data[DOMAIN].setdefault("free_drink_feed_sensors", {})
+    sensor = feed_sensors.get(year)
+    if sensor is not None:
+        await sensor.async_update_state()
+        return
+    add_entities = hass.data[DOMAIN].get("feed_add_entities")
+    feed_entry_id = hass.data[DOMAIN].get("feed_entry_id")
+    entry = (
+        hass.config_entries.async_get_entry(feed_entry_id)
+        if feed_entry_id is not None
+        else None
+    )
+    if add_entities is not None and entry is not None:
+        sensor = FreeDrinkFeedSensor(hass, entry, year)
+        feed_sensors[year] = sensor
+        add_entities([sensor])
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up via YAML is not supported."""
     hass.data.setdefault(
@@ -277,24 +297,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await hass.async_add_executor_job(
                 _write_free_drink_log, user, drink, count, comment
             )
-            feed_sensors = hass.data[DOMAIN].setdefault(
-                "free_drink_feed_sensors", {}
-            )
-            sensor = feed_sensors.get(year)
-            if sensor is not None:
-                await sensor.async_update_state()
-            else:
-                add_entities = hass.data[DOMAIN].get("feed_add_entities")
-                feed_entry_id = hass.data[DOMAIN].get("feed_entry_id")
-                entry = (
-                    hass.config_entries.async_get_entry(feed_entry_id)
-                    if feed_entry_id is not None
-                    else None
-                )
-                if add_entities is not None and entry is not None:
-                    sensor = FreeDrinkFeedSensor(hass, entry, year)
-                    feed_sensors[year] = sensor
-                    add_entities([sensor])
+            await _async_update_feed_sensor(hass, year)
             hass.bus.async_fire(
                 "tally_list_free_drink_created",
                 {"user": user, "drink": drink, "count": count, "comment": comment},
@@ -356,24 +359,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await hass.async_add_executor_job(
                 _write_free_drink_log, user, drink, -count, comment
             )
-            feed_sensors = hass.data[DOMAIN].setdefault(
-                "free_drink_feed_sensors", {}
-            )
-            sensor = feed_sensors.get(year)
-            if sensor is not None:
-                await sensor.async_update_state()
-            else:
-                add_entities = hass.data[DOMAIN].get("feed_add_entities")
-                feed_entry_id = hass.data[DOMAIN].get("feed_entry_id")
-                entry = (
-                    hass.config_entries.async_get_entry(feed_entry_id)
-                    if feed_entry_id is not None
-                    else None
-                )
-                if add_entities is not None and entry is not None:
-                    sensor = FreeDrinkFeedSensor(hass, entry, year)
-                    feed_sensors[year] = sensor
-                    add_entities([sensor])
+            await _async_update_feed_sensor(hass, year)
             hass.bus.async_fire(
                 "tally_list_free_drink_reversed",
                 {"user": user, "drink": drink, "count": count, "comment": comment},
