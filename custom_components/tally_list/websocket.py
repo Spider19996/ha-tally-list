@@ -14,6 +14,7 @@ from .const import (
     CONF_USER_PINS,
 )
 from .security import verify_pin
+from .utils import get_person_name
 
 
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/get_admins"})
@@ -42,11 +43,7 @@ async def websocket_is_public_device(
     if connection.user is None:
         raise Unauthorized
 
-    person_name: str | None = None
-    for state in hass.states.async_all("person"):
-        if state.attributes.get("user_id") == connection.user.id:
-            person_name = state.name
-            break
+    person_name = get_person_name(hass, connection.user.id)
 
     public_devices = hass.data.get(DOMAIN, {}).get(CONF_PUBLIC_DEVICES, [])
     connection.send_result(msg["id"], {"is_public": person_name in public_devices})
@@ -69,11 +66,7 @@ async def websocket_login(
     if connection.user is None:
         raise Unauthorized
 
-    person_name: str | None = None
-    for state in hass.states.async_all("person"):
-        if state.attributes.get("user_id") == connection.user.id:
-            person_name = state.name
-            break
+    person_name = get_person_name(hass, connection.user.id)
 
     public_devices = hass.data.get(DOMAIN, {}).get(CONF_PUBLIC_DEVICES, [])
     user_pins = hass.data.get(DOMAIN, {}).get(CONF_USER_PINS, {})
