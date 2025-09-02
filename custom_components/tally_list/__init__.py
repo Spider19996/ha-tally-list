@@ -179,6 +179,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 return data
         return None
 
+    def _find_cash_entry() -> dict:
+        cash_name = hass.data[DOMAIN].get(CONF_CASH_USER_NAME)
+        if not cash_name:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cash_user_missing"
+            )
+        entry = _find_user_entry(cash_name)
+        if entry is None:
+            cash_name_norm = cash_name.strip().lower()
+            for data in hass.data[DOMAIN].values():
+                if (
+                    isinstance(data, dict)
+                    and "entry" in data
+                    and data["entry"].data.get(CONF_USER, "").strip().lower()
+                    == cash_name_norm
+                ):
+                    entry = data
+                    break
+        if entry is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="cash_user_missing"
+            )
+        return entry
+
     async def set_pin_service(call):
         user_id = call.context.user_id
         if user_id is None:
@@ -255,11 +279,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     translation_domain=DOMAIN,
                     translation_key="free_drinks_disabled",
                 )
-            cash_name = hass.data[DOMAIN].get(CONF_CASH_USER_NAME)
-            if not cash_name:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="cash_user_missing"
-                )
             comment = comment.strip()
             if len(comment) < 3 or len(comment) > 200:
                 raise HomeAssistantError(
@@ -269,20 +288,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="drink_unknown"
                 )
-            cash_entry = None
-            for data in hass.data[DOMAIN].values():
-                if (
-                    isinstance(data, dict)
-                    and "entry" in data
-                    and data["entry"].data.get(CONF_USER, "").strip().lower()
-                    == cash_name.strip().lower()
-                ):
-                    cash_entry = data
-                    break
-            if cash_entry is None:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="cash_user_missing"
-                )
+            cash_entry = _find_cash_entry()
             counts = cash_entry.setdefault("counts", {})
             counts[drink] = counts.get(drink, 0) + count
             hass.data[DOMAIN]["free_drink_counts"] = counts
@@ -322,25 +328,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     translation_domain=DOMAIN,
                     translation_key="free_drinks_disabled",
                 )
-            cash_name = hass.data[DOMAIN].get(CONF_CASH_USER_NAME)
-            if not cash_name:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="cash_user_missing"
-                )
-            cash_entry = None
-            for data in hass.data[DOMAIN].values():
-                if (
-                    isinstance(data, dict)
-                    and "entry" in data
-                    and data["entry"].data.get(CONF_USER, "").strip().lower()
-                    == cash_name.strip().lower()
-                ):
-                    cash_entry = data
-                    break
-            if cash_entry is None:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN, translation_key="cash_user_missing"
-                )
+            cash_entry = _find_cash_entry()
             counts = cash_entry.setdefault("counts", {})
             if counts.get(drink, 0) < count:
                 raise HomeAssistantError(
