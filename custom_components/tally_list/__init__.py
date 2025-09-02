@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import os
 import re
 from datetime import datetime, timedelta
@@ -18,6 +17,7 @@ from homeassistant.helpers.storage import Store
 
 from .websocket import async_register as async_register_ws
 from .sensor import FreeDrinkFeedSensor
+from .security import hash_pin, verify_pin
 
 from .const import (
     DOMAIN,
@@ -51,11 +51,6 @@ PINS_STORAGE_VERSION = 1
 PINS_STORAGE_KEY = f"{DOMAIN}_pins"
 
 
-def _hash_pin(pin: str) -> str:
-    """Return a SHA256 hash for the given PIN string."""
-    return hashlib.sha256(pin.encode()).hexdigest()
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up via YAML is not supported."""
     hass.data.setdefault(
@@ -80,8 +75,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     stored_pins = await store.async_load() or {}
     migrated = False
     for user, pin in list(stored_pins.items()):
-        if pin and len(pin) != 64:
-            stored_pins[user] = _hash_pin(str(pin))
+        if not pin:
+            continue
+        # Convert plain text or legacy SHA256 pins to new storage format
+        if "$" not in str(pin):
+            pin_str = str(pin)
+            if len(pin_str) == 64:
+                stored_pins[user] = f"sha256${pin_str}"
+            else:
+                stored_pins[user] = hash_pin(pin_str)
             migrated = True
     if migrated:
         await store.async_save(stored_pins)
@@ -109,7 +111,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             user_pin = user_pins.get(target_user)
             provided_pin = call.data.get(ATTR_PIN)
             if user_pin and (
-                (provided_pin is not None and _hash_pin(str(provided_pin)) == user_pin)
+                (
+                    provided_pin is not None
+                    and verify_pin(str(provided_pin), user_pin)
+                )
                 or logins.get(user_id) == target_user
             ):
                 return
@@ -200,7 +205,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="invalid_pin"
                 )
-            user_pins[target_user] = _hash_pin(pin)
+            user_pins[target_user] = hash_pin(pin)
         else:
             user_pins.pop(target_user, None)
         await hass.data[DOMAIN]["pins_store"].async_save(user_pins)
@@ -722,13 +727,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     user_name = entry.data.get(CONF_USER)
     if user_name and entry.data.get(CONF_USER_PIN) is not None:
         pin = entry.data[CONF_USER_PIN]
-        if len(str(pin)) != 64:
-            pin = _hash_pin(str(pin))
+        if "$" not in str(pin):
+            pin_str = str(pin)
+            if len(pin_str) == 64:
+                pin = f"sha256${pin_str}"
+            else:
+                pin = hash_pin(pin_str)
             entry_data = dict(entry.data)
             entry_data[CONF_USER_PIN] = pin
             hass.config_entries.async_update_entry(entry, data=entry_data)
         hass.data[DOMAIN][CONF_USER_PINS][user_name] = pin
-        await hass.data[DOMAIN]["pins_store"].async_save(hass.data[DOMAIN][CONF_USER_PINS])
+        await hass.data[DOMAIN]["pins_store"].async_save(
+            hass.data[DOMAIN][CONF_USER_PINS]
+        )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
