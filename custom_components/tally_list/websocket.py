@@ -13,7 +13,7 @@ from .const import (
     CONF_PUBLIC_DEVICES,
     CONF_USER_PINS,
 )
-from .security import hash_pin, verify_pin
+from .security import verify_pin
 
 
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/get_admins"})
@@ -82,9 +82,6 @@ async def websocket_login(
 
     stored_pin = user_pins.get(msg["user"])
     if stored_pin and verify_pin(str(msg["pin"]), stored_pin):
-        if stored_pin.count("$") == 1:
-            user_pins[msg["user"]] = hash_pin(str(msg["pin"]))
-            await hass.data[DOMAIN]["pins_store"].async_save(user_pins)
         hass.data[DOMAIN].setdefault("logins", {})[
             connection.user.id
         ] = msg["user"]

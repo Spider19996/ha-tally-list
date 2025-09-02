@@ -19,29 +19,14 @@ def hash_pin(pin: str) -> str:
 
 
 def verify_pin(pin: str, stored: str) -> bool:
-    """Verify a PIN against a stored hash.
-
-    Supports the current ``<iterations>$<salt>$<hash>`` format as well as the
-    legacy ``<salt>$<hash>`` format which assumes ``PBKDF2_ITERATIONS``
-    iterations.
-    """
-    if "$" not in stored:
-        return False
-
+    """Verify a PIN against a stored hash."""
     parts = stored.split("$")
-    if len(parts) == 2:
-        salt_hex, hashed = parts
-        iterations = PBKDF2_ITERATIONS
-    elif len(parts) == 3:
-        iterations_hex, salt_hex, hashed = parts
-        try:
-            iterations = int(iterations_hex)
-        except ValueError:
-            return False
-    else:
+    if len(parts) != 3:
         return False
 
+    iterations_hex, salt_hex, hashed = parts
     try:
+        iterations = int(iterations_hex)
         salt = bytes.fromhex(salt_hex)
     except ValueError:
         return False
