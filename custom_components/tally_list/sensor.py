@@ -225,10 +225,13 @@ class TotalAmountSensor(CurrencySensor, RestoreEntity):
         drinks = self._hass.data[DOMAIN].get("drinks", {})
         for drink, price in drinks.items():
             total += counts.get(drink, 0) * price
-        free_amount = self._hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
-        total -= free_amount
-        if total < 0:
-            total = 0.0
+        user = self._entry.data[CONF_USER]
+        cash_name = self._hass.data.get(DOMAIN, {}).get(CONF_CASH_USER_NAME, "")
+        if user.strip().lower() != cash_name.strip().lower():
+            free_amount = self._hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
+            total -= free_amount
+            if total < 0:
+                total = 0.0
         return round(total, 2)
 
 
