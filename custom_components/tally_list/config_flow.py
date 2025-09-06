@@ -90,6 +90,64 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
+        entries = self.hass.config_entries.async_entries(DOMAIN)
+        if entries:
+            registry = er.async_get(self.hass)
+            persons = [
+                entry.original_name or entry.name or entry.entity_id
+                for entry in registry.entities.values()
+                if entry.domain == "person"
+                and (
+                    (state := self.hass.states.get(entry.entity_id))
+                    and state.attributes.get("user_id")
+                )
+            ]
+
+            existing = {entry.data.get(CONF_USER) for entry in entries}
+
+            excluded = set(self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, []))
+
+            persons = [
+                p
+                for p in persons
+                if p not in existing and p not in excluded and p not in PRICE_LIST_USERS
+            ]
+
+            if persons:
+                data_template = {
+                    CONF_DRINKS: self.hass.data.get(DOMAIN, {}).get(CONF_DRINKS, {}),
+                    CONF_FREE_AMOUNT: float(
+                        self.hass.data.get(DOMAIN, {}).get(CONF_FREE_AMOUNT, 0.0)
+                    ),
+                    CONF_EXCLUDED_USERS: list(
+                        self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, [])
+                    ),
+                    CONF_OVERRIDE_USERS: list(
+                        self.hass.data.get(DOMAIN, {}).get(CONF_OVERRIDE_USERS, [])
+                    ),
+                    CONF_PUBLIC_DEVICES: list(
+                        self.hass.data.get(DOMAIN, {}).get(CONF_PUBLIC_DEVICES, [])
+                    ),
+                    CONF_CURRENCY: self.hass.data.get(DOMAIN, {}).get(CONF_CURRENCY, "€"),
+                    CONF_ENABLE_FREE_DRINKS: self.hass.data.get(DOMAIN, {}).get(
+                        CONF_ENABLE_FREE_DRINKS, False
+                    ),
+                    CONF_CASH_USER_NAME: get_cash_user_name(
+                        getattr(self.hass.config, "language", None)
+                    ),
+                }
+
+                for person in persons:
+                    data = {**data_template, CONF_USER: person}
+                    self.hass.async_create_task(
+                        self.hass.config_entries.flow.async_init(
+                            DOMAIN,
+                            context={"source": config_entries.SOURCE_IMPORT},
+                            data=data,
+                        )
+                    )
+            return self.async_abort(reason="already_configured")
+
         if not self._user_selected:
             self._cash_user_name = get_cash_user_name(
                 getattr(self.hass.config, "language", None)
@@ -105,10 +163,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             ]
 
-            existing = {
-                entry.data.get(CONF_USER)
-                for entry in self.hass.config_entries.async_entries(DOMAIN)
-            }
+            existing = {entry.data.get(CONF_USER) for entry in entries}
 
             excluded = set(self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, []))
             # Preserve already excluded users when the price list user is recreated
@@ -120,7 +175,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if p not in existing and p not in excluded and p not in PRICE_LIST_USERS
             ]
 
-            entries = self.hass.config_entries.async_entries(DOMAIN)
             self._create_price_user = not any(
                 entry.data.get(CONF_USER) in PRICE_LIST_USERS for entry in entries
             )

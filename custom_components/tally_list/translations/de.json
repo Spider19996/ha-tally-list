@@ -3,7 +3,8 @@
   "config": {
     "title": "Strichliste",
     "abort": {
-      "no_users": "Keine Personen mit Benutzerkonto gefunden"
+      "no_users": "Keine Personen mit Benutzerkonto gefunden",
+      "already_configured": "Integration bereits eingerichtet; neue Nutzer automatisch hinzugefügt"
     },
     "step": {
       "menu": {
