@@ -3,8 +3,7 @@
   "config": {
     "title": "Tally List",
     "abort": {
-      "no_users": "No persons with a user account found",
-      "already_configured": "Integration already configured; added new users automatically"
+      "no_users": "No persons with a user account found"
     },
     "step": {
       "menu": {
