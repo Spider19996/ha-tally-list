@@ -64,13 +64,23 @@ async def async_setup_entry(
         hass.data[DOMAIN]["feed_entry_id"] = entry.entry_id
         feed_sensors: dict[int, FreeDrinkFeedSensor] = {}
         base_dir = hass.config.path("backup", "tally_list", "free_drinks")
-        if os.path.isdir(base_dir):
-            for name in os.listdir(base_dir):
-                match = re.match(r"free_drinks_(\d{4})\.csv$", name)
-                if not match:
-                    continue
-                year = int(match.group(1))
-                feed_sensors[year] = FreeDrinkFeedSensor(hass, entry, year)
+        try:
+            is_dir = await hass.async_add_executor_job(os.path.isdir, base_dir)
+        except OSError as err:
+            _LOGGER.warning("Failed accessing free drink directory %s: %s", base_dir, err)
+            is_dir = False
+        if is_dir:
+            try:
+                names = await hass.async_add_executor_job(os.listdir, base_dir)
+            except OSError as err:
+                _LOGGER.warning("Failed listing free drink directory %s: %s", base_dir, err)
+            else:
+                for name in names:
+                    match = re.match(r"free_drinks_(\d{4})\.csv$", name)
+                    if not match:
+                        continue
+                    year = int(match.group(1))
+                    feed_sensors[year] = FreeDrinkFeedSensor(hass, entry, year)
         if feed_sensors:
             async_add_entities(list(feed_sensors.values()))
             data.setdefault("sensors", []).extend(feed_sensors.values())
@@ -257,16 +267,19 @@ class FreeDrinkFeedSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         await self.async_update_state()
 
+    def _read_rows(self) -> list[list[str]]:
+        with open(self._path, "r", encoding="utf-8", newline="") as csvfile:
+            reader = csv.reader(csvfile, delimiter=";")
+            try:
+                next(reader)
+            except StopIteration:
+                return []
+            else:
+                return list(deque(reader, maxlen=self._max_entries))
+
     async def async_update_state(self) -> None:
         try:
-            with open(self._path, "r", encoding="utf-8", newline="") as csvfile:
-                reader = csv.reader(csvfile, delimiter=";")
-                try:
-                    next(reader)
-                except StopIteration:
-                    rows: list[list[str]] = []
-                else:
-                    rows = list(deque(reader, maxlen=self._max_entries))
+            rows = await self._hass.async_add_executor_job(self._read_rows)
         except FileNotFoundError:
             self._entries = []
             self._attr_native_value = "none"
