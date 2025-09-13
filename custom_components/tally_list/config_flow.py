@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import csv
+import re
 import voluptuous as vol
 
 from homeassistant.helpers import entity_registry as er
@@ -59,8 +60,41 @@ def _write_price_list_log(
     if len(rows) > 1 and rows[-1][:3] == [key_time, user, action]:
         existing = rows[-1][3]
         prefix = f"{user}:"
-        new_detail = details[len(prefix):] if existing.startswith(prefix) and details.startswith(prefix) else details
-        rows[-1][3] = f"{existing},{new_detail}"
+        if existing.startswith(prefix) and details.startswith(prefix):
+            existing_parts = existing[len(prefix):]
+            new_parts = details[len(prefix):]
+            counts: dict[tuple[str, str], int] = {}
+            order: list[tuple[str, str]] = []
+
+            def _parse(parts: str) -> bool:
+                for part in parts.split(","):
+                    part = part.strip()
+                    if not part:
+                        continue
+                    match = re.fullmatch(r"([^,+-]+)([+-])(\d+)", part)
+                    if match is None:
+                        return False
+                    name, sign, num = match.groups()
+                    key = (name, sign)
+                    if key not in counts:
+                        counts[key] = 0
+                        order.append(key)
+                    counts[key] += int(num)
+                return True
+
+            if _parse(existing_parts) and _parse(new_parts):
+                rows[-1][3] = prefix + ",".join(
+                    f"{name}{sign}{counts[(name, sign)]}" for name, sign in order
+                )
+            else:
+                rows[-1][3] = f"{existing},{new_parts}"
+        else:
+            new_detail = (
+                details[len(prefix):]
+                if existing.startswith(prefix) and details.startswith(prefix)
+                else details
+            )
+            rows[-1][3] = f"{existing},{new_detail}"
     else:
         rows.append([key_time, user, action, details])
     with open(path, "w", encoding="utf-8", newline="") as csvfile:
