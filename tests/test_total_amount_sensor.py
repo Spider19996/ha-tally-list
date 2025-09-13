@@ -106,6 +106,7 @@ DOMAIN = const.DOMAIN
 CONF_USER = const.CONF_USER
 CONF_CASH_USER_NAME = const.CONF_CASH_USER_NAME
 TotalAmountSensor = sensor_module.TotalAmountSensor
+TallyListSensor = sensor_module.TallyListSensor
 
 
 class DummyHass:
@@ -182,4 +183,13 @@ def test_total_amount_sensor_with_negative_credit():
     )
     sensor = TotalAmountSensor(hass, entry)
     assert sensor.native_value == 4.5
+
+
+def test_tally_list_sensor_icon():
+    entry = DummyConfigEntry("jkl", "Alice")
+    hass = DummyHass(
+        {DOMAIN: {"drinks": {"Beer": 2.0}, "drink_icons": {"Beer": "mdi:beer"}, entry.entry_id: {"counts": {}}}}
+    )
+    sensor = TallyListSensor(hass, entry, "Beer", 2.0, "mdi:beer")
+    assert sensor._attr_icon == "mdi:beer"
 

@@ -43,6 +43,7 @@ from .const import (
     CONF_USER_PINS,
     PRICE_LIST_USERS,
     CONF_CURRENCY,
+    CONF_ICONS,
     CONF_ENABLE_FREE_DRINKS,
     CONF_CASH_USER_NAME,
     ATTR_FREE_DRINK,
@@ -85,6 +86,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         {
             "drinks": {},
+            "drink_icons": {},
             CONF_EXCLUDED_USERS: [],
             CONF_OVERRIDE_USERS: [],
             CONF_PUBLIC_DEVICES: [],
@@ -605,6 +607,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN,
         {
             "drinks": {},
+            "drink_icons": {},
             CONF_EXCLUDED_USERS: [],
             CONF_OVERRIDE_USERS: [],
             CONF_CURRENCY: "€",
@@ -626,6 +629,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ]
     if not hass.data[DOMAIN].get("drinks") and entry.data.get("drinks"):
         hass.data[DOMAIN]["drinks"] = entry.data["drinks"]
+    if not hass.data[DOMAIN].get("drink_icons") and entry.data.get(CONF_ICONS):
+        hass.data[DOMAIN]["drink_icons"] = entry.data[CONF_ICONS]
     if hass.data[DOMAIN].get("drinks") and not entry.data.get("drinks"):
         entry_data = {
             "user": entry.data.get("user"),
@@ -635,6 +640,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_CURRENCY: hass.data[DOMAIN].get(CONF_CURRENCY, "€"),
         }
         if "drinks" in hass.data[DOMAIN]:
+            entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
+        if "drink_icons" in hass.data[DOMAIN]:
+            entry_data[CONF_ICONS] = hass.data[DOMAIN]["drink_icons"]
+        hass.config_entries.async_update_entry(entry, data=entry_data)
+    if hass.data[DOMAIN].get("drink_icons") and not entry.data.get(CONF_ICONS):
+        entry_data = dict(entry.data)
+        entry_data[CONF_ICONS] = hass.data[DOMAIN]["drink_icons"]
+        if "drinks" in hass.data[DOMAIN] and "drinks" not in entry_data:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
         hass.config_entries.async_update_entry(entry, data=entry_data)
     if (
@@ -655,6 +668,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
+        if "drink_icons" in hass.data[DOMAIN]:
+            entry_data[CONF_ICONS] = hass.data[DOMAIN]["drink_icons"]
         hass.config_entries.async_update_entry(entry, data=entry_data)
     if (
         not hass.data[DOMAIN].get("excluded_users")
@@ -679,6 +694,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
+        if "drink_icons" in hass.data[DOMAIN]:
+            entry_data[CONF_ICONS] = hass.data[DOMAIN]["drink_icons"]
         hass.config_entries.async_update_entry(entry, data=entry_data)
     if (
         hass.data[DOMAIN].get("override_users") is not None
@@ -693,6 +710,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
+        if "drink_icons" in hass.data[DOMAIN]:
+            entry_data[CONF_ICONS] = hass.data[DOMAIN]["drink_icons"]
         hass.config_entries.async_update_entry(entry, data=entry_data)
     if (
         not hass.data[DOMAIN].get(CONF_CURRENCY)
@@ -716,6 +735,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
+        if "drink_icons" in hass.data[DOMAIN]:
+            entry_data[CONF_ICONS] = hass.data[DOMAIN]["drink_icons"]
         hass.config_entries.async_update_entry(entry, data=entry_data)
     if (
         not hass.data[DOMAIN].get(CONF_ENABLE_FREE_DRINKS)
@@ -745,6 +766,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         if "drinks" in hass.data[DOMAIN]:
             entry_data["drinks"] = hass.data[DOMAIN]["drinks"]
+        if "drink_icons" in hass.data[DOMAIN]:
+            entry_data[CONF_ICONS] = hass.data[DOMAIN]["drink_icons"]
         hass.config_entries.async_update_entry(entry, data=entry_data)
     if entry.data.get(CONF_PUBLIC_DEVICES) is not None:
         hass.data[DOMAIN][CONF_PUBLIC_DEVICES] = entry.data[CONF_PUBLIC_DEVICES]
@@ -783,6 +806,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         user_name = entry.data.get(CONF_USER)
         if user_name in PRICE_LIST_USERS:
             hass.data[DOMAIN].pop("drinks", None)
+            hass.data[DOMAIN].pop("drink_icons", None)
             hass.data[DOMAIN].pop("free_amount", None)
             # Keep excluded users so they are not re-created when the price list
             # user is re-added later
