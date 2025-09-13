@@ -20,6 +20,7 @@ from .websocket import async_register as async_register_ws
 from .sensor import FreeDrinkFeedSensor
 from .security import hash_pin, verify_pin
 from .utils import get_person_name
+from .config_flow import _log_price_change
 
 from .const import (
     DOMAIN,
@@ -251,6 +252,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="pin_save_failed"
             ) from err
+        await _log_price_change(
+            hass,
+            user_id,
+            "set_pin",
+            f"{target_user}:{'set' if pin else 'cleared'}",
+        )
 
     async def adjust_count_service(call):
         user = call.data[ATTR_USER]
@@ -266,6 +273,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
                 break
+        await _log_price_change(
+            hass,
+            call.context.user_id,
+            "set_count",
+            f"{user}:{drink}={count}",
+        )
 
     async def add_drink_service(call):
         user = call.data[ATTR_USER]
@@ -314,12 +327,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "tally_list_free_drink_created",
                 {"user": user, "drink": drink, "count": count, "comment": comment},
             )
+            await _log_price_change(
+                hass,
+                call.context.user_id,
+                "book_free_drink",
+                f"{user}:{drink}+{count}",
+            )
             return
         counts = entry.setdefault("counts", {})
         new_count = counts.get(drink, 0) + count
         counts[drink] = new_count
         for sensor in entry.get("sensors", []):
             await sensor.async_update_state()
+        await _log_price_change(
+            hass,
+            call.context.user_id,
+            "book_drink",
+            f"{user}:{drink}+{count}",
+        )
 
     async def remove_drink_service(call):
         user = call.data[ATTR_USER]
@@ -358,6 +383,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "tally_list_free_drink_reversed",
                 {"user": user, "drink": drink, "count": count, "comment": comment},
             )
+            await _log_price_change(
+                hass,
+                call.context.user_id,
+                "remove_free_drink",
+                f"{user}:{drink}-{count}",
+            )
             return
         for entry_id, data in hass.data[DOMAIN].items():
             if not isinstance(data, dict) or "entry" not in data:
@@ -371,6 +402,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
                 break
+        await _log_price_change(
+            hass,
+            call.context.user_id,
+            "remove_drink",
+            f"{user}:{drink}-{count}",
+        )
 
     async def add_credit_service(call):
         await _verify_permissions(call, None)
@@ -384,6 +421,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entry["credit"] = entry.setdefault("credit", 0.0) + amount
         for sensor in entry.get("sensors", []):
             await sensor.async_update_state()
+        await _log_price_change(
+            hass,
+            call.context.user_id,
+            "add_credit",
+            f"{user}:{amount}",
+        )
 
     async def remove_credit_service(call):
         await _verify_permissions(call, None)
@@ -397,6 +440,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entry["credit"] = entry.setdefault("credit", 0.0) - amount
         for sensor in entry.get("sensors", []):
             await sensor.async_update_state()
+        await _log_price_change(
+            hass,
+            call.context.user_id,
+            "remove_credit",
+            f"{user}:{amount}",
+        )
 
     async def set_credit_service(call):
         await _verify_permissions(call, None)
@@ -410,6 +459,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         entry["credit"] = amount
         for sensor in entry.get("sensors", []):
             await sensor.async_update_state()
+        await _log_price_change(
+            hass,
+            call.context.user_id,
+            "set_credit",
+            f"{user}:{amount}",
+        )
 
     async def reset_counters_service(call):
         user = call.data.get(ATTR_USER)
@@ -423,6 +478,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 data["credit"] = 0.0
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
+        await _log_price_change(
+            hass,
+            call.context.user_id,
+            "reset_counters",
+            user if user is not None else "all",
+        )
 
     async def export_csv_service(call):
         sensors = sorted(
@@ -802,6 +863,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN].pop("free_drink_feed_sensors", None)
             hass.data[DOMAIN].pop("feed_add_entities", None)
             hass.data[DOMAIN].pop("feed_entry_id", None)
+        if hass.data[DOMAIN].get("price_feed_entry_id") == entry.entry_id:
+            unsub = hass.data[DOMAIN].pop("price_feed_unsub", None)
+            if unsub is not None:
+                unsub()
+            hass.data[DOMAIN].pop("price_list_feed_sensor", None)
+            hass.data[DOMAIN].pop("price_feed_add_entities", None)
+            hass.data[DOMAIN].pop("price_feed_entry_id", None)
         hass.data[DOMAIN].pop(entry.entry_id, None)
         user_name = entry.data.get(CONF_USER)
         if user_name in PRICE_LIST_USERS:
