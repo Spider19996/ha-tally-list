@@ -82,13 +82,15 @@ async def _async_update_price_feed_sensor(hass) -> None:
 
 async def _log_price_change(hass, user_id, action: str, details: str) -> None:
     auth = getattr(hass, "auth", None)
-    if user_id is None and auth is not None:
-        current = getattr(auth, "current_user", None)
-        if current is not None:
-            user_id = current.id
-    hass_user = (
-        await auth.async_get_user(user_id) if auth is not None and user_id else None
-    )
+    hass_user = None
+    if auth is not None:
+        if user_id:
+            hass_user = await auth.async_get_user(user_id)
+        if hass_user is None:
+            current = getattr(auth, "current_user", None)
+            if current is not None:
+                hass_user = current
+                user_id = current.id
     name = get_person_name(hass, user_id) or (
         hass_user.name if hass_user else "Unknown"
     )
