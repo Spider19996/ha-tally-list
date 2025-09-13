@@ -6,6 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.selector import IconSelector
 
 from homeassistant import config_entries
 from homeassistant.core import callback
@@ -16,6 +17,8 @@ from .const import (
     CONF_DRINKS,
     CONF_DRINK,
     CONF_PRICE,
+    CONF_ICON,
+    CONF_ICONS,
     CONF_FREE_AMOUNT,
     CONF_EXCLUDED_USERS,
     CONF_OVERRIDE_USERS,
@@ -55,6 +58,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         self._user: str | None = None
         self._drinks: dict[str, float] = {}
+        self._drink_icons: dict[str, str] = {}
         self._free_amount: float = 0.0
         self._excluded_users: list[str] = []
         self._override_users: list[str] = []
@@ -72,6 +76,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_import")
         self._user = user_input.get(CONF_USER)
         self._drinks = user_input.get(CONF_DRINKS, {})
+        self._drink_icons = user_input.get(CONF_ICONS, {})
         self._free_amount = float(user_input.get(CONF_FREE_AMOUNT, 0.0))
         self._excluded_users = user_input.get(CONF_EXCLUDED_USERS, [])
         self._override_users = user_input.get(CONF_OVERRIDE_USERS, [])
@@ -87,6 +92,8 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_ENABLE_FREE_DRINKS] = self._enable_free_drinks
         user_input[CONF_CASH_USER_NAME] = self._cash_user_name
         user_input[CONF_PUBLIC_DEVICES] = self._public_devices
+        if CONF_ICONS not in user_input:
+            user_input[CONF_ICONS] = self._drink_icons
         return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
@@ -116,6 +123,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if persons:
                 data_template = {
                     CONF_DRINKS: self.hass.data.get(DOMAIN, {}).get(CONF_DRINKS, {}),
+                    CONF_ICONS: self.hass.data.get(DOMAIN, {}).get(CONF_ICONS, {}),
                     CONF_FREE_AMOUNT: float(
                         self.hass.data.get(DOMAIN, {}).get(CONF_FREE_AMOUNT, 0.0)
                     ),
@@ -296,7 +304,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             drink = user_input[CONF_DRINK]
             price = float(user_input[CONF_PRICE])
+            icon = user_input[CONF_ICON]
             self._drinks[drink] = price
+            self._drink_icons[drink] = icon
             if user_input.get("add_more"):
                 return await self.async_step_add_drink()
             return await self.async_step_menu()
@@ -304,6 +314,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_DRINK): str,
                 vol.Required(CONF_PRICE): vol.Coerce(float),
+                vol.Required(CONF_ICON): IconSelector(),
                 vol.Optional("add_more", default=False): bool,
             }
         )
@@ -313,6 +324,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             drink = user_input[CONF_DRINK]
             self._drinks.pop(drink, None)
+            self._drink_icons.pop(drink, None)
             if user_input.get("remove_more") and self._drinks:
                 return await self.async_step_remove_drink()
             return await self.async_step_menu()
@@ -330,7 +342,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             drink = user_input[CONF_DRINK]
             price = float(user_input[CONF_PRICE])
+            icon = user_input[CONF_ICON]
             self._drinks[drink] = price
+            self._drink_icons[drink] = icon
             if user_input.get("edit_more") and self._drinks:
                 return await self.async_step_edit_price()
             return await self.async_step_menu()
@@ -340,6 +354,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
                 vol.Required(CONF_PRICE): vol.Coerce(float),
+                vol.Required(CONF_ICON): IconSelector(),
                 vol.Optional("edit_more", default=False): bool,
             }
         )
@@ -525,6 +540,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_USER: self._user,
                 CONF_DRINKS: self._drinks,
+                CONF_ICONS: self._drink_icons,
                 CONF_FREE_AMOUNT: self._free_amount,
                 CONF_EXCLUDED_USERS: self._excluded_users,
                 CONF_OVERRIDE_USERS: self._override_users,
@@ -537,6 +553,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _finalize_setup(self) -> None:
         self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
+        self.hass.data[DOMAIN]["drink_icons"] = self._drink_icons
         self.hass.data[DOMAIN]["free_amount"] = self._free_amount
         self.hass.data[DOMAIN][CONF_EXCLUDED_USERS] = self._excluded_users
         self.hass.data[DOMAIN][CONF_OVERRIDE_USERS] = self._override_users
@@ -554,6 +571,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     CONF_FREE_AMOUNT: self._free_amount,
                     CONF_DRINKS: self._drinks,
+                    CONF_ICONS: self._drink_icons,
                     CONF_EXCLUDED_USERS: self._excluded_users,
                     CONF_OVERRIDE_USERS: self._override_users,
                     CONF_PUBLIC_DEVICES: self._public_devices,
@@ -565,6 +583,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if entry.data.get(CONF_USER) in PRICE_LIST_USERS:
                     entry_data = dict(entry.data)
                     entry_data[CONF_DRINKS] = self._drinks
+                    entry_data[CONF_ICONS] = self._drink_icons
                     entry_data[CONF_FREE_AMOUNT] = self._free_amount
                     entry_data[CONF_EXCLUDED_USERS] = self._excluded_users
                     entry_data[CONF_OVERRIDE_USERS] = self._override_users
@@ -627,6 +646,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         self.config_entry = config_entry
         self._drinks: dict[str, float] = {}
+        self._drink_icons: dict[str, str] = {}
         self._free_amount: float = 0.0
         self._excluded_users: list[str] = []
         self._override_users: list[str] = []
@@ -637,6 +657,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
+        self._drink_icons = (
+            self.hass.data.get(DOMAIN, {}).get("drink_icons", {})
+        ).copy()
         self._free_amount = self.hass.data.get(DOMAIN, {}).get("free_amount", 0.0)
         self._excluded_users = (
             self.hass.data.get(DOMAIN, {}).get(CONF_EXCLUDED_USERS, [])
@@ -812,7 +835,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             drink = user_input[CONF_DRINK]
             price = float(user_input[CONF_PRICE])
+            icon = user_input[CONF_ICON]
             self._drinks[drink] = price
+            self._drink_icons[drink] = icon
             if user_input.get("add_more"):
                 return await self.async_step_add_drink()
             return await self.async_step_menu()
@@ -821,6 +846,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Required(CONF_DRINK): str,
                 vol.Required(CONF_PRICE): vol.Coerce(float),
+                vol.Required(CONF_ICON): IconSelector(),
                 vol.Optional("add_more", default=False): bool,
             }
         )
@@ -830,6 +856,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             drink = user_input[CONF_DRINK]
             self._drinks.pop(drink, None)
+            self._drink_icons.pop(drink, None)
             if user_input.get("remove_more") and self._drinks:
                 return await self.async_step_remove_drink()
             return await self.async_step_menu()
@@ -849,7 +876,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             drink = user_input[CONF_DRINK]
             price = float(user_input[CONF_PRICE])
+            icon = user_input[CONF_ICON]
             self._drinks[drink] = price
+            self._drink_icons[drink] = icon
             if user_input.get("edit_more") and self._drinks:
                 return await self.async_step_edit_price()
             return await self.async_step_menu()
@@ -861,6 +890,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
                 vol.Required(CONF_PRICE): vol.Coerce(float),
+                vol.Required(CONF_ICON): IconSelector(),
                 vol.Optional("edit_more", default=False): bool,
             }
         )
@@ -1145,6 +1175,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         # Update global drinks list before reloading entries so that new
         # sensors are created with the latest values during setup.
         self.hass.data.setdefault(DOMAIN, {})["drinks"] = self._drinks
+        self.hass.data[DOMAIN]["drink_icons"] = self._drink_icons
         self.hass.data[DOMAIN]["free_amount"] = self._free_amount
         self.hass.data[DOMAIN][CONF_EXCLUDED_USERS] = self._excluded_users
         self.hass.data[DOMAIN][CONF_OVERRIDE_USERS] = self._override_users
@@ -1194,6 +1225,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             data = {
                 CONF_USER: entry.data[CONF_USER],
                 CONF_DRINKS: self._drinks,
+                CONF_ICONS: self._drink_icons,
                 CONF_FREE_AMOUNT: self._free_amount,
                 CONF_EXCLUDED_USERS: self._excluded_users,
                 CONF_OVERRIDE_USERS: self._override_users,
@@ -1213,6 +1245,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             title="",
             data={
                 CONF_DRINKS: self._drinks,
+                CONF_ICONS: self._drink_icons,
                 CONF_FREE_AMOUNT: self._free_amount,
                 CONF_EXCLUDED_USERS: self._excluded_users,
                 CONF_OVERRIDE_USERS: self._override_users,

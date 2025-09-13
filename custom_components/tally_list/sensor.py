@@ -41,6 +41,7 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     user = entry.data[CONF_USER]
     drinks = hass.data[DOMAIN].get("drinks", {})
+    icons = hass.data[DOMAIN].get("drink_icons", {})
     sensors: list[SensorEntity] = []
 
     if user in PRICE_LIST_USERS:
@@ -49,7 +50,9 @@ async def async_setup_entry(
         sensors.append(FreeAmountSensor(hass, entry))
     else:
         for drink_name, price in drinks.items():
-            sensors.append(TallyListSensor(hass, entry, drink_name, price))
+            sensors.append(
+                TallyListSensor(hass, entry, drink_name, price, icons.get(drink_name))
+            )
         sensors.append(TotalAmountSensor(hass, entry))
         sensors.append(CreditSensor(hass, entry))
 
@@ -103,6 +106,7 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         entry: ConfigEntry,
         drink: str,
         price: float,
+        icon: str | None = None,
     ) -> None:
         self._hass = hass
         self._entry = entry
@@ -118,6 +122,7 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         self.entity_id = f"sensor.{user_slug}_{slugify(drink)}_count"
         self._attr_native_value = 0
         self._attr_native_unit_of_measurement = ""
+        self._attr_icon = icon
 
     async def async_added_to_hass(self) -> None:
         last_state = await self.async_get_last_state()
