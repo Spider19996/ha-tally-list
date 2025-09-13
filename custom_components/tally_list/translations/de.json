@@ -56,7 +56,7 @@
         }
       },
       "edit_price": {
-        "title": "Preis bearbeiten",
+        "title": "Getränk bearbeiten",
         "data": {
           "drink": "Getränk",
           "price": "Preis",
@@ -206,7 +206,7 @@
         }
       },
       "edit_price": {
-        "title": "Preis bearbeiten",
+        "title": "Getränk bearbeiten",
         "data": {
           "drink": "Getränk",
           "price": "Preis",
