@@ -8,7 +8,7 @@ Diese benutzerdefinierte Integration für [Home Assistant](https://www.home-assi
 
 - Automatischer Import von Personen mit Benutzerkonten.
 - Gemeinsame Getränkeliste mit Namen und Preis für jede Person.
-- Sensoren für Getränkezählungen, Getränkepreise, einen Freibetrag und den Gesamtbetrag pro Person.
+- Sensoren für Getränkezählungen, Getränkepreise, einen Freibetrag, ein persönliches Guthaben und den Gesamtbetrag pro Person.
 - Button-Entität zum Zurücksetzen aller Zähler einer Person; nur Nutzer mit Override-Rechten („Tally Admins") dürfen sie verwenden.
 - Konfigurierbares Währungssymbol (Standard: €).
 - Dienste zum Hinzufügen, Entfernen, Anpassen, Zurücksetzen, Exportieren von Zählern und zur Verwaltung persönlicher PINs (Tally-Admins können PINs für andere Nutzer setzen).
@@ -38,14 +38,21 @@ Beim ersten Einrichten wirst du nach verfügbaren Getränken gefragt. Alle Perso
 - `tally_list.reset_counters`: setzt alle Zähler für eine Person oder – ohne Angabe einer Person – für alle zurück.
 - `tally_list.export_csv`: exportiert alle `_amount_due`-Sensoren als CSV-Dateien (`daily`, `weekly`, `monthly` oder `manual`), gespeichert unter `/config/tally_list/<type>/`.
 - `tally_list.set_pin`: setzt oder entfernt eine persönliche vierstellige PIN aus Ziffern für öffentliche Geräte (Admins können PINs für andere Nutzer setzen).
+- `tally_list.add_credit`: erhöht das Guthaben einer Person.
+- `tally_list.remove_credit`: verringert das Guthaben einer Person.
+- `tally_list.set_credit`: setzt das Guthaben einer Person auf einen exakten Betrag.
 
 ### Reset-Schalter
 
 Jede Person erhält eine Entität `button.<person>_reset_tally`, um ihre Zähler zurückzusetzen. Nur Tally Admins dürfen sie betätigen.
 
+### Guthaben
+
+Jede Person verfügt außerdem über eine Entität `sensor.<person>_credit`, die ihr verfügbares Guthaben speichert. Positives Guthaben verringert den `*_amount_due`-Sensor, negatives erhöht ihn. Das Guthaben wird über die Dienste `tally_list.add_credit`, `tally_list.remove_credit` und `tally_list.set_credit` angepasst.
+
 ## Preisliste und Sensoren
 
-Alle Getränke werden in einer gemeinsamen Preisliste gespeichert. Ein spezieller Benutzer namens `Preisliste` (englisch `Price list`) stellt für jedes Getränk einen Preissensor sowie einen Sensor für den Freibetrag bereit, während normale Personen nur Zähl- und Gesamtbetragssensoren erhalten. Der Freibetrag wird vom Gesamtbetrag jeder Person abgezogen. Getränke, Preise und Freibetrag können jederzeit über die Integrationsoptionen bearbeitet werden.
+Alle Getränke werden in einer gemeinsamen Preisliste gespeichert. Ein spezieller Benutzer namens `Preisliste` (englisch `Price list`) stellt für jedes Getränk einen Preissensor sowie einen Sensor für den Freibetrag bereit, während normale Personen Zähl-, Guthaben- und Gesamtbetragssensoren erhalten. Freibetrag und persönliches Guthaben werden vom Gesamtbetrag jeder Person abgezogen. Getränke, Preise und Freibetrag können jederzeit über die Integrationsoptionen bearbeitet werden.
 Die Sensoren des Preisliste-Benutzers verwenden immer englische Entitäts-IDs mit dem Präfix `price_list`, z. B. `sensor.price_list_free_amount` oder `sensor.price_list_wasser_price`.
 
 Jede Änderung an der Preisliste wird in jährlichen CSV-Dateien unter `/config/tally_list/price_list/` protokolliert. Ein Feed-Sensor `sensor.price_list_feed` zeigt den letzten Eintrag an und stellt die jüngsten Änderungen in seinen Attributen bereit.
