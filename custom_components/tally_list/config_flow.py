@@ -46,7 +46,7 @@ def _write_price_list_log(
 ) -> None:
     tz = dt_util.get_time_zone("Europe/Berlin")
     ts = dt_util.now(tz).replace(second=0, microsecond=0)
-    base_dir = hass.config.path("backup", "tally_list", "price_list")
+    base_dir = hass.config.path("tally_list", "price_list")
     os.makedirs(base_dir, exist_ok=True)
     path = os.path.join(base_dir, f"price_list_{ts.year}.csv")
     rows: list[list[str]] = []

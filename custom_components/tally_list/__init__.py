@@ -137,7 +137,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def _write_free_drink_log(name: str, drink: str, count: int, comment: str) -> None:
         tz = dt_util.get_time_zone("Europe/Berlin")
         ts = dt_util.now(tz).replace(second=0, microsecond=0)
-        base_dir = hass.config.path("backup", "tally_list", "free_drinks")
+        base_dir = hass.config.path("tally_list", "free_drinks")
         os.makedirs(base_dir, exist_ok=True)
         year = ts.strftime("%Y")
         path = os.path.join(base_dir, f"free_drinks_{year}.csv")
@@ -477,7 +477,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if user is None or user == hass.data[DOMAIN].get(CONF_CASH_USER_NAME):
             hass.data[DOMAIN]["free_drink_counts"] = {}
             hass.data[DOMAIN]["free_drinks_ledger"] = 0.0
-            base_dir = hass.config.path("backup", "tally_list", "free_drinks")
+            base_dir = hass.config.path("tally_list", "free_drinks")
             if os.path.isdir(base_dir):
                 for name in os.listdir(base_dir):
                     if not re.match(r"free_drinks_\d{4}\.csv$", name):
@@ -506,7 +506,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         currency = hass.data.get(DOMAIN, {}).get(CONF_CURRENCY, "€")
         now = dt_now()
-        base_dir = hass.config.path("backup", "tally_list")
+        base_dir = hass.config.path("tally_list")
 
         def _write_csv(path: str) -> None:
             os.makedirs(os.path.dirname(path), exist_ok=True)

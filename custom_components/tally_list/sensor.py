@@ -324,7 +324,7 @@ class FreeDrinkFeedSensor(SensorEntity):
         )
         self.entity_id = "sensor.free_drink_feed"
         self._attr_unique_id = f"{entry.entry_id}_free_drink_feed"
-        self._base_dir = hass.config.path("backup", "tally_list", "free_drinks")
+        self._base_dir = hass.config.path("tally_list", "free_drinks")
         self._entries: list[dict[str, str]] = []
         self._attr_native_value = "none"
         self._attr_icon = "mdi:clipboard-list"
@@ -408,7 +408,7 @@ class PriceListFeedSensor(SensorEntity):
         self._attr_name = _local_suffix(hass, "Price list feed", "Preisliste Feed")
         self.entity_id = "sensor.price_list_feed"
         self._attr_unique_id = f"{entry.entry_id}_price_list_feed"
-        self._base_dir = hass.config.path("backup", "tally_list", "price_list")
+        self._base_dir = hass.config.path("tally_list", "price_list")
         self._entries: list[dict[str, str]] = []
         self._attr_native_value = "none"
         self._attr_icon = "mdi:clipboard-edit"
