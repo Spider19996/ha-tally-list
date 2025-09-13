@@ -133,6 +133,7 @@ DrinkPriceSensor = sensor_module.DrinkPriceSensor
 FreeAmountSensor = sensor_module.FreeAmountSensor
 CreditSensor = sensor_module.CreditSensor
 FreeDrinkFeedSensor = sensor_module.FreeDrinkFeedSensor
+PriceListFeedSensor = sensor_module.PriceListFeedSensor
 ResetButton = button_module.ResetButton
 
 
@@ -256,6 +257,13 @@ def test_free_drink_feed_sensor_icon():
     hass = DummyHass({DOMAIN: {}})
     sensor = FreeDrinkFeedSensor(hass, entry, 2024)
     assert sensor.icon == "mdi:clipboard-list"
+
+
+def test_price_list_feed_sensor_icon():
+    entry = DummyConfigEntry("id6", "Preisliste")
+    hass = DummyHass({DOMAIN: {}})
+    sensor = PriceListFeedSensor(hass, entry)
+    assert sensor.icon == "mdi:clipboard-edit"
 
 
 def test_reset_button_icon():
