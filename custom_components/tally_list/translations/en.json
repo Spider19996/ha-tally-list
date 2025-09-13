@@ -453,6 +453,48 @@
           "description": "New 4-digit PIN (leave empty to clear)"
         }
       }
+    },
+    "add_credit": {
+      "name": "Add credit",
+      "description": "Increase credit for a person",
+      "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Person name"
+        },
+        "amount": {
+          "name": "Amount",
+          "description": "Amount to add"
+        }
+      }
+    },
+    "remove_credit": {
+      "name": "Remove credit",
+      "description": "Decrease credit for a person",
+      "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Person name"
+        },
+        "amount": {
+          "name": "Amount",
+          "description": "Amount to remove"
+        }
+      }
+    },
+    "set_credit": {
+      "name": "Set credit",
+      "description": "Set credit for a person to an exact amount",
+      "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Person name"
+        },
+        "amount": {
+          "name": "Amount",
+          "description": "New credit amount"
+        }
+      }
     }
   }
 }

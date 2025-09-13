@@ -51,6 +51,7 @@ async def async_setup_entry(
         for drink_name, price in drinks.items():
             sensors.append(TallyListSensor(hass, entry, drink_name, price))
         sensors.append(TotalAmountSensor(hass, entry))
+        sensors.append(CreditSensor(hass, entry))
 
     data.setdefault("sensors", []).extend(sensors)
     async_add_entities(sensors)
@@ -242,7 +243,42 @@ class TotalAmountSensor(CurrencySensor, RestoreEntity):
             total -= free_amount
             if total < 0:
                 total = 0.0
+        credit = data.get("credit", 0.0)
+        total -= credit
         return round(total, 2)
+
+
+class CreditSensor(CurrencySensor, RestoreEntity):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        super().__init__(hass)
+        self._entry = entry
+        self._attr_name = (
+            f"{entry.data[CONF_USER]} "
+            f"{_local_suffix(hass, 'Credit', 'Guthaben')}"
+        )
+        self._attr_unique_id = f"{entry.entry_id}_credit"
+        user_slug = get_user_slug(hass, entry.data[CONF_USER])
+        self.entity_id = f"sensor.{user_slug}_credit"
+        self._attr_native_value = 0.0
+        self._attr_suggested_display_precision = 2
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if last_state and last_state.state not in (None, "unknown", "unavailable"):
+            try:
+                restored = float(last_state.state)
+            except ValueError:
+                restored = 0.0
+            data = self._hass.data[DOMAIN][self._entry.entry_id]
+            data["credit"] = restored
+            self._attr_native_value = restored
+        await self.async_update_state()
+
+    @property
+    def native_value(self):
+        data = self._hass.data[DOMAIN][self._entry.entry_id]
+        return round(data.get("credit", 0.0), 2)
 
 
 class FreeDrinkFeedSensor(SensorEntity):

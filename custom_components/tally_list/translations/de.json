@@ -453,6 +453,48 @@
           "description": "Neue vierstellige PIN (leer lassen zum Löschen)"
         }
       }
+    },
+    "add_credit": {
+      "name": "Guthaben hinzufügen",
+      "description": "Guthaben für eine Person erhöhen",
+      "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Personenname"
+        },
+        "amount": {
+          "name": "Betrag",
+          "description": "Hinzugefügter Betrag"
+        }
+      }
+    },
+    "remove_credit": {
+      "name": "Guthaben verringern",
+      "description": "Guthaben für eine Person verringern",
+      "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Personenname"
+        },
+        "amount": {
+          "name": "Betrag",
+          "description": "Abzuziehender Betrag"
+        }
+      }
+    },
+    "set_credit": {
+      "name": "Guthaben setzen",
+      "description": "Guthaben einer Person auf einen genauen Betrag setzen",
+      "fields": {
+        "user": {
+          "name": "Person",
+          "description": "Personenname"
+        },
+        "amount": {
+          "name": "Betrag",
+          "description": "Neuer Guthabenbetrag"
+        }
+      }
     }
   }
 }

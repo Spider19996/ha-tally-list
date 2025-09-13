@@ -29,6 +29,9 @@ from .const import (
     SERVICE_RESET_COUNTERS,
     SERVICE_EXPORT_CSV,
     SERVICE_SET_PIN,
+    SERVICE_ADD_CREDIT,
+    SERVICE_REMOVE_CREDIT,
+    SERVICE_SET_CREDIT,
     ATTR_USER,
     ATTR_DRINK,
     CONF_USER,
@@ -45,6 +48,7 @@ from .const import (
     ATTR_FREE_DRINK,
     ATTR_COMMENT,
     ATTR_PIN,
+    ATTR_AMOUNT,
     get_cash_user_name,
 )
 
@@ -366,6 +370,51 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     await sensor.async_update_state()
                 break
 
+    async def add_credit_service(call):
+        await _verify_permissions(call, None)
+        user = call.data[ATTR_USER]
+        amount = float(call.data.get(ATTR_AMOUNT, 0.0))
+        entry = _find_user_entry(user)
+        if entry is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="user_unknown"
+            )
+        credit = entry.setdefault("credit", 0.0) + amount
+        if credit < 0:
+            credit = 0.0
+        entry["credit"] = credit
+        for sensor in entry.get("sensors", []):
+            await sensor.async_update_state()
+
+    async def remove_credit_service(call):
+        await _verify_permissions(call, None)
+        user = call.data[ATTR_USER]
+        amount = float(call.data.get(ATTR_AMOUNT, 0.0))
+        entry = _find_user_entry(user)
+        if entry is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="user_unknown"
+            )
+        credit = entry.setdefault("credit", 0.0) - amount
+        if credit < 0:
+            credit = 0.0
+        entry["credit"] = credit
+        for sensor in entry.get("sensors", []):
+            await sensor.async_update_state()
+
+    async def set_credit_service(call):
+        await _verify_permissions(call, None)
+        user = call.data[ATTR_USER]
+        amount = max(0.0, float(call.data.get(ATTR_AMOUNT, 0.0)))
+        entry = _find_user_entry(user)
+        if entry is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="user_unknown"
+            )
+        entry["credit"] = amount
+        for sensor in entry.get("sensors", []):
+            await sensor.async_update_state()
+
     async def reset_counters_service(call):
         user = call.data.get(ATTR_USER)
         await _verify_permissions(call, user)
@@ -375,6 +424,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             if user is None or data["entry"].data.get("user") == user:
                 data["counts"] = {drink: 0 for drink in drinks}
+                data["credit"] = 0.0
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
 
@@ -532,6 +582,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         set_pin_service,
     )
 
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADD_CREDIT,
+        add_credit_service,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REMOVE_CREDIT,
+        remove_credit_service,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_CREDIT,
+        set_credit_service,
+    )
+
     await async_register_ws(hass)
 
     return True
@@ -548,7 +616,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_CURRENCY: "€",
         },
     )
-    hass.data[DOMAIN].setdefault(entry.entry_id, {"entry": entry, "counts": {}})
+    hass.data[DOMAIN].setdefault(entry.entry_id, {"entry": entry, "counts": {}, "credit": 0.0})
     cash_name = get_cash_user_name(hass.config.language)
     hass.data[DOMAIN][CONF_CASH_USER_NAME] = cash_name
     if entry.data.get(CONF_CASH_USER_NAME) != cash_name:
