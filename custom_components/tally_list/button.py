@@ -34,6 +34,12 @@ class ResetButton(ButtonEntity):
         self._attr_unique_id = f"{entry.entry_id}_reset_tally"
         user_slug = get_user_slug(hass, user)
         self.entity_id = f"button.{user_slug}_reset_tally"
+        self._attr_icon = "mdi:refresh"
+
+    @property
+    def icon(self) -> str:
+        """Return the icon for the reset button."""
+        return "mdi:refresh"
 
     async def async_press(self) -> None:
         user_id = self._context.user_id if self._context else None
