@@ -117,8 +117,7 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         user_slug = get_user_slug(hass, entry.data[CONF_USER])
         self.entity_id = f"sensor.{user_slug}_{slugify(drink)}_count"
         self._attr_native_value = 0
-        self._attr_native_unit_of_measurement = ""
-        self._attr_state_class = "measurement"
+        self._attr_native_unit_of_measurement = None
 
     async def async_added_to_hass(self) -> None:
         last_state = await self.async_get_last_state()
@@ -139,7 +138,7 @@ class TallyListSensor(RestoreEntity, SensorEntity):
         await self.async_update_state()
 
     async def async_update_state(self):
-        self._attr_native_unit_of_measurement = ""
+        self._attr_native_unit_of_measurement = None
         self.async_write_ha_state()
 
     @property
