@@ -7,13 +7,23 @@ import types
 ha = types.ModuleType("homeassistant")
 components = types.ModuleType("homeassistant.components")
 sensor_comp = types.ModuleType("homeassistant.components.sensor")
+button_comp = types.ModuleType("homeassistant.components.button")
 
 
 class SensorEntity:  # pragma: no cover - simple stub
-    pass
+    @property
+    def icon(self):
+        return getattr(self, "_attr_icon", None)
+
+
+class ButtonEntity:  # pragma: no cover - simple stub
+    @property
+    def icon(self):
+        return getattr(self, "_attr_icon", None)
 
 
 sensor_comp.SensorEntity = SensorEntity
+button_comp.ButtonEntity = ButtonEntity
 
 helpers = types.ModuleType("homeassistant.helpers")
 helpers.__path__ = []  # mark as package
@@ -68,11 +78,21 @@ def slugify(value):  # pragma: no cover - simple stub
 
 
 util_mod.slugify = slugify
+exceptions_mod = types.ModuleType("homeassistant.exceptions")
+
+
+class Unauthorized(Exception):  # pragma: no cover - simple stub
+    pass
+
+
+exceptions_mod.Unauthorized = Unauthorized
+
 sys.modules.update(
     {
         "homeassistant": ha,
         "homeassistant.components": components,
         "homeassistant.components.sensor": sensor_comp,
+        "homeassistant.components.button": button_comp,
         "homeassistant.helpers": helpers,
         "homeassistant.helpers.event": event_mod,
         "homeassistant.helpers.restore_state": restore_mod,
@@ -80,6 +100,7 @@ sys.modules.update(
         "homeassistant.config_entries": config_entries_mod,
         "homeassistant.core": core_mod,
         "homeassistant.util": util_mod,
+        "homeassistant.exceptions": exceptions_mod,
     }
 )
 
@@ -101,6 +122,7 @@ from importlib import import_module  # noqa: E402
 
 const = import_module("tally_list.const")  # noqa: E402
 sensor_module = import_module("tally_list.sensor")  # noqa: E402
+button_module = import_module("tally_list.button")  # noqa: E402
 
 DOMAIN = const.DOMAIN
 CONF_USER = const.CONF_USER
@@ -108,12 +130,18 @@ CONF_CASH_USER_NAME = const.CONF_CASH_USER_NAME
 TotalAmountSensor = sensor_module.TotalAmountSensor
 TallyListSensor = sensor_module.TallyListSensor
 DrinkPriceSensor = sensor_module.DrinkPriceSensor
+FreeAmountSensor = sensor_module.FreeAmountSensor
+CreditSensor = sensor_module.CreditSensor
+FreeDrinkFeedSensor = sensor_module.FreeDrinkFeedSensor
+ResetButton = button_module.ResetButton
 
 
 class DummyHass:
     def __init__(self, data, language="en"):
         self.data = data
-        self.config = types.SimpleNamespace(language=language)
+        self.config = types.SimpleNamespace(
+            language=language, path=lambda *parts: "/".join(parts)
+        )
 
 
 class DummyConfigEntry:
@@ -192,12 +220,47 @@ def test_tally_list_sensor_icon():
         {DOMAIN: {"drinks": {"Beer": 2.0}, "drink_icons": {"Beer": "mdi:beer"}, entry.entry_id: {"counts": {}}}}
     )
     sensor = TallyListSensor(hass, entry, "Beer", 2.0, "mdi:beer")
-    assert sensor._attr_icon == "mdi:beer"
+    assert sensor.icon == "mdi:beer"
 
 
 def test_drink_price_sensor_icon():
     entry = DummyConfigEntry("mno", "Preisliste")
     hass = DummyHass({DOMAIN: {"drinks": {"Beer": 2.0}}})
     sensor = DrinkPriceSensor(hass, entry, "Beer", 2.0, "mdi:beer")
-    assert sensor._attr_icon == "mdi:beer"
+    assert sensor.icon == "mdi:beer"
+
+
+def test_free_amount_sensor_icon():
+    entry = DummyConfigEntry("id1", "Preisliste")
+    hass = DummyHass({DOMAIN: {}})
+    sensor = FreeAmountSensor(hass, entry)
+    assert sensor.icon == "mdi:star"
+
+
+def test_total_amount_sensor_icon():
+    entry = DummyConfigEntry("id2", "Alice")
+    hass = DummyHass({DOMAIN: {}})
+    sensor = TotalAmountSensor(hass, entry)
+    assert sensor.icon == "mdi:cash"
+
+
+def test_credit_sensor_icon():
+    entry = DummyConfigEntry("id3", "Alice")
+    hass = DummyHass({DOMAIN: {}})
+    sensor = CreditSensor(hass, entry)
+    assert sensor.icon == "mdi:bank"
+
+
+def test_free_drink_feed_sensor_icon():
+    entry = DummyConfigEntry("id4", "Cash")
+    hass = DummyHass({DOMAIN: {}})
+    sensor = FreeDrinkFeedSensor(hass, entry, 2024)
+    assert sensor.icon == "mdi:clipboard-list"
+
+
+def test_reset_button_icon():
+    entry = DummyConfigEntry("id5", "Alice")
+    hass = DummyHass({DOMAIN: {}})
+    button = ResetButton(hass, entry)
+    assert button.icon == "mdi:refresh"
 
