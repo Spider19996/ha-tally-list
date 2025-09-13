@@ -214,5 +214,4 @@ set_credit:
       required: true
       selector:
         number:
-          min: 0
           step: 0.01

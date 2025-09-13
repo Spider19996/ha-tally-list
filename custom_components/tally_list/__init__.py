@@ -379,10 +379,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="user_unknown"
             )
-        credit = entry.setdefault("credit", 0.0) + amount
-        if credit < 0:
-            credit = 0.0
-        entry["credit"] = credit
+        entry["credit"] = entry.setdefault("credit", 0.0) + amount
         for sensor in entry.get("sensors", []):
             await sensor.async_update_state()
 
@@ -395,17 +392,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="user_unknown"
             )
-        credit = entry.setdefault("credit", 0.0) - amount
-        if credit < 0:
-            credit = 0.0
-        entry["credit"] = credit
+        entry["credit"] = entry.setdefault("credit", 0.0) - amount
         for sensor in entry.get("sensors", []):
             await sensor.async_update_state()
 
     async def set_credit_service(call):
         await _verify_permissions(call, None)
         user = call.data[ATTR_USER]
-        amount = max(0.0, float(call.data.get(ATTR_AMOUNT, 0.0)))
+        amount = float(call.data.get(ATTR_AMOUNT, 0.0))
         entry = _find_user_entry(user)
         if entry is None:
             raise HomeAssistantError(
