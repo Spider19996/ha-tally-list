@@ -36,7 +36,7 @@ Beim ersten Einrichten wirst du nach verfügbaren Getränken gefragt. Alle Perso
 - `tally_list.remove_drink`: verringert die Anzahl eines Getränks für eine Person (nie unter null; Anzahl kann angegeben werden).
 - `tally_list.adjust_count`: setzt die Anzahl eines Getränks auf einen bestimmten Wert.
 - `tally_list.reset_counters`: setzt alle Zähler für eine Person oder – ohne Angabe einer Person – für alle zurück.
-- `tally_list.export_csv`: exportiert alle `_amount_due`-Sensoren als CSV-Dateien (`daily`, `weekly`, `monthly` oder `manual`), gespeichert unter `/config/backup/tally_list/<type>/`.
+- `tally_list.export_csv`: exportiert alle `_amount_due`-Sensoren als CSV-Dateien (`daily`, `weekly`, `monthly` oder `manual`), gespeichert unter `/config/tally_list/<type>/`.
 - `tally_list.set_pin`: setzt oder entfernt eine persönliche vierstellige PIN aus Ziffern für öffentliche Geräte (Admins können PINs für andere Nutzer setzen).
 
 ### Reset-Schalter
@@ -48,7 +48,7 @@ Jede Person erhält eine Entität `button.<person>_reset_tally`, um ihre Zähler
 Alle Getränke werden in einer gemeinsamen Preisliste gespeichert. Ein spezieller Benutzer namens `Preisliste` (englisch `Price list`) stellt für jedes Getränk einen Preissensor sowie einen Sensor für den Freibetrag bereit, während normale Personen nur Zähl- und Gesamtbetragssensoren erhalten. Der Freibetrag wird vom Gesamtbetrag jeder Person abgezogen. Getränke, Preise und Freibetrag können jederzeit über die Integrationsoptionen bearbeitet werden.
 Die Sensoren des Preisliste-Benutzers verwenden immer englische Entitäts-IDs mit dem Präfix `price_list`, z. B. `sensor.price_list_free_amount` oder `sensor.price_list_wasser_price`.
 
-Jede Änderung an der Preisliste wird in jährlichen CSV-Dateien unter `/config/backup/tally_list/price_list/` protokolliert. Ein Feed-Sensor `sensor.price_list_feed` zeigt den letzten Eintrag an und stellt die jüngsten Änderungen in seinen Attributen bereit.
+Jede Änderung an der Preisliste wird in jährlichen CSV-Dateien unter `/config/tally_list/price_list/` protokolliert. Ein Feed-Sensor `sensor.price_list_feed` zeigt den letzten Eintrag an und stellt die jüngsten Änderungen in seinen Attributen bereit.
 
 ## Freigetränke (Optional)
 
@@ -58,7 +58,7 @@ gratis gebuchten Getränke und stellt die gleichen Zähl- und Betragssensoren wi
 normale Nutzer bereit, z. B. `sensor.free_drinks_bier_count` und
 `sensor.free_drinks_amount_due`. Jeder Freigetränke-Eintrag wird in einer
 jährlichen CSV-Datei `free_drinks_<Jahr>.csv` unter
-`/config/backup/tally_list/free_drinks/` protokolliert. Ein Feed-Sensor
+`/config/tally_list/free_drinks/` protokolliert. Ein Feed-Sensor
 `sensor.free_drink_feed` zeigt den letzten Eintrag an und listet die jüngsten
 Freigetränke in seinen Attributen auf.
 
