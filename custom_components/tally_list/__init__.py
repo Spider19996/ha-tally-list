@@ -61,10 +61,9 @@ PINS_STORAGE_VERSION = 1
 PINS_STORAGE_KEY = f"{DOMAIN}_pins"
 
 
-async def _async_update_feed_sensor(hass: HomeAssistant, year: int) -> None:
-    """Create or update the free drink feed sensor for the given year."""
-    feed_sensors = hass.data[DOMAIN].setdefault("free_drink_feed_sensors", {})
-    sensor = feed_sensors.get(year)
+async def _async_update_feed_sensor(hass: HomeAssistant) -> None:
+    """Create or update the free drink feed sensor."""
+    sensor = hass.data[DOMAIN].get("free_drink_feed_sensor")
     if sensor is not None:
         await sensor.async_update_state()
         return
@@ -76,8 +75,8 @@ async def _async_update_feed_sensor(hass: HomeAssistant, year: int) -> None:
         else None
     )
     if add_entities is not None and entry is not None:
-        sensor = FreeDrinkFeedSensor(hass, entry, year)
-        feed_sensors[year] = sensor
+        sensor = FreeDrinkFeedSensor(hass, entry)
+        hass.data[DOMAIN]["free_drink_feed_sensor"] = sensor
         add_entities([sensor])
 
 
@@ -140,7 +139,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ts = dt_util.now(tz).replace(second=0, microsecond=0)
         base_dir = hass.config.path("backup", "tally_list", "free_drinks")
         os.makedirs(base_dir, exist_ok=True)
-        path = os.path.join(base_dir, f"free_drinks_{ts.year}.csv")
+        year = ts.strftime("%Y")
+        path = os.path.join(base_dir, f"free_drinks_{year}.csv")
         key_time = ts.strftime("%Y-%m-%dT%H:%M")
         comment_clean = re.sub(r"[\n\r\t]", " ", comment).strip()[:200]
         rows: list[list[str]] = []
@@ -317,12 +317,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.data[DOMAIN]["free_drinks_ledger"] = hass.data[DOMAIN].get(
                 "free_drinks_ledger", 0.0
             ) + price * count
-            tz = dt_util.get_time_zone("Europe/Berlin")
-            year = dt_util.now(tz).year
             await hass.async_add_executor_job(
                 _write_free_drink_log, user, drink, count, comment
             )
-            await _async_update_feed_sensor(hass, year)
+            await _async_update_feed_sensor(hass)
             hass.bus.async_fire(
                 "tally_list_free_drink_created",
                 {"user": user, "drink": drink, "count": count, "comment": comment},
@@ -373,12 +371,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "free_drinks_ledger", 0.0
             ) - price * count
             comment = comment.strip()
-            tz = dt_util.get_time_zone("Europe/Berlin")
-            year = dt_util.now(tz).year
             await hass.async_add_executor_job(
                 _write_free_drink_log, user, drink, -count, comment
             )
-            await _async_update_feed_sensor(hass, year)
+            await _async_update_feed_sensor(hass)
             hass.bus.async_fire(
                 "tally_list_free_drink_reversed",
                 {"user": user, "drink": drink, "count": count, "comment": comment},
@@ -478,6 +474,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 data["credit"] = 0.0
                 for sensor in data.get("sensors", []):
                     await sensor.async_update_state()
+        if user is None or user == hass.data[DOMAIN].get(CONF_CASH_USER_NAME):
+            hass.data[DOMAIN]["free_drink_counts"] = {}
+            hass.data[DOMAIN]["free_drinks_ledger"] = 0.0
+            base_dir = hass.config.path("backup", "tally_list", "free_drinks")
+            if os.path.isdir(base_dir):
+                for name in os.listdir(base_dir):
+                    if not re.match(r"free_drinks_\d{4}\.csv$", name):
+                        continue
+                    path = os.path.join(base_dir, name)
+                    try:
+                        await hass.async_add_executor_job(os.remove, path)
+                    except FileNotFoundError:
+                        pass
+            await _async_update_feed_sensor(hass)
         await _log_price_change(
             hass,
             call.context.user_id,
@@ -860,7 +870,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             unsub = hass.data[DOMAIN].pop("feed_unsub", None)
             if unsub is not None:
                 unsub()
-            hass.data[DOMAIN].pop("free_drink_feed_sensors", None)
+            hass.data[DOMAIN].pop("free_drink_feed_sensor", None)
             hass.data[DOMAIN].pop("feed_add_entities", None)
             hass.data[DOMAIN].pop("feed_entry_id", None)
         if hass.data[DOMAIN].get("price_feed_entry_id") == entry.entry_id:

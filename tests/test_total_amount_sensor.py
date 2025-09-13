@@ -255,7 +255,7 @@ def test_credit_sensor_icon():
 def test_free_drink_feed_sensor_icon():
     entry = DummyConfigEntry("id4", "Cash")
     hass = DummyHass({DOMAIN: {}})
-    sensor = FreeDrinkFeedSensor(hass, entry, 2024)
+    sensor = FreeDrinkFeedSensor(hass, entry)
     assert sensor.icon == "mdi:clipboard-list"
 
 

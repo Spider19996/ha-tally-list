@@ -56,10 +56,10 @@ If enabled in the integration options, complimentary drinks are tracked separate
 A dedicated user (default name `Free Drinks`, configurable) records all free
 drinks and exposes the same count and amount sensors as regular users, for
 example `sensor.free_drinks_beer_count` and `sensor.free_drinks_amount_due`.
-Each free drink entry is written to a CSV log under
-`/config/backup/tally_list/free_drinks/`. For every year a feed sensor such as
-`sensor.free_drink_feed_2024` is created that shows the latest log entry and
-lists recent free drinks in its attributes.
+Each free drink entry is written to yearly CSV files `free_drinks_<year>.csv`
+under `/config/backup/tally_list/free_drinks/`. A feed sensor
+`sensor.free_drink_feed` shows the latest log entry and lists recent free drinks
+in its attributes.
 
 You can activate or deactivate the feature and change the free drinks user name
 from the integration options.
