@@ -8,7 +8,7 @@ This custom integration for [Home Assistant](https://www.home-assistant.io/) is 
 
 - Automatic import of persons with user accounts.
 - Shared drink list with name and price for every person.
-- Sensor entities for drink counts, drink prices, a free amount, and the total amount due per person.
+- Sensor entities for drink counts, drink prices, a free amount, a personal credit balance, and the total amount due per person.
 - Button entity to reset a person's counters; only users with override permissions ("Tally Admins") can use it.
 - Configurable currency symbol (defaults to €).
 - Services to add, remove, adjust, reset and export tallies, and manage personal PINs (Tally Admins can set PINs for other users).
@@ -38,14 +38,21 @@ At initial setup you will be asked to enter available drinks. All persons with a
 - `tally_list.reset_counters`: reset all counters for a person or for everyone if no user is specified.
 - `tally_list.export_csv`: export all `_amount_due` sensors to CSV files (`daily`, `weekly`, `monthly`, or `manual`) saved under `/config/tally_list/<type>/`.
 - `tally_list.set_pin`: set or clear a personal 4-digit numeric PIN required for public devices (admins can set PINs for others).
+- `tally_list.add_credit`: increase credit for a person.
+- `tally_list.remove_credit`: decrease credit for a person.
+- `tally_list.set_credit`: set credit for a person to an exact amount.
 
 ### Reset Button
 
 Each person gets a `button.<person>_reset_tally` entity to reset all their counters. Only Tally Admins can press it.
 
+### Credit
+
+Every person also has a `sensor.<person>_credit` entity that stores their available credit. Positive credit reduces the `*_amount_due` sensor; negative credit increases it. Adjust credit through the `tally_list.add_credit`, `tally_list.remove_credit`, and `tally_list.set_credit` services.
+
 ## Price List and Sensors
 
-All drinks are stored in a single price list. A dedicated user named `Preisliste` (`Price list` in English) exposes one price sensor per drink as well as a free amount sensor, while regular persons only get count and total amount sensors. The free amount is subtracted from each person's total. You can edit drinks, prices and the free amount at any time from the integration options.
+All drinks are stored in a single price list. A dedicated user named `Preisliste` (`Price list` in English) exposes one price sensor per drink as well as a free amount sensor, while regular persons get count, credit and total amount sensors. The free amount and personal credit are subtracted from each person's total. You can edit drinks, prices and the free amount at any time from the integration options.
 Sensors for the price list user always use English entity IDs prefixed with `price_list`, for example `sensor.price_list_free_amount` or `sensor.price_list_wasser_price`.
 
 Every change to the price list is written to yearly CSV logs under `/config/tally_list/price_list/`. A feed sensor `sensor.price_list_feed` shows the latest entry and exposes recent changes in its attributes.
