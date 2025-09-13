@@ -102,6 +102,26 @@ async def async_setup_entry(
             hass, _periodic_update, timedelta(seconds=60)
         )
 
+    if (
+        user in PRICE_LIST_USERS
+        and "price_feed_add_entities" not in hass.data[DOMAIN]
+    ):
+        hass.data[DOMAIN]["price_feed_add_entities"] = async_add_entities
+        hass.data[DOMAIN]["price_feed_entry_id"] = entry.entry_id
+        price_sensor = PriceListFeedSensor(hass, entry)
+        async_add_entities([price_sensor])
+        data.setdefault("sensors", []).append(price_sensor)
+        hass.data[DOMAIN]["price_list_feed_sensor"] = price_sensor
+
+        async def _price_periodic_update(_now):
+            sensor = hass.data[DOMAIN].get("price_list_feed_sensor")
+            if sensor is not None:
+                await sensor.async_update_state()
+
+        hass.data[DOMAIN]["price_feed_unsub"] = async_track_time_interval(
+            hass, _price_periodic_update, timedelta(seconds=60)
+        )
+
 
 class TallyListSensor(RestoreEntity, SensorEntity):
     def __init__(
@@ -389,6 +409,91 @@ class FreeDrinkFeedSensor(SensorEntity):
             self._attr_native_value = entries[0]["time_local"]
         else:
             self._attr_native_value = "none"
+        self.async_write_ha_state()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, list[dict[str, str]]]:
+        return {"entries": self._entries}
+
+
+class PriceListFeedSensor(SensorEntity):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, max_entries: int = 20
+    ) -> None:
+        self._hass = hass
+        self._max_entries = max_entries
+        self._attr_should_poll = False
+        self._attr_name = _local_suffix(hass, "Price list feed", "Preisliste Feed")
+        self.entity_id = "sensor.price_list_feed"
+        self._attr_unique_id = f"{entry.entry_id}_price_list_feed"
+        self._base_dir = hass.config.path("backup", "tally_list", "price_list")
+        self._entries: list[dict[str, str]] = []
+        self._attr_native_value = "none"
+        self._attr_icon = "mdi:clipboard-edit"
+
+    @property
+    def icon(self) -> str:
+        """Return the icon for the price list feed sensor."""
+        return "mdi:clipboard-edit"
+
+    async def async_added_to_hass(self) -> None:
+        await self.async_update_state()
+
+    def _read_rows(self) -> list[list[str]]:
+        rows: list[list[str]] = []
+        if not os.path.isdir(self._base_dir):
+            return rows
+        for name in os.listdir(self._base_dir):
+            if not re.match(r"price_list_\d{4}\.csv$", name):
+                continue
+            path = os.path.join(self._base_dir, name)
+            with open(path, "r", encoding="utf-8", newline="") as csvfile:
+                reader = csv.reader(csvfile, delimiter=";")
+                try:
+                    next(reader)
+                except StopIteration:
+                    continue
+                rows.extend(list(reader))
+        return rows
+
+    async def async_update_state(self) -> None:
+        try:
+            rows = await self._hass.async_add_executor_job(self._read_rows)
+        except OSError as err:
+            _LOGGER.warning(
+                "Failed reading price list logs %s: %s", self._base_dir, err
+            )
+            return
+
+        entries: list[dict[str, str]] = []
+        for row in rows:
+            if len(row) != 4:
+                _LOGGER.warning("Skipping malformed price list row: %s", row)
+                continue
+            try:
+                dt = datetime.strptime(row[0], "%Y-%m-%dT%H:%M")
+                time_local = dt.strftime("%Y-%m-%d %H:%M")
+            except Exception:
+                _LOGGER.warning("Skipping price list row with bad time: %s", row)
+                continue
+            entries.append(
+                {
+                    "time_local": time_local,
+                    "user": row[1],
+                    "action": row[2],
+                    "details": row[3],
+                    "dt": dt,
+                }
+            )
+
+        entries.sort(key=lambda e: e["dt"], reverse=True)
+        entries = entries[: self._max_entries]
+        self._entries = [
+            {k: v for k, v in entry.items() if k != "dt"} for entry in entries
+        ]
+        self._attr_native_value = (
+            self._entries[0]["time_local"] if self._entries else "none"
+        )
         self.async_write_ha_state()
 
     @property
