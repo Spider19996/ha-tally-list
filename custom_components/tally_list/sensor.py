@@ -219,7 +219,6 @@ class FreeAmountSensor(CurrencySensor):
         self._attr_unique_id = f"{entry.entry_id}_free_amount"
         self.entity_id = "sensor.price_list_free_amount"
         self._attr_suggested_display_precision = 2
-        self._attr_icon = "mdi:star"
 
     @property
     def native_value(self):
@@ -239,7 +238,6 @@ class TotalAmountSensor(CurrencySensor, RestoreEntity):
         self.entity_id = f"sensor.{user_slug}_amount_due"
         self._attr_native_value = 0
         self._attr_suggested_display_precision = 2
-        self._attr_icon = "mdi:cash"
 
     @property
     def native_value(self):
@@ -274,7 +272,6 @@ class CreditSensor(CurrencySensor, RestoreEntity):
         self.entity_id = f"sensor.{user_slug}_credit"
         self._attr_native_value = 0.0
         self._attr_suggested_display_precision = 2
-        self._attr_icon = "mdi:bank"
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -313,7 +310,6 @@ class FreeDrinkFeedSensor(SensorEntity):
         )
         self._entries: list[dict[str, str]] = []
         self._attr_native_value = "none"
-        self._attr_icon = "mdi:clipboard-list"
 
     async def async_added_to_hass(self) -> None:
         await self.async_update_state()
