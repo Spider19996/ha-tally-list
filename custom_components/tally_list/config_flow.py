@@ -82,13 +82,21 @@ async def _async_update_price_feed_sensor(hass) -> None:
 
 async def _log_price_change(hass, user_id, action: str, details: str) -> None:
     auth = getattr(hass, "auth", None)
-    if user_id is None and auth is not None:
-        current = getattr(auth, "current_user", None)
-        if current is not None:
-            user_id = current.id
-    hass_user = (
-        await auth.async_get_user(user_id) if auth is not None and user_id else None
-    )
+    hass_user = None
+    if auth is not None:
+        if user_id:
+            try:
+                hass_user = await auth.async_get_user(user_id)
+            except Exception:  # pragma: no cover - auth lookup failed
+                hass_user = None
+        if hass_user is None:
+            try:
+                current = auth.current_user
+            except Exception:  # pragma: no cover - no request context
+                current = None
+            if current is not None:
+                hass_user = current
+                user_id = current.id
     name = get_person_name(hass, user_id) or (
         hass_user.name if hass_user else "Unknown"
     )
@@ -133,6 +141,21 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._enable_free_drinks: bool = False
         self._cash_user_name: str = get_cash_user_name(None)
         self._edit_drink: str | None = None
+
+    def _get_user_id(self) -> str | None:
+        """Return the active Home Assistant user ID for this flow."""
+        user_id = self.context.get("user_id")
+        if user_id is None:
+            auth = getattr(self.hass, "auth", None)
+            current = None
+            if auth is not None:
+                try:
+                    current = auth.current_user
+                except Exception:  # pragma: no cover - no request context
+                    current = None
+            if current is not None:
+                user_id = current.id
+        return user_id
 
     async def async_step_import(self, user_input=None):
         """Handle import of a config entry."""
@@ -373,7 +396,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._drink_icons[drink] = icon
             await _log_price_change(
                 self.hass,
-                self.context.get("user_id"),
+                self._get_user_id(),
                 "add_drink",
                 f"{drink}={price}",
             )
@@ -397,7 +420,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._drink_icons.pop(drink, None)
             await _log_price_change(
                 self.hass,
-                self.context.get("user_id"),
+                self._get_user_id(),
                 "remove_drink",
                 drink,
             )
@@ -425,7 +448,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._drink_icons[drink] = icon
                 await _log_price_change(
                     self.hass,
-                    self.context.get("user_id"),
+                    self._get_user_id(),
                     "edit_drink",
                     f"{drink}:{old}->{price}",
                 )
@@ -458,7 +481,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._free_amount = float(user_input[CONF_FREE_AMOUNT])
             await _log_price_change(
                 self.hass,
-                self.context.get("user_id"),
+                self._get_user_id(),
                 "free_amount",
                 f"{old}->{self._free_amount}",
             )
@@ -940,7 +963,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             self._drink_icons[drink] = icon
             await _log_price_change(
                 self.hass,
-                self.context.get("user_id"),
+                self._get_user_id(),
                 "add_drink",
                 f"{drink}={price}",
             )
@@ -965,7 +988,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             self._drink_icons.pop(drink, None)
             await _log_price_change(
                 self.hass,
-                self.context.get("user_id"),
+                self._get_user_id(),
                 "remove_drink",
                 drink,
             )
@@ -995,7 +1018,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 self._drink_icons[drink] = icon
                 await _log_price_change(
                     self.hass,
-                    self.context.get("user_id"),
+                    self._get_user_id(),
                     "edit_drink",
                     f"{drink}:{old}->{price}",
                 )
@@ -1030,7 +1053,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             self._free_amount = float(user_input[CONF_FREE_AMOUNT])
             await _log_price_change(
                 self.hass,
-                self.context.get("user_id"),
+                self._get_user_id(),
                 "free_amount",
                 f"{old}->{self._free_amount}",
             )
