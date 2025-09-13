@@ -168,3 +168,51 @@ set_pin:
       required: false
       selector:
         text:
+add_credit:
+  name: Add credit
+  description: Increase credit for a person
+  fields:
+    user:
+      description: Person name
+      required: true
+      selector:
+        text:
+    amount:
+      description: Amount to add
+      required: true
+      selector:
+        number:
+          min: 0
+          step: 0.01
+remove_credit:
+  name: Remove credit
+  description: Decrease credit for a person
+  fields:
+    user:
+      description: Person name
+      required: true
+      selector:
+        text:
+    amount:
+      description: Amount to remove
+      required: true
+      selector:
+        number:
+          min: 0
+          step: 0.01
+set_credit:
+  name: Set credit
+  description: Set credit for a person to an exact amount
+  fields:
+    user:
+      description: Person name
+      required: true
+      selector:
+        text:
+    amount:
+      description: New credit amount
+      required: true
+      selector:
+        number:
+          min: 0
+          step: 0.01

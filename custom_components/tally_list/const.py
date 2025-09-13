@@ -20,6 +20,7 @@ ATTR_DRINK = "drink"
 ATTR_FREE_DRINK = "free_drink"
 ATTR_COMMENT = "comment"
 ATTR_PIN = "pin"
+ATTR_AMOUNT = "amount"
 
 SERVICE_ADD_DRINK = "add_drink"
 SERVICE_REMOVE_DRINK = "remove_drink"
@@ -27,6 +28,9 @@ SERVICE_ADJUST_COUNT = "adjust_count"
 SERVICE_RESET_COUNTERS = "reset_counters"
 SERVICE_EXPORT_CSV = "export_csv"
 SERVICE_SET_PIN = "set_pin"
+SERVICE_ADD_CREDIT = "add_credit"
+SERVICE_REMOVE_CREDIT = "remove_credit"
+SERVICE_SET_CREDIT = "set_credit"
 
 # Dedicated user name that exposes drink prices
 PRICE_LIST_USER_DE = "Preisliste"
