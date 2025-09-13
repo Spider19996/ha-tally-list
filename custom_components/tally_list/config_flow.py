@@ -69,6 +69,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._user_selected: bool = False
         self._enable_free_drinks: bool = False
         self._cash_user_name: str = get_cash_user_name(None)
+        self._edit_drink: str | None = None
 
     async def async_step_import(self, user_input=None):
         """Handle import of a config entry."""
@@ -340,24 +341,33 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_edit_price(self, user_input=None):
         if user_input is not None:
-            drink = user_input[CONF_DRINK]
-            price = float(user_input[CONF_PRICE])
-            icon = user_input[CONF_ICON]
-            self._drinks[drink] = price
-            self._drink_icons[drink] = icon
-            if user_input.get("edit_more") and self._drinks:
-                return await self.async_step_edit_price()
-            return await self.async_step_menu()
+            if CONF_PRICE in user_input:
+                drink = self._edit_drink
+                price = float(user_input[CONF_PRICE])
+                icon = user_input[CONF_ICON]
+                self._drinks[drink] = price
+                self._drink_icons[drink] = icon
+                self._edit_drink = None
+                if user_input.get("edit_more") and self._drinks:
+                    return await self.async_step_edit_price()
+                return await self.async_step_menu()
+            self._edit_drink = user_input[CONF_DRINK]
+            schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_PRICE, default=self._drinks[self._edit_drink]
+                    ): vol.Coerce(float),
+                    vol.Required(
+                        CONF_ICON,
+                        default=self._drink_icons.get(self._edit_drink),
+                    ): IconSelector(),
+                    vol.Optional("edit_more", default=False): bool,
+                }
+            )
+            return self.async_show_form(step_id="edit_price", data_schema=schema)
         if not self._drinks:
             return await self.async_step_menu()
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
-                vol.Required(CONF_PRICE): vol.Coerce(float),
-                vol.Required(CONF_ICON): IconSelector(),
-                vol.Optional("edit_more", default=False): bool,
-            }
-        )
+        schema = vol.Schema({vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys()))})
         return self.async_show_form(step_id="edit_price", data_schema=schema)
 
     async def async_step_set_free_amount(self, user_input=None):
@@ -654,6 +664,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._currency: str = "€"
         self._enable_free_drinks: bool = False
         self._cash_user_name: str = get_cash_user_name(None)
+        self._edit_drink: str | None = None
 
     async def async_step_init(self, user_input=None):
         self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
@@ -874,26 +885,35 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_edit_price(self, user_input=None):
         if user_input is not None:
-            drink = user_input[CONF_DRINK]
-            price = float(user_input[CONF_PRICE])
-            icon = user_input[CONF_ICON]
-            self._drinks[drink] = price
-            self._drink_icons[drink] = icon
-            if user_input.get("edit_more") and self._drinks:
-                return await self.async_step_edit_price()
-            return await self.async_step_menu()
+            if CONF_PRICE in user_input:
+                drink = self._edit_drink
+                price = float(user_input[CONF_PRICE])
+                icon = user_input[CONF_ICON]
+                self._drinks[drink] = price
+                self._drink_icons[drink] = icon
+                self._edit_drink = None
+                if user_input.get("edit_more") and self._drinks:
+                    return await self.async_step_edit_price()
+                return await self.async_step_menu()
+            self._edit_drink = user_input[CONF_DRINK]
+            schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_PRICE, default=self._drinks[self._edit_drink]
+                    ): vol.Coerce(float),
+                    vol.Required(
+                        CONF_ICON,
+                        default=self._drink_icons.get(self._edit_drink),
+                    ): IconSelector(),
+                    vol.Optional("edit_more", default=False): bool,
+                }
+            )
+            return self.async_show_form(step_id="edit_price", data_schema=schema)
 
         if not self._drinks:
             return await self.async_step_menu()
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys())),
-                vol.Required(CONF_PRICE): vol.Coerce(float),
-                vol.Required(CONF_ICON): IconSelector(),
-                vol.Optional("edit_more", default=False): bool,
-            }
-        )
+        schema = vol.Schema({vol.Required(CONF_DRINK): vol.In(list(self._drinks.keys()))})
         return self.async_show_form(step_id="edit_price", data_schema=schema)
 
     async def async_step_set_free_amount(self, user_input=None):
