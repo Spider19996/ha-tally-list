@@ -56,7 +56,13 @@ def _write_price_list_log(
     if not rows:
         rows = [["Time", "User", "Action", "Details"]]
     key_time = ts.strftime("%Y-%m-%dT%H:%M")
-    rows.append([key_time, user, action, details])
+    if len(rows) > 1 and rows[-1][:3] == [key_time, user, action]:
+        existing = rows[-1][3]
+        prefix = f"{user}:"
+        new_detail = details[len(prefix):] if existing.startswith(prefix) and details.startswith(prefix) else details
+        rows[-1][3] = f"{existing},{new_detail}"
+    else:
+        rows.append([key_time, user, action, details])
     with open(path, "w", encoding="utf-8", newline="") as csvfile:
         writer = csv.writer(csvfile, delimiter=";", quoting=csv.QUOTE_MINIMAL)
         writer.writerows(rows)
