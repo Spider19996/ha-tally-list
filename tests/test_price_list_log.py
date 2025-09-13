@@ -9,8 +9,7 @@ import importlib.machinery
 from importlib import import_module
 
 
-def test_group_drinks_same_minute(tmp_path):
-    # Keep track of modules to restore later
+def _setup_env(tmp_path):
     original_modules = set(sys.modules.keys())
 
     # Stub minimal Home Assistant and related modules
@@ -85,25 +84,60 @@ def test_group_drinks_same_minute(tmp_path):
             self.config = DummyConfig(base_path)
 
     hass = DummyHass(tmp_path)
-    tz = ZoneInfo("Europe/Berlin")
-    ts = datetime(2025, 9, 14, 1, 9, 30, tzinfo=tz)
-    with patch("tally_list.config_flow.dt_util.now", return_value=ts):
-        _write_price_list_log(hass, "Robin Zimmermann", "book_free_drink", "Robin Zimmermann:Bier+1")
-        _write_price_list_log(hass, "Robin Zimmermann", "book_free_drink", "Robin Zimmermann:Limo+1")
-        _write_price_list_log(hass, "Robin Zimmermann", "book_free_drink", "Robin Zimmermann:Wasser+1")
-    path = Path(tmp_path, "tally_list", "price_list", "price_list_2025.csv")
-    with path.open(newline="", encoding="utf-8") as f:
-        rows = list(csv.reader(f, delimiter=";"))
-    assert rows[0] == ["Time", "User", "Action", "Details"]
-    assert rows[1] == [
-        "2025-09-14T01:09",
-        "Robin Zimmermann",
-        "book_free_drink",
-        "Robin Zimmermann:Bier+1,Limo+1,Wasser+1",
-    ]
-    assert len(rows) == 2
 
-    # Cleanup modules
-    sys.path.remove(str(component_path.parent))
-    for mod in set(sys.modules.keys()) - original_modules:
-        del sys.modules[mod]
+    def _cleanup():
+        sys.path.remove(str(component_path.parent))
+        for mod in set(sys.modules.keys()) - original_modules:
+            del sys.modules[mod]
+
+    return hass, _write_price_list_log, _cleanup
+
+
+def test_group_drinks_same_minute(tmp_path):
+    hass, _write_price_list_log, cleanup = _setup_env(tmp_path)
+    try:
+        tz = ZoneInfo("Europe/Berlin")
+        ts = datetime(2025, 9, 14, 1, 9, 30, tzinfo=tz)
+        with patch("tally_list.config_flow.dt_util.now", return_value=ts):
+            _write_price_list_log(hass, "Robin Zimmermann", "book_free_drink", "Robin Zimmermann:Bier+1")
+            _write_price_list_log(hass, "Robin Zimmermann", "book_free_drink", "Robin Zimmermann:Limo+1")
+            _write_price_list_log(hass, "Robin Zimmermann", "book_free_drink", "Robin Zimmermann:Wasser+1")
+        path = Path(tmp_path, "tally_list", "price_list", "price_list_2025.csv")
+        with path.open(newline="", encoding="utf-8") as f:
+            rows = list(csv.reader(f, delimiter=";"))
+        assert rows[0] == ["Time", "User", "Action", "Details"]
+        assert rows[1] == [
+            "2025-09-14T01:09",
+            "Robin Zimmermann",
+            "book_free_drink",
+            "Robin Zimmermann:Bier+1,Limo+1,Wasser+1",
+        ]
+        assert len(rows) == 2
+    finally:
+        cleanup()
+
+
+def test_aggregate_same_drink(tmp_path):
+    hass, _write_price_list_log, cleanup = _setup_env(tmp_path)
+    try:
+        tz = ZoneInfo("Europe/Berlin")
+        ts = datetime(2025, 9, 14, 1, 22, 15, tzinfo=tz)
+        with patch("tally_list.config_flow.dt_util.now", return_value=ts):
+            for _ in range(4):
+                _write_price_list_log(
+                    hass,
+                    "Robin Zimmermann",
+                    "book_drink",
+                    "Robin Zimmermann:Bier+1",
+                )
+        path = Path(tmp_path, "tally_list", "price_list", "price_list_2025.csv")
+        with path.open(newline="", encoding="utf-8") as f:
+            rows = list(csv.reader(f, delimiter=";"))
+        assert rows[1] == [
+            "2025-09-14T01:22",
+            "Robin Zimmermann",
+            "book_drink",
+            "Robin Zimmermann:Bier+4",
+        ]
+    finally:
+        cleanup()
