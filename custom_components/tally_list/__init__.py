@@ -802,13 +802,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.data[DOMAIN].pop("free_drink_feed_sensors", None)
             hass.data[DOMAIN].pop("feed_add_entities", None)
             hass.data[DOMAIN].pop("feed_entry_id", None)
-        if hass.data[DOMAIN].get("price_feed_entry_id") == entry.entry_id:
-            unsub = hass.data[DOMAIN].pop("price_feed_unsub", None)
-            if unsub is not None:
-                unsub()
-            hass.data[DOMAIN].pop("price_list_feed_sensor", None)
-            hass.data[DOMAIN].pop("price_feed_add_entities", None)
-            hass.data[DOMAIN].pop("price_feed_entry_id", None)
         hass.data[DOMAIN].pop(entry.entry_id, None)
         user_name = entry.data.get(CONF_USER)
         if user_name in PRICE_LIST_USERS:
