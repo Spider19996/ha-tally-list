@@ -48,8 +48,6 @@ Jede Person erhält eine Entität `button.<person>_reset_tally`, um ihre Zähler
 Alle Getränke werden in einer gemeinsamen Preisliste gespeichert. Ein spezieller Benutzer namens `Preisliste` (englisch `Price list`) stellt für jedes Getränk einen Preissensor sowie einen Sensor für den Freibetrag bereit, während normale Personen nur Zähl- und Gesamtbetragssensoren erhalten. Der Freibetrag wird vom Gesamtbetrag jeder Person abgezogen. Getränke, Preise und Freibetrag können jederzeit über die Integrationsoptionen bearbeitet werden.
 Die Sensoren des Preisliste-Benutzers verwenden immer englische Entitäts-IDs mit dem Präfix `price_list`, z. B. `sensor.price_list_free_amount` oder `sensor.price_list_wasser_price`.
 
-Jede Änderung an der Preisliste wird in jährlichen CSV-Dateien unter `/config/backup/tally_list/price_list/` protokolliert. Ein Feed-Sensor `sensor.price_list_feed` zeigt den letzten Eintrag an und stellt die jüngsten Änderungen in seinen Attributen bereit.
-
 ## Freigetränke (Optional)
 
 Wenn in den Integrationsoptionen aktiviert, können Freigetränke separat erfasst werden.
