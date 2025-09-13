@@ -70,32 +70,14 @@ async def async_setup_entry(
     ):
         hass.data[DOMAIN]["feed_add_entities"] = async_add_entities
         hass.data[DOMAIN]["feed_entry_id"] = entry.entry_id
-        feed_sensors: dict[int, FreeDrinkFeedSensor] = {}
-        base_dir = hass.config.path("backup", "tally_list", "free_drinks")
-        try:
-            is_dir = await hass.async_add_executor_job(os.path.isdir, base_dir)
-        except OSError as err:
-            _LOGGER.warning("Failed accessing free drink directory %s: %s", base_dir, err)
-            is_dir = False
-        if is_dir:
-            try:
-                names = await hass.async_add_executor_job(os.listdir, base_dir)
-            except OSError as err:
-                _LOGGER.warning("Failed listing free drink directory %s: %s", base_dir, err)
-            else:
-                for name in names:
-                    match = re.match(r"free_drinks_(\d{4})\.csv$", name)
-                    if not match:
-                        continue
-                    year = int(match.group(1))
-                    feed_sensors[year] = FreeDrinkFeedSensor(hass, entry, year)
-        if feed_sensors:
-            async_add_entities(list(feed_sensors.values()))
-            data.setdefault("sensors", []).extend(feed_sensors.values())
-        hass.data[DOMAIN]["free_drink_feed_sensors"] = feed_sensors
+        feed_sensor = FreeDrinkFeedSensor(hass, entry)
+        async_add_entities([feed_sensor])
+        data.setdefault("sensors", []).append(feed_sensor)
+        hass.data[DOMAIN]["free_drink_feed_sensor"] = feed_sensor
 
         async def _periodic_update(_now):
-            for sensor in hass.data[DOMAIN]["free_drink_feed_sensors"].values():
+            sensor = hass.data[DOMAIN].get("free_drink_feed_sensor")
+            if sensor is not None:
                 await sensor.async_update_state()
 
         hass.data[DOMAIN]["feed_unsub"] = async_track_time_interval(
@@ -332,20 +314,17 @@ class CreditSensor(CurrencySensor, RestoreEntity):
 
 class FreeDrinkFeedSensor(SensorEntity):
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, year: int, max_entries: int = 20
+        self, hass: HomeAssistant, entry: ConfigEntry, max_entries: int = 20
     ) -> None:
         self._hass = hass
-        self._year = year
         self._max_entries = max_entries
         self._attr_should_poll = False
-        self._attr_name = (
-            f"{_local_suffix(hass, 'Free drinks feed', 'Freigetränke Feed')} {year}"
+        self._attr_name = _local_suffix(
+            hass, "Free drinks feed", "Freigetränke Feed"
         )
-        self.entity_id = f"sensor.free_drink_feed_{year}"
-        self._attr_unique_id = f"{entry.entry_id}_free_drink_feed_{year}"
-        self._path = hass.config.path(
-            "backup", "tally_list", "free_drinks", f"free_drinks_{year}.csv"
-        )
+        self.entity_id = "sensor.free_drink_feed"
+        self._attr_unique_id = f"{entry.entry_id}_free_drink_feed"
+        self._base_dir = hass.config.path("backup", "tally_list", "free_drinks")
         self._entries: list[dict[str, str]] = []
         self._attr_native_value = "none"
         self._attr_icon = "mdi:clipboard-list"
@@ -359,40 +338,43 @@ class FreeDrinkFeedSensor(SensorEntity):
         await self.async_update_state()
 
     def _read_rows(self) -> list[list[str]]:
-        with open(self._path, "r", encoding="utf-8", newline="") as csvfile:
-            reader = csv.reader(csvfile, delimiter=";")
-            try:
-                next(reader)
-            except StopIteration:
-                return []
-            else:
-                return list(deque(reader, maxlen=self._max_entries))
+        rows: list[list[str]] = []
+        if not os.path.isdir(self._base_dir):
+            return rows
+        for name in os.listdir(self._base_dir):
+            if not re.match(r"free_drinks_\d{4}\.csv$", name):
+                continue
+            path = os.path.join(self._base_dir, name)
+            with open(path, "r", encoding="utf-8", newline="") as csvfile:
+                reader = csv.reader(csvfile, delimiter=";")
+                try:
+                    next(reader)
+                except StopIteration:
+                    continue
+                rows.extend(list(reader))
+        rows.sort(key=lambda r: r[0])
+        return list(deque(rows, maxlen=self._max_entries))
 
     async def async_update_state(self) -> None:
         try:
             rows = await self._hass.async_add_executor_job(self._read_rows)
-        except FileNotFoundError:
-            self._entries = []
-            self._attr_native_value = "none"
-            self.async_write_ha_state()
-            return
         except OSError as err:
-            _LOGGER.warning("Failed reading free drink log %s: %s", self._path, err)
+            _LOGGER.warning(
+                "Failed reading free drink logs %s: %s", self._base_dir, err
+            )
             return
 
         entries: list[dict[str, str]] = []
         for row in reversed(rows):
             if len(row) != 4:
-                _LOGGER.warning(
-                    "Skipping malformed free drink row for %s: %s", self._year, row
-                )
+                _LOGGER.warning("Skipping malformed free drink row: %s", row)
                 continue
             try:
                 dt = datetime.strptime(row[0], "%Y-%m-%dT%H:%M")
                 time_local = dt.strftime("%Y-%m-%d %H:%M")
             except Exception:
                 _LOGGER.warning(
-                    "Skipping free drink row with bad time for %s: %s", self._year, row
+                    "Skipping free drink row with bad time: %s", row
                 )
                 continue
             entries.append(

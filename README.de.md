@@ -56,10 +56,11 @@ Wenn in den Integrationsoptionen aktiviert, können Freigetränke separat erfass
 Ein eigener Benutzer (Standardname `Freigetränke`, konfigurierbar) sammelt alle
 gratis gebuchten Getränke und stellt die gleichen Zähl- und Betragssensoren wie
 normale Nutzer bereit, z. B. `sensor.free_drinks_bier_count` und
-`sensor.free_drinks_amount_due`. Jeder Freigetränke-Eintrag wird in einer CSV-Datei
-unter `/config/backup/tally_list/free_drinks/` protokolliert. Für jedes Jahr
-entsteht ein Feed-Sensor wie `sensor.free_drink_feed_2024`, der den letzten Eintrag
-anzeigt und die jüngsten Freigetränke in seinen Attributen auflistet.
+`sensor.free_drinks_amount_due`. Jeder Freigetränke-Eintrag wird in einer
+jährlichen CSV-Datei `free_drinks_<Jahr>.csv` unter
+`/config/backup/tally_list/free_drinks/` protokolliert. Ein Feed-Sensor
+`sensor.free_drink_feed` zeigt den letzten Eintrag an und listet die jüngsten
+Freigetränke in seinen Attributen auf.
 
 Die Funktion kann in den Integrationsoptionen aktiviert oder deaktiviert und der
 Name des Freigetränke-Benutzers angepasst werden.
