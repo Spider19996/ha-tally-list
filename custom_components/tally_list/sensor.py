@@ -46,7 +46,11 @@ async def async_setup_entry(
 
     if user in PRICE_LIST_USERS:
         for drink_name, price in drinks.items():
-            sensors.append(DrinkPriceSensor(hass, entry, drink_name, price))
+            sensors.append(
+                DrinkPriceSensor(
+                    hass, entry, drink_name, price, icons.get(drink_name)
+                )
+            )
         sensors.append(FreeAmountSensor(hass, entry))
     else:
         for drink_name, price in drinks.items():
@@ -183,6 +187,7 @@ class DrinkPriceSensor(CurrencySensor):
         entry: ConfigEntry,
         drink: str,
         price: float,
+        icon: str | None = None,
     ) -> None:
         super().__init__(hass)
         self._entry = entry
@@ -195,6 +200,7 @@ class DrinkPriceSensor(CurrencySensor):
         self._attr_unique_id = f"{entry.entry_id}_{drink}_price"
         self.entity_id = f"sensor.price_list_{slugify(drink)}_price"
         self._attr_suggested_display_precision = 2
+        self._attr_icon = icon
 
     @property
     def native_value(self):
