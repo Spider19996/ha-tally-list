@@ -167,3 +167,19 @@ def test_total_amount_sensor_with_credit():
     sensor = TotalAmountSensor(hass, entry)
     assert sensor.native_value == 1.5
 
+
+def test_total_amount_sensor_with_negative_credit():
+    entry = DummyConfigEntry("ghi", "Alice")
+    hass = DummyHass(
+        {
+            DOMAIN: {
+                "drinks": {"Beer": 2.0},
+                "free_amount": 1.0,
+                CONF_CASH_USER_NAME: "Cash",
+                entry.entry_id: {"counts": {"Beer": 2}, "credit": -1.5},
+            }
+        }
+    )
+    sensor = TotalAmountSensor(hass, entry)
+    assert sensor.native_value == 4.5
+
