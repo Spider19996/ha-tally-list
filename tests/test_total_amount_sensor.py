@@ -107,6 +107,7 @@ CONF_USER = const.CONF_USER
 CONF_CASH_USER_NAME = const.CONF_CASH_USER_NAME
 TotalAmountSensor = sensor_module.TotalAmountSensor
 TallyListSensor = sensor_module.TallyListSensor
+DrinkPriceSensor = sensor_module.DrinkPriceSensor
 
 
 class DummyHass:
@@ -191,5 +192,12 @@ def test_tally_list_sensor_icon():
         {DOMAIN: {"drinks": {"Beer": 2.0}, "drink_icons": {"Beer": "mdi:beer"}, entry.entry_id: {"counts": {}}}}
     )
     sensor = TallyListSensor(hass, entry, "Beer", 2.0, "mdi:beer")
+    assert sensor._attr_icon == "mdi:beer"
+
+
+def test_drink_price_sensor_icon():
+    entry = DummyConfigEntry("mno", "Preisliste")
+    hass = DummyHass({DOMAIN: {"drinks": {"Beer": 2.0}}})
+    sensor = DrinkPriceSensor(hass, entry, "Beer", 2.0, "mdi:beer")
     assert sensor._attr_icon == "mdi:beer"
 
