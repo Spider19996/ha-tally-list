@@ -38,6 +38,7 @@ from .const import (
     CONF_LOG_PRICE_CHANGES,
     CONF_LOG_FREE_DRINKS,
     CONF_LOG_PIN_SET,
+    CONF_LOG_SETTINGS,
     get_cash_user_name,
 )
 
@@ -133,6 +134,15 @@ async def _log_price_change(hass, user_id, action: str, details: str) -> None:
         flag = CONF_LOG_FREE_DRINKS
     elif action == "set_pin":
         flag = CONF_LOG_PIN_SET
+    elif action in {
+        "exclude_user",
+        "include_user",
+        "grant_admin",
+        "revoke_admin",
+        "authorize_public",
+        "unauthorize_public",
+    }:
+        flag = CONF_LOG_SETTINGS
     else:
         flag = CONF_LOG_PRICE_CHANGES
     if not hass.data.get(DOMAIN, {}).get(CONF_ENABLE_LOGGING, True):
@@ -247,6 +257,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._log_price_changes: bool = True
         self._log_free_drinks: bool = True
         self._log_pin_set: bool = True
+        self._log_settings: bool = True
+        self._log_settings: bool = True
+        self._log_settings: bool = True
 
     def _ensure_user_id(self) -> None:
         if self._user_id is None:
@@ -273,6 +286,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._log_price_changes = user_input.get(CONF_LOG_PRICE_CHANGES, True)
         self._log_free_drinks = user_input.get(CONF_LOG_FREE_DRINKS, True)
         self._log_pin_set = user_input.get(CONF_LOG_PIN_SET, True)
+        self._log_settings = user_input.get(CONF_LOG_SETTINGS, True)
         if CONF_CURRENCY not in user_input:
             user_input[CONF_CURRENCY] = self._currency
         if CONF_ENABLE_FREE_DRINKS not in user_input:
@@ -291,6 +305,8 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_LOG_FREE_DRINKS] = self._log_free_drinks
         if CONF_LOG_PIN_SET not in user_input:
             user_input[CONF_LOG_PIN_SET] = self._log_pin_set
+        if CONF_LOG_SETTINGS not in user_input:
+            user_input[CONF_LOG_SETTINGS] = self._log_settings
         return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
@@ -495,6 +511,12 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, self._user_id, "log_pin_set", new_log_pin_set
                 )
             self._log_pin_set = new_log_pin_set
+            new_log_settings = user_input[CONF_LOG_SETTINGS]
+            if new_log_settings != self._log_settings:
+                await _log_logging_toggle(
+                    self.hass, self._user_id, "log_settings", new_log_settings
+                )
+            self._log_settings = new_log_settings
             return await self.async_step_menu()
         schema = vol.Schema(
             {
@@ -509,6 +531,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_LOG_PIN_SET, default=self._log_pin_set
                 ): bool,
+                vol.Required(
+                    CONF_LOG_SETTINGS, default=self._log_settings
+                ): bool,
             }
         )
         return self.async_show_form(step_id="logging", data_schema=schema)
@@ -518,7 +543,16 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             enable = user_input[CONF_ENABLE_FREE_DRINKS]
             if self._enable_free_drinks and not enable:
                 return await self.async_step_free_drinks_confirm()
+            old = self._enable_free_drinks
             self._enable_free_drinks = enable
+            if old != enable:
+                self._ensure_user_id()
+                await _log_price_change(
+                    self.hass,
+                    self._user_id,
+                    "enable_free_drinks" if enable else "disable_free_drinks",
+                    f"{old}->{enable}",
+                )
             return await self.async_step_menu()
         schema = vol.Schema(
             {
@@ -536,7 +570,16 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             confirmation = user_input.get("confirm", "").strip().upper()
             if confirmation in {"JA ICH WILL", "YES I WANT"}:
+                old = self._enable_free_drinks
                 self._enable_free_drinks = False
+                if old:
+                    self._ensure_user_id()
+                    await _log_price_change(
+                        self.hass,
+                        self._user_id,
+                        "disable_free_drinks",
+                        f"{old}->False",
+                    )
                 return await self.async_step_menu()
             errors["base"] = "confirmation_required"
         schema = vol.Schema({vol.Required("confirm"): str})
@@ -690,6 +733,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user = user_input[CONF_USER]
             self._excluded_users.append(user)
+            self._ensure_user_id()
+            await _log_price_change(
+                self.hass, self._user_id, "exclude_user", user
+            )
             if user in self._pending_users:
                 self._pending_users.remove(user)
             if user_input.get("add_more") and len(persons) > 1:
@@ -708,6 +755,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user = user_input[CONF_USER]
             if user in self._excluded_users:
                 self._excluded_users.remove(user)
+                self._ensure_user_id()
+                await _log_price_change(
+                    self.hass, self._user_id, "include_user", user
+                )
                 if user not in self._pending_users:
                     self._pending_users.append(user)
             if user_input.get("remove_more") and self._excluded_users:
@@ -744,6 +795,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user = user_input[CONF_USER]
             self._override_users.append(user)
+            self._ensure_user_id()
+            await _log_price_change(
+                self.hass, self._user_id, "grant_admin", user
+            )
             if user_input.get("add_more") and len(persons) > 1:
                 return await self.async_step_add_override_user()
             return await self.async_step_menu()
@@ -760,6 +815,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user = user_input[CONF_USER]
             if user in self._override_users:
                 self._override_users.remove(user)
+                self._ensure_user_id()
+                await _log_price_change(
+                    self.hass, self._user_id, "revoke_admin", user
+                )
             if user_input.get("remove_more") and self._override_users:
                 return await self.async_step_remove_override_user()
             return await self.async_step_menu()
@@ -794,6 +853,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user = user_input[CONF_USER]
             self._public_devices.append(user)
+            self._ensure_user_id()
+            await _log_price_change(
+                self.hass, self._user_id, "authorize_public", user
+            )
             if user_input.get("add_more") and len(persons) > 1:
                 return await self.async_step_add_public_user()
             return await self.async_step_menu()
@@ -810,6 +873,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user = user_input[CONF_USER]
             if user in self._public_devices:
                 self._public_devices.remove(user)
+                self._ensure_user_id()
+                await _log_price_change(
+                    self.hass, self._user_id, "unauthorize_public", user
+                )
             if user_input.get("remove_more") and self._public_devices:
                 return await self.async_step_remove_public_user()
             return await self.async_step_menu()
@@ -849,6 +916,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_LOG_PRICE_CHANGES: self._log_price_changes,
                 CONF_LOG_FREE_DRINKS: self._log_free_drinks,
                 CONF_LOG_PIN_SET: self._log_pin_set,
+                CONF_LOG_SETTINGS: self._log_settings,
             },
         )
 
@@ -867,6 +935,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.hass.data[DOMAIN][CONF_LOG_PRICE_CHANGES] = self._log_price_changes
         self.hass.data[DOMAIN][CONF_LOG_FREE_DRINKS] = self._log_free_drinks
         self.hass.data[DOMAIN][CONF_LOG_PIN_SET] = self._log_pin_set
+        self.hass.data[DOMAIN][CONF_LOG_SETTINGS] = self._log_settings
         if self._create_price_user:
             await self.hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -887,6 +956,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_LOG_PRICE_CHANGES: self._log_price_changes,
                     CONF_LOG_FREE_DRINKS: self._log_free_drinks,
                     CONF_LOG_PIN_SET: self._log_pin_set,
+                    CONF_LOG_SETTINGS: self._log_settings,
                 },
             )
         else:
@@ -905,6 +975,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     entry_data[CONF_LOG_PRICE_CHANGES] = self._log_price_changes
                     entry_data[CONF_LOG_FREE_DRINKS] = self._log_free_drinks
                     entry_data[CONF_LOG_PIN_SET] = self._log_pin_set
+                    entry_data[CONF_LOG_SETTINGS] = self._log_settings
                     self.hass.config_entries.async_update_entry(entry, data=entry_data)
                     await self.hass.config_entries.async_reload(entry.entry_id)
                     break
@@ -921,6 +992,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_LOG_PRICE_CHANGES: self._log_price_changes,
                     CONF_LOG_FREE_DRINKS: self._log_free_drinks,
                     CONF_LOG_PIN_SET: self._log_pin_set,
+                    CONF_LOG_SETTINGS: self._log_settings,
                 },
             )
         self._pending_users = []
@@ -946,6 +1018,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_LOG_PRICE_CHANGES: self._log_price_changes,
                         CONF_LOG_FREE_DRINKS: self._log_free_drinks,
                         CONF_LOG_PIN_SET: self._log_pin_set,
+                        CONF_LOG_SETTINGS: self._log_settings,
                     },
                 )
             else:
@@ -991,6 +1064,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._log_price_changes: bool = True
         self._log_free_drinks: bool = True
         self._log_pin_set: bool = True
+        self._log_settings: bool = True
 
     def _ensure_user_id(self) -> None:
         if self._user_id is None:
@@ -1031,6 +1105,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         )
         self._log_pin_set = self.hass.data.get(DOMAIN, {}).get(
             CONF_LOG_PIN_SET, True
+        )
+        self._log_settings = self.hass.data.get(DOMAIN, {}).get(
+            CONF_LOG_SETTINGS, True
         )
         return await self.async_step_menu()
 
@@ -1137,6 +1214,12 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                     self.hass, self._user_id, "log_pin_set", new_log_pin_set
                 )
             self._log_pin_set = new_log_pin_set
+            new_log_settings = user_input[CONF_LOG_SETTINGS]
+            if new_log_settings != self._log_settings:
+                await _log_logging_toggle(
+                    self.hass, self._user_id, "log_settings", new_log_settings
+                )
+            self._log_settings = new_log_settings
             return await self.async_step_menu()
         schema = vol.Schema(
             {
@@ -1151,6 +1234,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(
                     CONF_LOG_PIN_SET, default=self._log_pin_set
                 ): bool,
+                vol.Required(
+                    CONF_LOG_SETTINGS, default=self._log_settings
+                ): bool,
             }
         )
         return self.async_show_form(step_id="logging", data_schema=schema)
@@ -1160,7 +1246,16 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             enable = user_input[CONF_ENABLE_FREE_DRINKS]
             if self._enable_free_drinks and not enable:
                 return await self.async_step_free_drinks_confirm()
+            old = self._enable_free_drinks
             self._enable_free_drinks = enable
+            if old != enable:
+                self._ensure_user_id()
+                await _log_price_change(
+                    self.hass,
+                    self._user_id,
+                    "enable_free_drinks" if enable else "disable_free_drinks",
+                    f"{old}->{enable}",
+                )
             return await self.async_step_drinks()
         schema = vol.Schema(
             {
@@ -1176,7 +1271,16 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             confirmation = user_input.get("confirm", "").strip().upper()
             if confirmation in {"JA ICH WILL", "YES I WANT"}:
+                old = self._enable_free_drinks
                 self._enable_free_drinks = False
+                if old:
+                    self._ensure_user_id()
+                    await _log_price_change(
+                        self.hass,
+                        self._user_id,
+                        "disable_free_drinks",
+                        f"{old}->False",
+                    )
                 return self.async_show_menu(
                     step_id="menu",
                     menu_options=[
@@ -1393,6 +1497,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             user = user_input[CONF_USER]
             self._excluded_users.append(user)
+            self._ensure_user_id()
+            await _log_price_change(
+                self.hass, self._user_id, "exclude_user", user
+            )
             if user_input.get("add_more") and len(persons) > 1:
                 return await self.async_step_add_excluded_user()
             return await self.async_step_menu()
@@ -1413,6 +1521,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             user = user_input[CONF_USER]
             if user in self._excluded_users:
                 self._excluded_users.remove(user)
+                self._ensure_user_id()
+                await _log_price_change(
+                    self.hass, self._user_id, "include_user", user
+                )
             if user_input.get("remove_more") and self._excluded_users:
                 return await self.async_step_remove_excluded_user()
             return await self.async_step_menu()
@@ -1454,6 +1566,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             user = user_input[CONF_USER]
             self._override_users.append(user)
+            self._ensure_user_id()
+            await _log_price_change(
+                self.hass, self._user_id, "grant_admin", user
+            )
             if user_input.get("add_more") and len(persons) > 1:
                 return await self.async_step_add_override_user()
             return await self.async_step_menu()
@@ -1474,6 +1590,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             user = user_input[CONF_USER]
             if user in self._override_users:
                 self._override_users.remove(user)
+                self._ensure_user_id()
+                await _log_price_change(
+                    self.hass, self._user_id, "revoke_admin", user
+                )
             if user_input.get("remove_more") and self._override_users:
                 return await self.async_step_remove_override_user()
             return await self.async_step_menu()
@@ -1513,6 +1633,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             user = user_input[CONF_USER]
             self._public_devices.append(user)
+            self._ensure_user_id()
+            await _log_price_change(
+                self.hass, self._user_id, "authorize_public", user
+            )
             if user_input.get("add_more") and len(persons) > 1:
                 return await self.async_step_add_public_user()
             return await self.async_step_menu()
@@ -1529,6 +1653,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             user = user_input[CONF_USER]
             if user in self._public_devices:
                 self._public_devices.remove(user)
+                self._ensure_user_id()
+                await _log_price_change(
+                    self.hass, self._user_id, "unauthorize_public", user
+                )
             if user_input.get("remove_more") and self._public_devices:
                 return await self.async_step_remove_public_user()
             return await self.async_step_menu()
@@ -1666,6 +1794,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                             CONF_LOG_PRICE_CHANGES: self._log_price_changes,
                             CONF_LOG_FREE_DRINKS: self._log_free_drinks,
                             CONF_LOG_PIN_SET: self._log_pin_set,
+                            CONF_LOG_SETTINGS: self._log_settings,
                         },
                     )
                 )
@@ -1706,6 +1835,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_LOG_PRICE_CHANGES: self._log_price_changes,
                 CONF_LOG_FREE_DRINKS: self._log_free_drinks,
                 CONF_LOG_PIN_SET: self._log_pin_set,
+                CONF_LOG_SETTINGS: self._log_settings,
             }
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -1731,5 +1861,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_LOG_PRICE_CHANGES: self._log_price_changes,
                 CONF_LOG_FREE_DRINKS: self._log_free_drinks,
                 CONF_LOG_PIN_SET: self._log_pin_set,
+                CONF_LOG_SETTINGS: self._log_settings,
             },
         )

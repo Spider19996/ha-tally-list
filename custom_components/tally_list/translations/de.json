@@ -47,7 +47,8 @@
           "log_drinks": "Getränke protokollieren",
           "log_price_changes": "Preisänderungen protokollieren",
           "log_free_drinks": "Freigetränke protokollieren",
-          "log_pin_set": "PIN-Änderungen protokollieren"
+          "log_pin_set": "PIN-Änderungen protokollieren",
+          "log_settings": "Einstellungen protokollieren"
         }
       },
       "add_drink": {
@@ -194,7 +195,8 @@
           "log_drinks": "Getränke protokollieren",
           "log_price_changes": "Preisänderungen protokollieren",
           "log_free_drinks": "Freigetränke protokollieren",
-          "log_pin_set": "PIN-Änderungen protokollieren"
+          "log_pin_set": "PIN-Änderungen protokollieren",
+          "log_settings": "Einstellungen protokollieren"
         }
       },
       "free_drinks": {

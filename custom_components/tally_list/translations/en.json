@@ -47,7 +47,8 @@
           "log_drinks": "Log drink events",
           "log_price_changes": "Log price changes",
           "log_free_drinks": "Log free drink events",
-          "log_pin_set": "Log PIN set events"
+          "log_pin_set": "Log PIN set events",
+          "log_settings": "Log settings changes"
         }
       },
       "add_drink": {
@@ -194,7 +195,8 @@
           "log_drinks": "Log drink events",
           "log_price_changes": "Log price changes",
           "log_free_drinks": "Log free drink events",
-          "log_pin_set": "Log PIN set events"
+          "log_pin_set": "Log PIN set events",
+          "log_settings": "Log settings changes"
         }
       },
       "free_drinks": {

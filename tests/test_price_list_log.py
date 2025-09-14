@@ -48,6 +48,10 @@ def _setup_env(tmp_path):
         return func
     core_mod.callback = callback
     vol_mod = types.ModuleType("voluptuous")
+    vol_mod.Schema = lambda schema, *args, **kwargs: schema
+    vol_mod.Required = lambda key, default=None: key
+    vol_mod.Optional = lambda key, default=None: key
+    vol_mod.Coerce = lambda typ: typ
     sys.modules.update({
         "homeassistant": ha,
         "homeassistant.helpers": helpers,
@@ -468,6 +472,7 @@ async def test_logging_toggle_always_logged(tmp_path):
                 const.CONF_LOG_PRICE_CHANGES: True,
                 const.CONF_LOG_FREE_DRINKS: True,
                 const.CONF_LOG_PIN_SET: True,
+                const.CONF_LOG_SETTINGS: True,
             }
         )
         hass.async_add_executor_job.assert_awaited_once()
@@ -505,6 +510,7 @@ async def test_individual_logging_toggle_logged(tmp_path):
                 const.CONF_LOG_PRICE_CHANGES: True,
                 const.CONF_LOG_FREE_DRINKS: True,
                 const.CONF_LOG_PIN_SET: True,
+                const.CONF_LOG_SETTINGS: True,
             }
         )
         hass.async_add_executor_job.assert_awaited_once()
@@ -543,6 +549,7 @@ async def test_pin_logging_toggle_logged(tmp_path):
                 const.CONF_LOG_PRICE_CHANGES: True,
                 const.CONF_LOG_FREE_DRINKS: True,
                 const.CONF_LOG_PIN_SET: True,
+                const.CONF_LOG_SETTINGS: True,
             }
         )
         hass.async_add_executor_job.assert_awaited_once()
@@ -550,5 +557,100 @@ async def test_pin_logging_toggle_logged(tmp_path):
         assert args[0] is _write_price_list_log
         assert args[3] == "enable_logging"
         assert args[4] == "log_pin_set"
+    finally:
+        cleanup()
+
+
+@pytest.mark.asyncio
+async def test_settings_logging_toggle_logged(tmp_path):
+    hass, _write_price_list_log, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
+    try:
+        hass.data = {const.DOMAIN: {}}
+        hass.states = types.SimpleNamespace(async_all=lambda domain: [])
+        mock_user = types.SimpleNamespace(id="user-1", name="Tester", username="tester")
+        hass.auth = types.SimpleNamespace(
+            async_get_user=AsyncMock(return_value=mock_user), current_user=mock_user
+        )
+        flow = OptionsFlowHandler(config_entry=None)
+        flow.hass = hass
+        flow.context = {}
+        flow._enable_logging = True
+        flow._log_drinks = True
+        flow._log_price_changes = True
+        flow._log_free_drinks = True
+        flow._log_pin_set = True
+        flow._log_settings = False
+        flow.async_step_menu = AsyncMock(return_value=None)
+        hass.async_add_executor_job = AsyncMock()
+        await flow.async_step_logging(
+            {
+                const.CONF_ENABLE_LOGGING: True,
+                const.CONF_LOG_DRINKS: True,
+                const.CONF_LOG_PRICE_CHANGES: True,
+                const.CONF_LOG_FREE_DRINKS: True,
+                const.CONF_LOG_PIN_SET: True,
+                const.CONF_LOG_SETTINGS: True,
+            }
+        )
+        hass.async_add_executor_job.assert_awaited_once()
+        args = hass.async_add_executor_job.await_args.args
+        assert args[0] is _write_price_list_log
+        assert args[3] == "enable_logging"
+        assert args[4] == "log_settings"
+    finally:
+        cleanup()
+
+
+@pytest.mark.asyncio
+async def test_log_free_drinks_enable(tmp_path):
+    hass, _, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
+    try:
+        hass.auth = types.SimpleNamespace(current_user=types.SimpleNamespace(id="user-1"))
+        flow = OptionsFlowHandler(config_entry=None)
+        flow.hass = hass
+        flow.context = {}
+        flow.async_step_drinks = AsyncMock(return_value=None)
+        flow._user_id = "user-1"
+        flow._enable_free_drinks = False
+        with patch("tally_list.config_flow._log_price_change", AsyncMock()) as log_mock:
+            await flow.async_step_free_drinks({const.CONF_ENABLE_FREE_DRINKS: True})
+            log_mock.assert_awaited_once_with(
+                hass, "user-1", "enable_free_drinks", "False->True"
+            )
+    finally:
+        cleanup()
+
+
+@pytest.mark.asyncio
+async def test_log_free_drinks_disable(tmp_path):
+    hass, _, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
+    try:
+        hass.auth = types.SimpleNamespace(current_user=types.SimpleNamespace(id="user-1"))
+        flow = OptionsFlowHandler(config_entry=None)
+        flow.hass = hass
+        flow.context = {}
+        flow.async_step_drinks = AsyncMock(return_value=None)
+        flow.async_show_menu = lambda **kwargs: None
+        flow._user_id = "user-1"
+        flow._enable_free_drinks = True
+        with patch("tally_list.config_flow._log_price_change", AsyncMock()) as log_mock:
+            await flow.async_step_free_drinks_confirm({"confirm": "YES I WANT"})
+            log_mock.assert_awaited_once_with(
+                hass, "user-1", "disable_free_drinks", "True->False"
+            )
+    finally:
+        cleanup()
+
+
+@pytest.mark.asyncio
+async def test_no_log_when_settings_logging_disabled(tmp_path):
+    hass, _write_price_list_log, _log_price_change, _, const, cleanup = _setup_env(tmp_path)
+    try:
+        hass.data = {const.DOMAIN: {const.CONF_ENABLE_LOGGING: True, const.CONF_LOG_SETTINGS: False}}
+        hass.states = types.SimpleNamespace(async_all=lambda domain: [])
+        hass.auth = types.SimpleNamespace(async_get_user=AsyncMock(return_value=None), current_user=None)
+        hass.async_add_executor_job = AsyncMock()
+        await _log_price_change(hass, "user-id", "exclude_user", "Alice")
+        hass.async_add_executor_job.assert_not_called()
     finally:
         cleanup()
