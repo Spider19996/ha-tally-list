@@ -34,7 +34,7 @@ At initial setup you will be asked to enter available drinks. All persons with a
 
 - `tally_list.add_drink`: increment drink count for a person (fails if the person does not exist; optionally specify amount).
 - `tally_list.remove_drink`: decrement drink count for a person (never below zero; optionally specify amount).
-- `tally_list.adjust_count`: set a drink count to a specific value.
+- `tally_list.set_drink`: set a drink count to a specific value.
 - `tally_list.reset_counters`: reset all counters for a person or for everyone if no user is specified.
 - `tally_list.export_csv`: export all `_amount_due` sensors to CSV files (`daily`, `weekly`, `monthly`, or `manual`) saved under `/config/tally_list/<type>/`.
 - `tally_list.set_pin`: set or clear a personal 4-digit numeric PIN required for public devices (admins can set PINs for others).

@@ -34,7 +34,7 @@ Beim ersten Einrichten wirst du nach verfügbaren Getränken gefragt. Alle Perso
 
 - `tally_list.add_drink`: erhöht die Anzahl eines Getränks für eine Person (schlägt fehl, wenn die Person nicht existiert; Anzahl kann angegeben werden).
 - `tally_list.remove_drink`: verringert die Anzahl eines Getränks für eine Person (nie unter null; Anzahl kann angegeben werden).
-- `tally_list.adjust_count`: setzt die Anzahl eines Getränks auf einen bestimmten Wert.
+- `tally_list.set_drink`: setzt die Anzahl eines Getränks auf einen bestimmten Wert.
 - `tally_list.reset_counters`: setzt alle Zähler für eine Person oder – ohne Angabe einer Person – für alle zurück.
 - `tally_list.export_csv`: exportiert alle `_amount_due`-Sensoren als CSV-Dateien (`daily`, `weekly`, `monthly` oder `manual`), gespeichert unter `/config/tally_list/<type>/`.
 - `tally_list.set_pin`: setzt oder entfernt eine persönliche vierstellige PIN aus Ziffern für öffentliche Geräte (Admins können PINs für andere Nutzer setzen).

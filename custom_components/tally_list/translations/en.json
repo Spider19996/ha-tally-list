@@ -390,8 +390,8 @@
         }
       }
     },
-    "adjust_count": {
-      "name": "Adjust count",
+    "set_drink": {
+      "name": "Set drink",
       "description": "Set drink count for a person",
       "fields": {
         "user": {
