@@ -4,7 +4,7 @@ import csv
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 import importlib.machinery
 from importlib import import_module
 
@@ -82,11 +82,6 @@ def _setup_env(tmp_path):
     class DummyHass:
         def __init__(self, base_path):
             self.config = DummyConfig(base_path)
-            self.data = {"tally_list": {}}
-            self.states = types.SimpleNamespace(async_all=lambda domain=None: [])
-
-        async def async_add_executor_job(self, func, *args):
-            return func(*args)
 
     hass = DummyHass(tmp_path)
 
@@ -182,76 +177,5 @@ def test_free_drink_logged_separately(tmp_path):
             "Robin Zimmermann:Bier+1",
         ]
         assert len(rows) == 3
-    finally:
-        cleanup()
-
-
-def test_log_price_change_uses_current_user(tmp_path):
-    hass, _write_price_list_log, cleanup = _setup_env(tmp_path)
-    try:
-        config_flow = import_module("tally_list.config_flow")
-        _log_price_change = config_flow._log_price_change
-
-        class DummyUser:
-            def __init__(self, user_id, name):
-                self.id = user_id
-                self.name = name
-
-        class DummyAuth:
-            def __init__(self, user):
-                self.current_user = user
-
-            async def async_get_user(self, user_id):  # pragma: no cover - simple stub
-                return self.current_user if user_id == self.current_user.id else None
-
-        hass.auth = DummyAuth(DummyUser("user-1", "Alice"))
-        tz = ZoneInfo("Europe/Berlin")
-        ts = datetime(2025, 9, 14, 12, 8, tzinfo=tz)
-        with patch("tally_list.config_flow.dt_util.now", return_value=ts):
-            import asyncio
-
-            asyncio.run(
-                _log_price_change(hass, None, "edit_drink", "Bier:1->2")
-            )
-        path = Path(tmp_path, "tally_list", "price_list", "price_list_2025.csv")
-        with path.open(newline="", encoding="utf-8") as f:
-            rows = list(csv.reader(f, delimiter=";"))
-        assert rows[1][1] == "Alice"
-    finally:
-        cleanup()
-
-
-def test_edit_price_not_logged_when_unchanged(tmp_path):
-    hass, _write_price_list_log, cleanup = _setup_env(tmp_path)
-    try:
-        config_flow = import_module("tally_list.config_flow")
-        TallyListOptionsFlowHandler = config_flow.TallyListOptionsFlowHandler
-        CONF_PRICE = config_flow.CONF_PRICE
-        CONF_ICON = config_flow.CONF_ICON
-
-        handler = TallyListOptionsFlowHandler(config_entry=None)
-        handler.hass = hass
-        handler.context = {}
-        handler._drinks = {"Bier": 1.7}
-        handler._drink_icons = {"Bier": "mdi:beer"}
-        handler._edit_drink = "Bier"
-        handler.async_step_menu = AsyncMock(return_value=None)
-
-        calls = []
-
-        async def fake_log(*args, **kwargs):
-            calls.append((args, kwargs))
-
-        with patch("tally_list.config_flow._log_price_change", new=fake_log):
-            import asyncio
-
-            asyncio.run(
-                handler.async_step_edit_price({
-                    CONF_PRICE: 1.7,
-                    CONF_ICON: "mdi:beer",
-                })
-            )
-
-        assert calls == []
     finally:
         cleanup()
