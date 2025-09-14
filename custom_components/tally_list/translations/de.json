@@ -390,8 +390,8 @@
         }
       }
     },
-    "adjust_count": {
-      "name": "Zähler anpassen",
+    "set_drink": {
+      "name": "Getränkeanzahl setzen",
       "description": "Setzt den Getränkezähler für eine Person",
       "fields": {
         "user": {

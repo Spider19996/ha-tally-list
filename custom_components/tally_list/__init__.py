@@ -26,7 +26,7 @@ from .const import (
     DOMAIN,
     SERVICE_ADD_DRINK,
     SERVICE_REMOVE_DRINK,
-    SERVICE_ADJUST_COUNT,
+    SERVICE_SET_DRINK,
     SERVICE_RESET_COUNTERS,
     SERVICE_EXPORT_CSV,
     SERVICE_SET_PIN,
@@ -259,7 +259,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             f"{target_user}:{'set' if pin else 'cleared'}",
         )
 
-    async def adjust_count_service(call):
+    async def set_drink_service(call):
         user = call.data[ATTR_USER]
         await _verify_permissions(call, user)
         drink = call.data[ATTR_DRINK]
@@ -276,7 +276,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await _log_price_change(
             hass,
             call.context.user_id,
-            "adjust_count",
+            "set_drink",
             f"{user}:{drink}={count}",
         )
 
@@ -627,8 +627,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.services.async_register(
         DOMAIN,
-        SERVICE_ADJUST_COUNT,
-        adjust_count_service,
+        SERVICE_SET_DRINK,
+        set_drink_service,
     )
 
     hass.services.async_register(
