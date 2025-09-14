@@ -43,25 +43,6 @@ from .sensor import PriceListFeedSensor
 _LOGGER = logging.getLogger(__name__)
 
 
-def _debug_user_state(hass, label: str, user_id: str | None, context=None) -> None:
-    """Log debug information about user resolution."""
-    if not _LOGGER.isEnabledFor(logging.DEBUG):
-        return
-    auth = getattr(hass, "auth", None)
-    current = getattr(auth, "current_user", None) if auth is not None else None
-    request = current_request.get()
-    request_user = request.get("hass_user").id if request and request.get("hass_user") else None
-    context_user = context.get("user_id") if context else None
-    _LOGGER.debug(
-        "user debug (%s): context=%s request=%s current=%s stored=%s",
-        label,
-        context_user,
-        request_user,
-        getattr(current, "id", None),
-        user_id,
-    )
-
-
 def _write_price_list_log(
     hass, user: str, action: str, details: str
 ) -> None:
@@ -141,7 +122,6 @@ async def _async_update_price_feed_sensor(hass) -> None:
 
 
 async def _log_price_change(hass, user_id, action: str, details: str) -> None:
-    _debug_user_state(hass, f"log_price_change:{action}", user_id)
     auth = getattr(hass, "auth", None)
     if user_id is None and auth is not None:
         current = getattr(auth, "current_user", None)
@@ -160,14 +140,6 @@ async def _log_price_change(hass, user_id, action: str, details: str) -> None:
         )
         or "Unknown"
     )
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug(
-            "logging price change as '%s' (user_id=%s action=%s details=%s)",
-            name,
-            user_id,
-            action,
-            details,
-        )
     await hass.async_add_executor_job(
         _write_price_list_log, hass, name, action, details
     )
@@ -181,7 +153,6 @@ def _get_flow_user_id(hass, context) -> str | None:
     auth = getattr(hass, "auth", None)
     current = getattr(auth, "current_user", None) if auth is not None else None
     user_id = context_id or request_user or (current.id if current is not None else None)
-    _debug_user_state(hass, "get_flow_user_id", user_id, context)
     return user_id
 
 
@@ -225,9 +196,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _ensure_user_id(self) -> None:
         if self._user_id is None:
             self._user_id = _get_flow_user_id(self.hass, self.context)
-        _debug_user_state(
-            self.hass, "config_flow.ensure_user_id", self._user_id, self.context
-        )
 
     async def async_step_import(self, user_input=None):
         """Handle import of a config entry."""
@@ -860,15 +828,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
     def _ensure_user_id(self) -> None:
         if self._user_id is None:
             self._user_id = _get_flow_user_id(self.hass, self.context)
-        _debug_user_state(
-            self.hass, "options_flow.ensure_user_id", self._user_id, self.context
-        )
 
     async def async_step_init(self, user_input=None):
         self._user_id = _get_flow_user_id(self.hass, self.context)
-        _debug_user_state(
-            self.hass, "options_flow.init", self._user_id, self.context
-        )
         self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
         self._drink_icons = (
             self.hass.data.get(DOMAIN, {}).get("drink_icons", {})
