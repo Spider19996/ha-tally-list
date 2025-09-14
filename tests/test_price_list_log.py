@@ -141,3 +141,41 @@ def test_aggregate_same_drink(tmp_path):
         ]
     finally:
         cleanup()
+
+
+def test_free_drink_logged_separately(tmp_path):
+    hass, _write_price_list_log, cleanup = _setup_env(tmp_path)
+    try:
+        tz = ZoneInfo("Europe/Berlin")
+        ts = datetime(2025, 9, 14, 1, 9, 30, tzinfo=tz)
+        with patch("tally_list.config_flow.dt_util.now", return_value=ts):
+            _write_price_list_log(
+                hass,
+                "Robin Zimmermann",
+                "add_drink",
+                "Robin Zimmermann:Bier+1",
+            )
+            _write_price_list_log(
+                hass,
+                "Robin Zimmermann",
+                "add_free_drink",
+                "Robin Zimmermann:Bier+1",
+            )
+        path = Path(tmp_path, "tally_list", "price_list", "price_list_2025.csv")
+        with path.open(newline="", encoding="utf-8") as f:
+            rows = list(csv.reader(f, delimiter=";"))
+        assert rows[1] == [
+            "2025-09-14T01:09",
+            "Robin Zimmermann",
+            "add_drink",
+            "Robin Zimmermann:Bier+1",
+        ]
+        assert rows[2] == [
+            "2025-09-14T01:09",
+            "Robin Zimmermann",
+            "add_free_drink",
+            "Robin Zimmermann:Bier+1",
+        ]
+        assert len(rows) == 3
+    finally:
+        cleanup()
