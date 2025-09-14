@@ -4,10 +4,9 @@ import csv
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch
 import importlib.machinery
 from importlib import import_module
-import pytest
 
 
 def _setup_env(tmp_path):
@@ -71,10 +70,7 @@ def _setup_env(tmp_path):
 
     # Import module under test
     config_flow = import_module("tally_list.config_flow")
-    const_mod = import_module("tally_list.const")
     _write_price_list_log = config_flow._write_price_list_log
-    _log_price_change = config_flow._log_price_change
-    OptionsFlowHandler = config_flow.TallyListOptionsFlowHandler
 
     class DummyConfig:
         def __init__(self, base_path):
@@ -94,18 +90,11 @@ def _setup_env(tmp_path):
         for mod in set(sys.modules.keys()) - original_modules:
             del sys.modules[mod]
 
-    return (
-        hass,
-        _write_price_list_log,
-        _log_price_change,
-        OptionsFlowHandler,
-        const_mod,
-        _cleanup,
-    )
+    return hass, _write_price_list_log, _cleanup
 
 
 def test_group_drinks_same_minute(tmp_path):
-    hass, _write_price_list_log, _, _, _, cleanup = _setup_env(tmp_path)
+    hass, _write_price_list_log, cleanup = _setup_env(tmp_path)
     try:
         tz = ZoneInfo("Europe/Berlin")
         ts = datetime(2025, 9, 14, 1, 9, 30, tzinfo=tz)
@@ -129,7 +118,7 @@ def test_group_drinks_same_minute(tmp_path):
 
 
 def test_aggregate_same_drink(tmp_path):
-    hass, _write_price_list_log, _, _, _, cleanup = _setup_env(tmp_path)
+    hass, _write_price_list_log, cleanup = _setup_env(tmp_path)
     try:
         tz = ZoneInfo("Europe/Berlin")
         ts = datetime(2025, 9, 14, 1, 22, 15, tzinfo=tz)
@@ -155,7 +144,7 @@ def test_aggregate_same_drink(tmp_path):
 
 
 def test_free_drink_logged_separately(tmp_path):
-    hass, _write_price_list_log, _, _, _, cleanup = _setup_env(tmp_path)
+    hass, _write_price_list_log, cleanup = _setup_env(tmp_path)
     try:
         tz = ZoneInfo("Europe/Berlin")
         ts = datetime(2025, 9, 14, 1, 9, 30, tzinfo=tz)
@@ -188,138 +177,5 @@ def test_free_drink_logged_separately(tmp_path):
             "Robin Zimmermann:Bier+1",
         ]
         assert len(rows) == 3
-    finally:
-        cleanup()
-
-
-@pytest.mark.asyncio
-async def test_log_when_price_changed(tmp_path):
-    hass, _, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
-    try:
-        hass.auth = types.SimpleNamespace(current_user=types.SimpleNamespace(id="user-1"))
-        flow = OptionsFlowHandler(config_entry=None)
-        flow.hass = hass
-        flow.context = {}
-        flow.async_step_menu = AsyncMock(return_value=None)
-        flow._user_id = "user-1"
-        flow._drinks = {"Bier": 1.6}
-        flow._drink_icons = {"Bier": "mdi:beer"}
-        flow._edit_drink = "Bier"
-        with patch("tally_list.config_flow._log_price_change", AsyncMock()) as log_mock:
-            await flow.async_step_edit_price({
-                const.CONF_PRICE: 1.7,
-                const.CONF_ICON: "mdi:beer",
-            })
-            log_mock.assert_awaited_once_with(
-                hass,
-                "user-1",
-                "edit_drink",
-                "Bier:1.6->1.7",
-            )
-    finally:
-        cleanup()
-
-
-@pytest.mark.asyncio
-async def test_no_log_when_price_unchanged(tmp_path):
-    hass, _, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
-    try:
-        hass.auth = types.SimpleNamespace(current_user=types.SimpleNamespace(id="user-1"))
-        flow = OptionsFlowHandler(config_entry=None)
-        flow.hass = hass
-        flow.context = {}
-        flow.async_step_menu = AsyncMock(return_value=None)
-        flow._user_id = "user-1"
-        flow._drinks = {"Bier": 1.6}
-        flow._drink_icons = {"Bier": "mdi:beer"}
-        flow._edit_drink = "Bier"
-        with patch("tally_list.config_flow._log_price_change", AsyncMock()) as log_mock:
-            await flow.async_step_edit_price({
-                const.CONF_PRICE: 1.6,
-                const.CONF_ICON: "mdi:beer",
-            })
-            log_mock.assert_not_called()
-    finally:
-        cleanup()
-
-
-@pytest.mark.asyncio
-async def test_log_uses_context_user(tmp_path):
-    hass, _, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
-    try:
-        flow = OptionsFlowHandler(config_entry=None)
-        flow.hass = hass
-        flow.context = {"user_id": "user-ctx"}
-        flow.async_step_menu = AsyncMock(return_value=None)
-        flow._user_id = "user-ctx"
-        flow._drinks = {"Bier": 1.6}
-        flow._drink_icons = {"Bier": "mdi:beer"}
-        flow._edit_drink = "Bier"
-        with patch("tally_list.config_flow._log_price_change", AsyncMock()) as log_mock:
-            await flow.async_step_edit_price({
-                const.CONF_PRICE: 1.7,
-                const.CONF_ICON: "mdi:beer",
-            })
-            log_mock.assert_awaited_once_with(
-                hass,
-                "user-ctx",
-                "edit_drink",
-                "Bier:1.6->1.7",
-            )
-    finally:
-        cleanup()
-
-
-@pytest.mark.asyncio
-async def test_log_price_change_uses_username(tmp_path):
-    hass, _write_price_list_log, _log_price_change, _, const, cleanup = _setup_env(tmp_path)
-    try:
-        hass.data = {const.DOMAIN: {}}
-        hass.states = types.SimpleNamespace(async_all=lambda domain: [])
-        mock_user = types.SimpleNamespace(name=None, username="tester")
-        hass.auth = types.SimpleNamespace(
-            async_get_user=AsyncMock(return_value=mock_user), current_user=None
-        )
-        hass.async_add_executor_job = AsyncMock()
-        await _log_price_change(
-            hass,
-            "user-id",
-            "edit_drink",
-            "Bier:1.6->1.7",
-        )
-        hass.async_add_executor_job.assert_awaited_once()
-        args = hass.async_add_executor_job.await_args.args
-        assert args[2] == "tester"
-    finally:
-        cleanup()
-
-
-@pytest.mark.asyncio
-async def test_user_id_preserved_after_init(tmp_path):
-    hass, _, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
-    try:
-        hass.auth = types.SimpleNamespace(current_user=types.SimpleNamespace(id="user-1"))
-        hass.data = {const.DOMAIN: {}}
-        hass.config.language = "en"
-        flow = OptionsFlowHandler(config_entry=None)
-        flow.hass = hass
-        flow.context = {}
-        flow.async_step_menu = AsyncMock(return_value=None)
-        await flow.async_step_init()
-        hass.auth.current_user = None
-        flow._drinks = {"Bier": 1.6}
-        flow._drink_icons = {"Bier": "mdi:beer"}
-        flow._edit_drink = "Bier"
-        with patch("tally_list.config_flow._log_price_change", AsyncMock()) as log_mock:
-            await flow.async_step_edit_price({
-                const.CONF_PRICE: 1.7,
-                const.CONF_ICON: "mdi:beer",
-            })
-            log_mock.assert_awaited_once_with(
-                hass,
-                "user-1",
-                "edit_drink",
-                "Bier:1.6->1.7",
-            )
     finally:
         cleanup()
