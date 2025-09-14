@@ -12,6 +12,7 @@
         "menu_options": {
           "user": "Nutzereinstellungen",
           "drinks": "Getränkeeinstellungen",
+          "logging": "Protokollierung",
           "finish": "Fertig"
         }
       },
@@ -37,6 +38,15 @@
           "edit": "Bearbeiten",
           "currency": "Währung setzen",
           "back": "Zurück"
+        }
+      },
+      "logging": {
+        "title": "Protokollierung",
+        "data": {
+          "enable_logging": "Logging aktivieren",
+          "log_drinks": "Getränke protokollieren",
+          "log_price_changes": "Preisänderungen protokollieren",
+          "log_free_drinks": "Freigetränke protokollieren"
         }
       },
       "add_drink": {
@@ -145,6 +155,7 @@
         "menu_options": {
           "user": "Nutzereinstellungen",
           "drinks": "Getränkeeinstellungen",
+          "logging": "Protokollierung",
           "cleanup": "Nicht mehr genutzte Sensoren entfernen",
           "delete": "Integration komplett entfernen",
           "finish": "Fertig"
@@ -173,6 +184,15 @@
           "currency": "Währung setzen",
           "free_drinks": "Freigetränke",
           "back": "Zurück"
+        }
+      },
+      "logging": {
+        "title": "Protokollierung",
+        "data": {
+          "enable_logging": "Logging aktivieren",
+          "log_drinks": "Getränke protokollieren",
+          "log_price_changes": "Preisänderungen protokollieren",
+          "log_free_drinks": "Freigetränke protokollieren"
         }
       },
       "free_drinks": {
@@ -302,6 +322,7 @@
       "action": {
         "user": "Nutzereinstellungen",
         "drinks": "Getränkeeinstellungen",
+        "logging": "Protokollierung",
         "free_drinks": "Freigetränke",
         "add": "Hinzufügen",
         "remove": "Entfernen",

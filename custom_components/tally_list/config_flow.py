@@ -33,6 +33,10 @@ from .const import (
     CONF_CURRENCY,
     CONF_ENABLE_FREE_DRINKS,
     CONF_CASH_USER_NAME,
+    CONF_ENABLE_LOGGING,
+    CONF_LOG_DRINKS,
+    CONF_LOG_PRICE_CHANGES,
+    CONF_LOG_FREE_DRINKS,
     get_cash_user_name,
 )
 
@@ -122,6 +126,16 @@ async def _async_update_price_feed_sensor(hass) -> None:
 
 
 async def _log_price_change(hass, user_id, action: str, details: str) -> None:
+    if action in {"add_drink", "remove_drink"}:
+        flag = CONF_LOG_DRINKS
+    elif action in {"add_free_drink", "remove_free_drink"}:
+        flag = CONF_LOG_FREE_DRINKS
+    else:
+        flag = CONF_LOG_PRICE_CHANGES
+    if not hass.data.get(DOMAIN, {}).get(CONF_ENABLE_LOGGING, True):
+        return
+    if not hass.data.get(DOMAIN, {}).get(flag, True):
+        return
     auth = getattr(hass, "auth", None)
     if user_id is None and auth is not None:
         current = getattr(auth, "current_user", None)
@@ -144,6 +158,31 @@ async def _log_price_change(hass, user_id, action: str, details: str) -> None:
         _write_price_list_log, hass, name, action, details
     )
     await _async_update_price_feed_sensor(hass)
+
+
+async def _log_logging_toggle(hass, user_id, enabled: bool) -> None:
+    auth = getattr(hass, "auth", None)
+    if user_id is None and auth is not None:
+        current = getattr(auth, "current_user", None)
+        if current is not None:
+            user_id = current.id
+    hass_user = (
+        await auth.async_get_user(user_id) if auth is not None and user_id else None
+    )
+    name = (
+        get_person_name(hass, user_id)
+        or (hass_user.name if hass_user and getattr(hass_user, "name", None) else None)
+        or (
+            hass_user.username
+            if hass_user and getattr(hass_user, "username", None)
+            else None
+        )
+        or "Unknown"
+    )
+    action = "enable_logging" if enabled else "disable_logging"
+    await hass.async_add_executor_job(
+        _write_price_list_log, hass, name, action, action
+    )
 
 
 def _get_flow_user_id(hass, context) -> str | None:
@@ -192,6 +231,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._cash_user_name: str = get_cash_user_name(None)
         self._edit_drink: str | None = None
         self._user_id: str | None = None
+        self._enable_logging: bool = True
+        self._log_drinks: bool = True
+        self._log_price_changes: bool = True
+        self._log_free_drinks: bool = True
 
     def _ensure_user_id(self) -> None:
         if self._user_id is None:
@@ -213,6 +256,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._cash_user_name = get_cash_user_name(
             getattr(self.hass.config, "language", None)
         )
+        self._enable_logging = user_input.get(CONF_ENABLE_LOGGING, True)
+        self._log_drinks = user_input.get(CONF_LOG_DRINKS, True)
+        self._log_price_changes = user_input.get(CONF_LOG_PRICE_CHANGES, True)
+        self._log_free_drinks = user_input.get(CONF_LOG_FREE_DRINKS, True)
         if CONF_CURRENCY not in user_input:
             user_input[CONF_CURRENCY] = self._currency
         if CONF_ENABLE_FREE_DRINKS not in user_input:
@@ -221,6 +268,14 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input[CONF_PUBLIC_DEVICES] = self._public_devices
         if CONF_ICONS not in user_input:
             user_input[CONF_ICONS] = self._drink_icons
+        if CONF_ENABLE_LOGGING not in user_input:
+            user_input[CONF_ENABLE_LOGGING] = self._enable_logging
+        if CONF_LOG_DRINKS not in user_input:
+            user_input[CONF_LOG_DRINKS] = self._log_drinks
+        if CONF_LOG_PRICE_CHANGES not in user_input:
+            user_input[CONF_LOG_PRICE_CHANGES] = self._log_price_changes
+        if CONF_LOG_FREE_DRINKS not in user_input:
+            user_input[CONF_LOG_FREE_DRINKS] = self._log_free_drinks
         return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
@@ -354,7 +409,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_menu(self, user_input=None):
         return self.async_show_menu(
             step_id="menu",
-            menu_options=["user", "drinks", "finish"],
+            menu_options=["user", "drinks", "logging", "finish"],
         )
 
     async def async_step_drinks(self, user_input=None):
@@ -384,6 +439,31 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_menu()
         schema = vol.Schema({vol.Required(CONF_CURRENCY, default=self._currency): str})
         return self.async_show_form(step_id="currency", data_schema=schema)
+
+    async def async_step_logging(self, user_input=None):
+        if user_input is not None:
+            self._ensure_user_id()
+            new_enable = user_input[CONF_ENABLE_LOGGING]
+            if new_enable != self._enable_logging:
+                await _log_logging_toggle(self.hass, self._user_id, new_enable)
+            self._enable_logging = new_enable
+            self._log_drinks = user_input[CONF_LOG_DRINKS]
+            self._log_price_changes = user_input[CONF_LOG_PRICE_CHANGES]
+            self._log_free_drinks = user_input[CONF_LOG_FREE_DRINKS]
+            return await self.async_step_menu()
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_ENABLE_LOGGING, default=self._enable_logging): bool,
+                vol.Required(CONF_LOG_DRINKS, default=self._log_drinks): bool,
+                vol.Required(
+                    CONF_LOG_PRICE_CHANGES, default=self._log_price_changes
+                ): bool,
+                vol.Required(
+                    CONF_LOG_FREE_DRINKS, default=self._log_free_drinks
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="logging", data_schema=schema)
 
     async def async_step_free_drinks(self, user_input=None):
         if user_input is not None:
@@ -716,6 +796,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_CURRENCY: self._currency,
                 CONF_ENABLE_FREE_DRINKS: self._enable_free_drinks,
                 CONF_CASH_USER_NAME: self._cash_user_name,
+                CONF_ENABLE_LOGGING: self._enable_logging,
+                CONF_LOG_DRINKS: self._log_drinks,
+                CONF_LOG_PRICE_CHANGES: self._log_price_changes,
+                CONF_LOG_FREE_DRINKS: self._log_free_drinks,
             },
         )
 
@@ -729,6 +813,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.hass.data[DOMAIN][CONF_CURRENCY] = self._currency
         self.hass.data[DOMAIN][CONF_ENABLE_FREE_DRINKS] = self._enable_free_drinks
         self.hass.data[DOMAIN][CONF_CASH_USER_NAME] = self._cash_user_name
+        self.hass.data[DOMAIN][CONF_ENABLE_LOGGING] = self._enable_logging
+        self.hass.data[DOMAIN][CONF_LOG_DRINKS] = self._log_drinks
+        self.hass.data[DOMAIN][CONF_LOG_PRICE_CHANGES] = self._log_price_changes
+        self.hass.data[DOMAIN][CONF_LOG_FREE_DRINKS] = self._log_free_drinks
         if self._create_price_user:
             await self.hass.config_entries.flow.async_init(
                 DOMAIN,
@@ -744,6 +832,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_OVERRIDE_USERS: self._override_users,
                     CONF_PUBLIC_DEVICES: self._public_devices,
                     CONF_CURRENCY: self._currency,
+                    CONF_ENABLE_LOGGING: self._enable_logging,
+                    CONF_LOG_DRINKS: self._log_drinks,
+                    CONF_LOG_PRICE_CHANGES: self._log_price_changes,
+                    CONF_LOG_FREE_DRINKS: self._log_free_drinks,
                 },
             )
         else:
@@ -757,6 +849,10 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     entry_data[CONF_OVERRIDE_USERS] = self._override_users
                     entry_data[CONF_PUBLIC_DEVICES] = self._public_devices
                     entry_data[CONF_CURRENCY] = self._currency
+                    entry_data[CONF_ENABLE_LOGGING] = self._enable_logging
+                    entry_data[CONF_LOG_DRINKS] = self._log_drinks
+                    entry_data[CONF_LOG_PRICE_CHANGES] = self._log_price_changes
+                    entry_data[CONF_LOG_FREE_DRINKS] = self._log_free_drinks
                     self.hass.config_entries.async_update_entry(entry, data=entry_data)
                     await self.hass.config_entries.async_reload(entry.entry_id)
                     break
@@ -766,7 +862,13 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
-                data={CONF_USER: p},
+                data={
+                    CONF_USER: p,
+                    CONF_ENABLE_LOGGING: self._enable_logging,
+                    CONF_LOG_DRINKS: self._log_drinks,
+                    CONF_LOG_PRICE_CHANGES: self._log_price_changes,
+                    CONF_LOG_FREE_DRINKS: self._log_free_drinks,
+                },
             )
         self._pending_users = []
         cash_name = self._cash_user_name.strip()
@@ -784,7 +886,13 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": config_entries.SOURCE_IMPORT},
-                    data={CONF_USER: cash_name},
+                    data={
+                        CONF_USER: cash_name,
+                        CONF_ENABLE_LOGGING: self._enable_logging,
+                        CONF_LOG_DRINKS: self._log_drinks,
+                        CONF_LOG_PRICE_CHANGES: self._log_price_changes,
+                        CONF_LOG_FREE_DRINKS: self._log_free_drinks,
+                    },
                 )
             else:
                 cash_data = self.hass.data.get(DOMAIN, {}).get(cash_entry.entry_id)
@@ -824,6 +932,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._enable_free_drinks: bool = False
         self._cash_user_name: str = get_cash_user_name(None)
         self._edit_drink: str | None = None
+        self._enable_logging: bool = True
+        self._log_drinks: bool = True
+        self._log_price_changes: bool = True
+        self._log_free_drinks: bool = True
 
     def _ensure_user_id(self) -> None:
         if self._user_id is None:
@@ -850,6 +962,18 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             CONF_ENABLE_FREE_DRINKS, False
         )
         self._cash_user_name = get_cash_user_name(self.hass.config.language)
+        self._enable_logging = self.hass.data.get(DOMAIN, {}).get(
+            CONF_ENABLE_LOGGING, True
+        )
+        self._log_drinks = self.hass.data.get(DOMAIN, {}).get(
+            CONF_LOG_DRINKS, True
+        )
+        self._log_price_changes = self.hass.data.get(DOMAIN, {}).get(
+            CONF_LOG_PRICE_CHANGES, True
+        )
+        self._log_free_drinks = self.hass.data.get(DOMAIN, {}).get(
+            CONF_LOG_FREE_DRINKS, True
+        )
         return await self.async_step_menu()
 
     async def async_step_menu(self, user_input=None):
@@ -858,6 +982,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             menu_options=[
                 "user",
                 "drinks",
+                "logging",
                 "cleanup",
                 "delete",
                 "finish",
@@ -914,6 +1039,31 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         schema = vol.Schema({vol.Required(CONF_CURRENCY, default=self._currency): str})
         return self.async_show_form(step_id="currency", data_schema=schema)
 
+    async def async_step_logging(self, user_input=None):
+        if user_input is not None:
+            self._ensure_user_id()
+            new_enable = user_input[CONF_ENABLE_LOGGING]
+            if new_enable != self._enable_logging:
+                await _log_logging_toggle(self.hass, self._user_id, new_enable)
+            self._enable_logging = new_enable
+            self._log_drinks = user_input[CONF_LOG_DRINKS]
+            self._log_price_changes = user_input[CONF_LOG_PRICE_CHANGES]
+            self._log_free_drinks = user_input[CONF_LOG_FREE_DRINKS]
+            return await self.async_step_menu()
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_ENABLE_LOGGING, default=self._enable_logging): bool,
+                vol.Required(CONF_LOG_DRINKS, default=self._log_drinks): bool,
+                vol.Required(
+                    CONF_LOG_PRICE_CHANGES, default=self._log_price_changes
+                ): bool,
+                vol.Required(
+                    CONF_LOG_FREE_DRINKS, default=self._log_free_drinks
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="logging", data_schema=schema)
+
     async def async_step_free_drinks(self, user_input=None):
         if user_input is not None:
             enable = user_input[CONF_ENABLE_FREE_DRINKS]
@@ -941,6 +1091,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                     menu_options=[
                         "user",
                         "drinks",
+                        "logging",
                         "cleanup",
                         "delete",
                         "finish",
@@ -1397,6 +1548,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self.hass.data[DOMAIN][CONF_PUBLIC_DEVICES] = self._public_devices
         self.hass.data[DOMAIN][CONF_CURRENCY] = self._currency
         self.hass.data[DOMAIN][CONF_CASH_USER_NAME] = self._cash_user_name
+        self.hass.data[DOMAIN][CONF_ENABLE_LOGGING] = self._enable_logging
+        self.hass.data[DOMAIN][CONF_LOG_DRINKS] = self._log_drinks
+        self.hass.data[DOMAIN][CONF_LOG_PRICE_CHANGES] = self._log_price_changes
+        self.hass.data[DOMAIN][CONF_LOG_FREE_DRINKS] = self._log_free_drinks
         cash_name = self._cash_user_name.strip()
         entries = self.hass.config_entries.async_entries(DOMAIN)
         cash_entry = next(
@@ -1413,7 +1568,13 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                     self.hass.config_entries.flow.async_init(
                         DOMAIN,
                         context={"source": config_entries.SOURCE_IMPORT},
-                        data={CONF_USER: cash_name},
+                        data={
+                            CONF_USER: cash_name,
+                            CONF_ENABLE_LOGGING: self._enable_logging,
+                            CONF_LOG_DRINKS: self._log_drinks,
+                            CONF_LOG_PRICE_CHANGES: self._log_price_changes,
+                            CONF_LOG_FREE_DRINKS: self._log_free_drinks,
+                        },
                     )
                 )
             else:
@@ -1448,6 +1609,10 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_CURRENCY: self._currency,
                 CONF_ENABLE_FREE_DRINKS: self._enable_free_drinks,
                 CONF_CASH_USER_NAME: self._cash_user_name,
+                CONF_ENABLE_LOGGING: self._enable_logging,
+                CONF_LOG_DRINKS: self._log_drinks,
+                CONF_LOG_PRICE_CHANGES: self._log_price_changes,
+                CONF_LOG_FREE_DRINKS: self._log_free_drinks,
             }
             self.hass.config_entries.async_update_entry(entry, data=data)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -1468,5 +1633,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_CURRENCY: self._currency,
                 CONF_ENABLE_FREE_DRINKS: self._enable_free_drinks,
                 CONF_CASH_USER_NAME: self._cash_user_name,
+                CONF_ENABLE_LOGGING: self._enable_logging,
+                CONF_LOG_DRINKS: self._log_drinks,
+                CONF_LOG_PRICE_CHANGES: self._log_price_changes,
+                CONF_LOG_FREE_DRINKS: self._log_free_drinks,
             },
         )

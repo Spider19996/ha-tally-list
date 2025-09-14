@@ -12,6 +12,7 @@
         "menu_options": {
           "user": "User settings",
           "drinks": "Drink settings",
+          "logging": "Logging settings",
           "finish": "Done"
         }
       },
@@ -37,6 +38,15 @@
           "edit": "Edit price",
           "currency": "Set currency",
           "back": "Back"
+        }
+      },
+      "logging": {
+        "title": "Logging settings",
+        "data": {
+          "enable_logging": "Enable logging",
+          "log_drinks": "Log drink events",
+          "log_price_changes": "Log price changes",
+          "log_free_drinks": "Log free drink events"
         }
       },
       "add_drink": {
@@ -145,6 +155,7 @@
         "menu_options": {
           "user": "User settings",
           "drinks": "Drink settings",
+          "logging": "Logging settings",
           "cleanup": "Remove unused sensors",
           "delete": "Delete all entries",
           "finish": "Done"
@@ -173,6 +184,15 @@
           "currency": "Set currency",
           "free_drinks": "Free drinks",
           "back": "Back"
+        }
+      },
+      "logging": {
+        "title": "Logging settings",
+        "data": {
+          "enable_logging": "Enable logging",
+          "log_drinks": "Log drink events",
+          "log_price_changes": "Log price changes",
+          "log_free_drinks": "Log free drink events"
         }
       },
       "free_drinks": {
@@ -302,6 +322,7 @@
       "action": {
         "user": "User settings",
         "drinks": "Drink settings",
+        "logging": "Logging settings",
         "free_drinks": "Free drinks",
         "add": "Add drink",
         "remove": "Remove drink",
