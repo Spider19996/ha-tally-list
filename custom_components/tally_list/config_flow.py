@@ -138,14 +138,6 @@ async def _log_price_change(hass, user_id, action: str, details: str) -> None:
     await _async_update_price_feed_sensor(hass)
 
 
-def _get_flow_user_id(hass, context) -> str | None:
-    auth = getattr(hass, "auth", None)
-    current = getattr(auth, "current_user", None) if auth is not None else None
-    if current is not None:
-        return current.id
-    return context.get("user_id") if context is not None else None
-
-
 def _parse_drinks(value: str) -> dict[str, float]:
     drinks: dict[str, float] = {}
     if not value:
@@ -471,14 +463,12 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 old = self._drinks.get(drink)
                 self._drinks[drink] = price
                 self._drink_icons[drink] = icon
-                user_id = _get_flow_user_id(self.hass, self.context)
-                if old != price:
-                    await _log_price_change(
-                        self.hass,
-                        user_id,
-                        "edit_drink",
-                        f"{drink}:{old}->{price}",
-                    )
+                await _log_price_change(
+                    self.hass,
+                    self.context.get("user_id"),
+                    "edit_drink",
+                    f"{drink}:{old}->{price}",
+                )
                 self._edit_drink = None
                 if user_input.get("edit_more") and self._drinks:
                     return await self.async_step_edit_price()
@@ -1043,14 +1033,12 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 old = self._drinks.get(drink)
                 self._drinks[drink] = price
                 self._drink_icons[drink] = icon
-                user_id = _get_flow_user_id(self.hass, self.context)
-                if old != price:
-                    await _log_price_change(
-                        self.hass,
-                        user_id,
-                        "edit_drink",
-                        f"{drink}:{old}->{price}",
-                    )
+                await _log_price_change(
+                    self.hass,
+                    self.context.get("user_id"),
+                    "edit_drink",
+                    f"{drink}:{old}->{price}",
+                )
                 self._edit_drink = None
                 if user_input.get("edit_more") and self._drinks:
                     return await self.async_step_edit_price()
