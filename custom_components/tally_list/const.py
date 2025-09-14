@@ -20,6 +20,7 @@ CONF_ENABLE_LOGGING = "enable_logging"
 CONF_LOG_DRINKS = "log_drinks"
 CONF_LOG_PRICE_CHANGES = "log_price_changes"
 CONF_LOG_FREE_DRINKS = "log_free_drinks"
+CONF_LOG_PIN_SET = "log_pin_set"
 
 ATTR_USER = "user"
 ATTR_DRINK = "drink"

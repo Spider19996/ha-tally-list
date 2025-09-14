@@ -51,6 +51,7 @@ from .const import (
     CONF_LOG_DRINKS,
     CONF_LOG_PRICE_CHANGES,
     CONF_LOG_FREE_DRINKS,
+    CONF_LOG_PIN_SET,
     ATTR_FREE_DRINK,
     ATTR_COMMENT,
     ATTR_PIN,
@@ -102,6 +103,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             CONF_LOG_DRINKS: True,
             CONF_LOG_PRICE_CHANGES: True,
             CONF_LOG_FREE_DRINKS: True,
+            CONF_LOG_PIN_SET: True,
             "free_drink_counts": {},
             "free_drinks_ledger": 0.0,
             "logins": {},
@@ -700,6 +702,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_LOG_DRINKS: True,
             CONF_LOG_PRICE_CHANGES: True,
             CONF_LOG_FREE_DRINKS: True,
+            CONF_LOG_PIN_SET: True,
         },
     )
     hass.data[DOMAIN].setdefault(entry.entry_id, {"entry": entry, "counts": {}, "credit": 0.0})
@@ -887,6 +890,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     elif hass.data[DOMAIN].get(CONF_LOG_FREE_DRINKS) is not None:
         entry_data = dict(entry.data)
         entry_data[CONF_LOG_FREE_DRINKS] = hass.data[DOMAIN][CONF_LOG_FREE_DRINKS]
+        hass.config_entries.async_update_entry(entry, data=entry_data)
+    if entry.data.get(CONF_LOG_PIN_SET) is not None:
+        hass.data[DOMAIN][CONF_LOG_PIN_SET] = entry.data[CONF_LOG_PIN_SET]
+    elif hass.data[DOMAIN].get(CONF_LOG_PIN_SET) is not None:
+        entry_data = dict(entry.data)
+        entry_data[CONF_LOG_PIN_SET] = hass.data[DOMAIN][CONF_LOG_PIN_SET]
         hass.config_entries.async_update_entry(entry, data=entry_data)
     user_name = entry.data.get(CONF_USER)
     if user_name and entry.data.get(CONF_USER_PIN) is not None:
