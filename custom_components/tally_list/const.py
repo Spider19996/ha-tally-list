@@ -16,6 +16,9 @@ CONF_CURRENCY = "currency"
 
 CONF_ENABLE_FREE_DRINKS = "enable_free_drinks"
 CONF_CASH_USER_NAME = "cash_user_name"
+CONF_ENABLE_LOGGING = "enable_logging"
+CONF_LOG_PRICE_CHANGES = "log_price_changes"
+CONF_LOG_FREE_DRINKS = "log_free_drinks"
 
 ATTR_USER = "user"
 ATTR_DRINK = "drink"
