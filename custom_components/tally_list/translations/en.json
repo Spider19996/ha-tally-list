@@ -12,7 +12,6 @@
         "menu_options": {
           "user": "User settings",
           "drinks": "Drink settings",
-          "logging": "Logging settings",
           "finish": "Done"
         }
       },
@@ -38,14 +37,6 @@
           "edit": "Edit price",
           "currency": "Set currency",
           "back": "Back"
-        }
-      },
-      "logging": {
-        "title": "Logging settings",
-        "data": {
-          "enable_logging": "Enable logging",
-          "log_price_changes": "Log price changes",
-          "log_free_drinks": "Log free drink events"
         }
       },
       "add_drink": {
@@ -311,7 +302,6 @@
       "action": {
         "user": "User settings",
         "drinks": "Drink settings",
-        "logging": "Logging settings",
         "free_drinks": "Free drinks",
         "add": "Add drink",
         "remove": "Remove drink",

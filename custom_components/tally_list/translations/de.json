@@ -12,7 +12,6 @@
         "menu_options": {
           "user": "Nutzereinstellungen",
           "drinks": "Getränkeeinstellungen",
-          "logging": "Protokollierung",
           "finish": "Fertig"
         }
       },
@@ -38,14 +37,6 @@
           "edit": "Bearbeiten",
           "currency": "Währung setzen",
           "back": "Zurück"
-        }
-      },
-      "logging": {
-        "title": "Protokollierung",
-        "data": {
-          "enable_logging": "Logging aktivieren",
-          "log_price_changes": "Preisänderungen protokollieren",
-          "log_free_drinks": "Freigetränke protokollieren"
         }
       },
       "add_drink": {
@@ -311,7 +302,6 @@
       "action": {
         "user": "Nutzereinstellungen",
         "drinks": "Getränkeeinstellungen",
-        "logging": "Protokollierung",
         "free_drinks": "Freigetränke",
         "add": "Hinzufügen",
         "remove": "Entfernen",
