@@ -193,7 +193,8 @@
           "enable_logging": "Enable logging",
           "log_drinks": "Log drink events",
           "log_price_changes": "Log price changes",
-          "log_free_drinks": "Log free drink events"
+          "log_free_drinks": "Log free drink events",
+          "log_pin_set": "Log PIN set events"
         }
       },
       "free_drinks": {

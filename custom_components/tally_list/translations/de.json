@@ -193,7 +193,8 @@
           "enable_logging": "Logging aktivieren",
           "log_drinks": "Getränke protokollieren",
           "log_price_changes": "Preisänderungen protokollieren",
-          "log_free_drinks": "Freigetränke protokollieren"
+          "log_free_drinks": "Freigetränke protokollieren",
+          "log_pin_set": "PIN-Änderungen protokollieren"
         }
       },
       "free_drinks": {
