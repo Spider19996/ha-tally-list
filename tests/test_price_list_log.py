@@ -385,6 +385,34 @@ async def test_no_log_when_drinks_logging_disabled(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_log_pin_change_logged(tmp_path):
+    hass, _write_price_list_log, _log_price_change, _, const, cleanup = _setup_env(tmp_path)
+    try:
+        hass.data = {const.DOMAIN: {const.CONF_ENABLE_LOGGING: True, const.CONF_LOG_PIN_SET: True}}
+        hass.states = types.SimpleNamespace(async_all=lambda domain: [])
+        hass.auth = types.SimpleNamespace(async_get_user=AsyncMock(return_value=None), current_user=None)
+        hass.async_add_executor_job = AsyncMock()
+        await _log_price_change(hass, "user-id", "set_pin", "Alice:set")
+        hass.async_add_executor_job.assert_awaited_once()
+    finally:
+        cleanup()
+
+
+@pytest.mark.asyncio
+async def test_no_log_when_pin_logging_disabled(tmp_path):
+    hass, _write_price_list_log, _log_price_change, _, const, cleanup = _setup_env(tmp_path)
+    try:
+        hass.data = {const.DOMAIN: {const.CONF_ENABLE_LOGGING: True, const.CONF_LOG_PIN_SET: False}}
+        hass.states = types.SimpleNamespace(async_all=lambda domain: [])
+        hass.auth = types.SimpleNamespace(async_get_user=AsyncMock(return_value=None), current_user=None)
+        hass.async_add_executor_job = AsyncMock()
+        await _log_price_change(hass, "user-id", "set_pin", "Alice:set")
+        hass.async_add_executor_job.assert_not_called()
+    finally:
+        cleanup()
+
+
+@pytest.mark.asyncio
 async def test_logging_toggle_always_logged(tmp_path):
     hass, _write_price_list_log, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
     try:
@@ -409,11 +437,88 @@ async def test_logging_toggle_always_logged(tmp_path):
                 const.CONF_LOG_DRINKS: True,
                 const.CONF_LOG_PRICE_CHANGES: True,
                 const.CONF_LOG_FREE_DRINKS: True,
+                const.CONF_LOG_PIN_SET: True,
             }
         )
         hass.async_add_executor_job.assert_awaited_once()
         args = hass.async_add_executor_job.await_args.args
         assert args[0] is _write_price_list_log
         assert args[3] == "enable_logging"
+        assert args[4] == "logging"
+    finally:
+        cleanup()
+
+
+@pytest.mark.asyncio
+async def test_individual_logging_toggle_logged(tmp_path):
+    hass, _write_price_list_log, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
+    try:
+        hass.data = {const.DOMAIN: {}}
+        hass.states = types.SimpleNamespace(async_all=lambda domain: [])
+        mock_user = types.SimpleNamespace(id="user-1", name="Tester", username="tester")
+        hass.auth = types.SimpleNamespace(
+            async_get_user=AsyncMock(return_value=mock_user), current_user=mock_user
+        )
+        flow = OptionsFlowHandler(config_entry=None)
+        flow.hass = hass
+        flow.context = {}
+        flow._enable_logging = True
+        flow._log_drinks = False
+        flow._log_price_changes = True
+        flow._log_free_drinks = True
+        flow.async_step_menu = AsyncMock(return_value=None)
+        hass.async_add_executor_job = AsyncMock()
+        await flow.async_step_logging(
+            {
+                const.CONF_ENABLE_LOGGING: True,
+                const.CONF_LOG_DRINKS: True,
+                const.CONF_LOG_PRICE_CHANGES: True,
+                const.CONF_LOG_FREE_DRINKS: True,
+                const.CONF_LOG_PIN_SET: True,
+            }
+        )
+        hass.async_add_executor_job.assert_awaited_once()
+        args = hass.async_add_executor_job.await_args.args
+        assert args[0] is _write_price_list_log
+        assert args[3] == "enable_logging"
+        assert args[4] == "log_drinks"
+    finally:
+        cleanup()
+
+
+@pytest.mark.asyncio
+async def test_pin_logging_toggle_logged(tmp_path):
+    hass, _write_price_list_log, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
+    try:
+        hass.data = {const.DOMAIN: {}}
+        hass.states = types.SimpleNamespace(async_all=lambda domain: [])
+        mock_user = types.SimpleNamespace(id="user-1", name="Tester", username="tester")
+        hass.auth = types.SimpleNamespace(
+            async_get_user=AsyncMock(return_value=mock_user), current_user=mock_user
+        )
+        flow = OptionsFlowHandler(config_entry=None)
+        flow.hass = hass
+        flow.context = {}
+        flow._enable_logging = True
+        flow._log_drinks = True
+        flow._log_price_changes = True
+        flow._log_free_drinks = True
+        flow._log_pin_set = False
+        flow.async_step_menu = AsyncMock(return_value=None)
+        hass.async_add_executor_job = AsyncMock()
+        await flow.async_step_logging(
+            {
+                const.CONF_ENABLE_LOGGING: True,
+                const.CONF_LOG_DRINKS: True,
+                const.CONF_LOG_PRICE_CHANGES: True,
+                const.CONF_LOG_FREE_DRINKS: True,
+                const.CONF_LOG_PIN_SET: True,
+            }
+        )
+        hass.async_add_executor_job.assert_awaited_once()
+        args = hass.async_add_executor_job.await_args.args
+        assert args[0] is _write_price_list_log
+        assert args[3] == "enable_logging"
+        assert args[4] == "log_pin_set"
     finally:
         cleanup()
