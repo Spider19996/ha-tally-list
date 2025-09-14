@@ -162,6 +162,14 @@ async def _log_price_change(hass, user_id, action: str, details: str) -> None:
     )
     await _async_update_price_feed_sensor(hass)
 
+async def _log_drink_list_change(hass, user_id, action: str, details: str) -> None:
+    """Log modifications to the drink list separately from drink usage."""
+    mapped_action = {
+        "add_drink": "add_drink_type",
+        "remove_drink": "remove_drink_type",
+    }.get(action, action)
+    await _log_price_change(hass, user_id, mapped_action, details)
+
 
 async def _log_logging_toggle(hass, user_id, option: str, enabled: bool) -> None:
     auth = getattr(hass, "auth", None)
@@ -556,7 +564,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._drinks[drink] = price
             self._drink_icons[drink] = icon
             self._ensure_user_id()
-            await _log_price_change(
+            await _log_drink_list_change(
                 self.hass,
                 self._user_id,
                 "add_drink",
@@ -581,7 +589,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._drinks.pop(drink, None)
             self._drink_icons.pop(drink, None)
             self._ensure_user_id()
-            await _log_price_change(
+            await _log_drink_list_change(
                 self.hass,
                 self._user_id,
                 "remove_drink",
@@ -1248,7 +1256,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             self._drinks[drink] = price
             self._drink_icons[drink] = icon
             self._ensure_user_id()
-            await _log_price_change(
+            await _log_drink_list_change(
                 self.hass,
                 self._user_id,
                 "add_drink",
@@ -1274,7 +1282,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             self._drinks.pop(drink, None)
             self._drink_icons.pop(drink, None)
             self._ensure_user_id()
-            await _log_price_change(
+            await _log_drink_list_change(
                 self.hass,
                 self._user_id,
                 "remove_drink",

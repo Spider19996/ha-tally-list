@@ -249,6 +249,36 @@ async def test_no_log_when_price_unchanged(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_options_flow_add_remove_logged_separately(tmp_path):
+    hass, _, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
+    try:
+        hass.auth = types.SimpleNamespace(current_user=types.SimpleNamespace(id="user-1"))
+        flow = OptionsFlowHandler(config_entry=None)
+        flow.hass = hass
+        flow.context = {}
+        flow.async_step_menu = AsyncMock(return_value=None)
+        flow._user_id = "user-1"
+        with patch("tally_list.config_flow._log_price_change", AsyncMock()) as log_mock:
+            await flow.async_step_add_drink({
+                const.CONF_DRINK: "Bier",
+                const.CONF_PRICE: 1.5,
+                const.CONF_ICON: "mdi:beer",
+            })
+            log_mock.assert_awaited_once_with(
+                hass, "user-1", "add_drink_type", "Bier=1.5"
+            )
+        flow._drinks = {"Bier": 1.5}
+        flow._drink_icons = {"Bier": "mdi:beer"}
+        with patch("tally_list.config_flow._log_price_change", AsyncMock()) as log_mock:
+            await flow.async_step_remove_drink({const.CONF_DRINK: "Bier"})
+            log_mock.assert_awaited_once_with(
+                hass, "user-1", "remove_drink_type", "Bier"
+            )
+    finally:
+        cleanup()
+
+
+@pytest.mark.asyncio
 async def test_log_uses_context_user(tmp_path):
     hass, _, _, OptionsFlowHandler, const, cleanup = _setup_env(tmp_path)
     try:
