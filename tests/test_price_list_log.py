@@ -163,6 +163,63 @@ def test_aggregate_same_drink(tmp_path):
         cleanup()
 
 
+def test_group_other_user_same_minute(tmp_path):
+    hass, _write_price_list_log, _, _, _, cleanup = _setup_env(tmp_path)
+    try:
+        tz = ZoneInfo("Europe/Berlin")
+        ts = datetime(2025, 9, 14, 1, 33, 0, tzinfo=tz)
+        with patch("tally_list.config_flow.dt_util.now", return_value=ts):
+            _write_price_list_log(
+                hass,
+                "Robin Zimmermann",
+                "add_drink",
+                "Sebastian Schumans:Bitburger+1",
+            )
+            _write_price_list_log(
+                hass,
+                "Robin Zimmermann",
+                "add_drink",
+                "Sebastian Schumans:Limo+1",
+            )
+        path = Path(tmp_path, "tally_list", "price_list", "price_list_2025.csv")
+        with path.open(newline="", encoding="utf-8") as f:
+            rows = list(csv.reader(f, delimiter=";"))
+        assert rows[1] == [
+            "2025-09-14T01:33",
+            "Robin Zimmermann",
+            "add_drink",
+            "Sebastian Schumans:Bitburger+1,Limo+1",
+        ]
+    finally:
+        cleanup()
+
+
+def test_aggregate_same_drink_other_user(tmp_path):
+    hass, _write_price_list_log, _, _, _, cleanup = _setup_env(tmp_path)
+    try:
+        tz = ZoneInfo("Europe/Berlin")
+        ts = datetime(2025, 9, 14, 1, 44, 0, tzinfo=tz)
+        with patch("tally_list.config_flow.dt_util.now", return_value=ts):
+            for _ in range(2):
+                _write_price_list_log(
+                    hass,
+                    "Robin Zimmermann",
+                    "add_drink",
+                    "Sebastian Schumans:Bitburger+1",
+                )
+        path = Path(tmp_path, "tally_list", "price_list", "price_list_2025.csv")
+        with path.open(newline="", encoding="utf-8") as f:
+            rows = list(csv.reader(f, delimiter=";"))
+        assert rows[1] == [
+            "2025-09-14T01:44",
+            "Robin Zimmermann",
+            "add_drink",
+            "Sebastian Schumans:Bitburger+2",
+        ]
+    finally:
+        cleanup()
+
+
 def test_free_drink_logged_separately(tmp_path):
     hass, _write_price_list_log, _, _, _, cleanup = _setup_env(tmp_path)
     try:

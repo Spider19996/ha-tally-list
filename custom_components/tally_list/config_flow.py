@@ -66,42 +66,42 @@ def _write_price_list_log(
     key_time = ts.strftime("%Y-%m-%dT%H:%M")
     if len(rows) > 1 and rows[-1][:3] == [key_time, user, action]:
         existing = rows[-1][3]
-        prefix = f"{user}:"
-        if existing.startswith(prefix) and details.startswith(prefix):
-            existing_parts = existing[len(prefix):]
-            new_parts = details[len(prefix):]
-            counts: dict[tuple[str, str], int] = {}
-            order: list[tuple[str, str]] = []
+        counts: dict[tuple[str, str, str], int] = {}
+        order: list[tuple[str, str, str]] = []
 
-            def _parse(parts: str) -> bool:
-                for part in parts.split(","):
-                    part = part.strip()
-                    if not part:
-                        continue
-                    match = re.fullmatch(r"([^,+-]+)([+-])(\d+)", part)
-                    if match is None:
-                        return False
-                    name, sign, num = match.groups()
-                    key = (name, sign)
-                    if key not in counts:
-                        counts[key] = 0
-                        order.append(key)
-                    counts[key] += int(num)
-                return True
+        def _parse(parts: str) -> bool:
+            current_user: str | None = None
+            for part in parts.split(","):
+                part = part.strip()
+                if not part:
+                    continue
+                if ":" in part:
+                    current_user, part = part.split(":", 1)
+                if current_user is None:
+                    return False
+                match = re.fullmatch(r"([^,+-]+)([+-])(\d+)", part)
+                if match is None:
+                    return False
+                name, sign, num = match.groups()
+                key = (current_user, name, sign)
+                if key not in counts:
+                    counts[key] = 0
+                    order.append(key)
+                counts[key] += int(num)
+            return True
 
-            if _parse(existing_parts) and _parse(new_parts):
-                rows[-1][3] = prefix + ",".join(
-                    f"{name}{sign}{counts[(name, sign)]}" for name, sign in order
-                )
-            else:
-                rows[-1][3] = f"{existing},{new_parts}"
+        if _parse(existing) and _parse(details):
+            parts: list[str] = []
+            last_user: str | None = None
+            for user_name, drink, sign in order:
+                token = f"{drink}{sign}{counts[(user_name, drink, sign)]}"
+                if user_name != last_user:
+                    token = f"{user_name}:{token}"
+                    last_user = user_name
+                parts.append(token)
+            rows[-1][3] = ",".join(parts)
         else:
-            new_detail = (
-                details[len(prefix):]
-                if existing.startswith(prefix) and details.startswith(prefix)
-                else details
-            )
-            rows[-1][3] = f"{existing},{new_detail}"
+            rows[-1][3] = f"{existing},{details}"
     else:
         rows.append([key_time, user, action, details])
     with open(path, "w", encoding="utf-8", newline="") as csvfile:
