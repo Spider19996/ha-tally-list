@@ -99,9 +99,9 @@ def test_group_drinks_same_minute(tmp_path):
         tz = ZoneInfo("Europe/Berlin")
         ts = datetime(2025, 9, 14, 1, 9, 30, tzinfo=tz)
         with patch("tally_list.config_flow.dt_util.now", return_value=ts):
-            _write_price_list_log(hass, "Robin Zimmermann", "book_free_drink", "Robin Zimmermann:Bier+1")
-            _write_price_list_log(hass, "Robin Zimmermann", "book_free_drink", "Robin Zimmermann:Limo+1")
-            _write_price_list_log(hass, "Robin Zimmermann", "book_free_drink", "Robin Zimmermann:Wasser+1")
+            _write_price_list_log(hass, "Robin Zimmermann", "add_drink", "Robin Zimmermann:Bier+1")
+            _write_price_list_log(hass, "Robin Zimmermann", "add_drink", "Robin Zimmermann:Limo+1")
+            _write_price_list_log(hass, "Robin Zimmermann", "add_drink", "Robin Zimmermann:Wasser+1")
         path = Path(tmp_path, "tally_list", "price_list", "price_list_2025.csv")
         with path.open(newline="", encoding="utf-8") as f:
             rows = list(csv.reader(f, delimiter=";"))
@@ -109,7 +109,7 @@ def test_group_drinks_same_minute(tmp_path):
         assert rows[1] == [
             "2025-09-14T01:09",
             "Robin Zimmermann",
-            "book_free_drink",
+            "add_drink",
             "Robin Zimmermann:Bier+1,Limo+1,Wasser+1",
         ]
         assert len(rows) == 2
@@ -127,7 +127,7 @@ def test_aggregate_same_drink(tmp_path):
                 _write_price_list_log(
                     hass,
                     "Robin Zimmermann",
-                    "book_drink",
+                    "add_drink",
                     "Robin Zimmermann:Bier+1",
                 )
         path = Path(tmp_path, "tally_list", "price_list", "price_list_2025.csv")
@@ -136,7 +136,7 @@ def test_aggregate_same_drink(tmp_path):
         assert rows[1] == [
             "2025-09-14T01:22",
             "Robin Zimmermann",
-            "book_drink",
+            "add_drink",
             "Robin Zimmermann:Bier+4",
         ]
     finally:
