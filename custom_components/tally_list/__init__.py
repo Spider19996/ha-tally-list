@@ -276,7 +276,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await _log_price_change(
             hass,
             call.context.user_id,
-            "set_count",
+            "adjust_count",
             f"{user}:{drink}={count}",
         )
 
@@ -328,7 +328,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await _log_price_change(
                 hass,
                 call.context.user_id,
-                "book_free_drink",
+                "add_drink",
                 f"{user}:{drink}+{count}",
             )
             return
@@ -340,7 +340,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await _log_price_change(
             hass,
             call.context.user_id,
-            "book_drink",
+            "add_drink",
             f"{user}:{drink}+{count}",
         )
 
@@ -382,7 +382,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await _log_price_change(
                 hass,
                 call.context.user_id,
-                "remove_free_drink",
+                "remove_drink",
                 f"{user}:{drink}-{count}",
             )
             return

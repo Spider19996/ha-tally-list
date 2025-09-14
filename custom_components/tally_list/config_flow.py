@@ -499,7 +499,7 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await _log_price_change(
                 self.hass,
                 self.context.get("user_id"),
-                "free_amount",
+                "set_free_amount",
                 f"{old}->{self._free_amount}",
             )
             return await self.async_step_menu()
@@ -1071,7 +1071,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             await _log_price_change(
                 self.hass,
                 self.context.get("user_id"),
-                "free_amount",
+                "set_free_amount",
                 f"{old}->{self._free_amount}",
             )
             return await self.async_step_menu()
