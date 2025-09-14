@@ -42,22 +42,6 @@ from .sensor import PriceListFeedSensor
 _LOGGER = logging.getLogger(__name__)
 
 
-def _debug_user_state(hass, label: str, user_id: str | None, context=None) -> None:
-    """Log debug information about user resolution."""
-    if not _LOGGER.isEnabledFor(logging.DEBUG):
-        return
-    auth = getattr(hass, "auth", None)
-    current = getattr(auth, "current_user", None) if auth is not None else None
-    context_user = context.get("user_id") if context else None
-    _LOGGER.debug(
-        "user debug (%s): context=%s current=%s stored=%s",
-        label,
-        context_user,
-        getattr(current, "id", None),
-        user_id,
-    )
-
-
 def _write_price_list_log(
     hass, user: str, action: str, details: str
 ) -> None:
@@ -137,7 +121,6 @@ async def _async_update_price_feed_sensor(hass) -> None:
 
 
 async def _log_price_change(hass, user_id, action: str, details: str) -> None:
-    _debug_user_state(hass, f"log_price_change:{action}", user_id)
     auth = getattr(hass, "auth", None)
     if user_id is None and auth is not None:
         current = getattr(auth, "current_user", None)
@@ -146,37 +129,13 @@ async def _log_price_change(hass, user_id, action: str, details: str) -> None:
     hass_user = (
         await auth.async_get_user(user_id) if auth is not None and user_id else None
     )
-    name = (
-        get_person_name(hass, user_id)
-        or (hass_user.name if hass_user and getattr(hass_user, "name", None) else None)
-        or (
-            hass_user.username
-            if hass_user and getattr(hass_user, "username", None)
-            else None
-        )
-        or "Unknown"
+    name = get_person_name(hass, user_id) or (
+        hass_user.name if hass_user else "Unknown"
     )
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug(
-            "logging price change as '%s' (user_id=%s action=%s details=%s)",
-            name,
-            user_id,
-            action,
-            details,
-        )
     await hass.async_add_executor_job(
         _write_price_list_log, hass, name, action, details
     )
     await _async_update_price_feed_sensor(hass)
-
-
-def _get_flow_user_id(hass, context) -> str | None:
-    context_id = context.get("user_id") if context and context.get("user_id") else None
-    auth = getattr(hass, "auth", None)
-    current = getattr(auth, "current_user", None) if auth is not None else None
-    user_id = context_id or (current.id if current is not None else None)
-    _debug_user_state(hass, "get_flow_user_id", user_id, context)
-    return user_id
 
 
 def _parse_drinks(value: str) -> dict[str, float]:
@@ -214,14 +173,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._enable_free_drinks: bool = False
         self._cash_user_name: str = get_cash_user_name(None)
         self._edit_drink: str | None = None
-        self._user_id: str | None = None
-
-    def _ensure_user_id(self) -> None:
-        if self._user_id is None:
-            self._user_id = _get_flow_user_id(self.hass, self.context)
-        _debug_user_state(
-            self.hass, "config_flow.ensure_user_id", self._user_id, self.context
-        )
 
     async def async_step_import(self, user_input=None):
         """Handle import of a config entry."""
@@ -250,7 +201,6 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=self._user, data=user_input)
 
     async def async_step_user(self, user_input=None):
-        self._ensure_user_id()
         entries = self.hass.config_entries.async_entries(DOMAIN)
         if entries:
             registry = er.async_get(self.hass)
@@ -461,10 +411,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             icon = user_input[CONF_ICON]
             self._drinks[drink] = price
             self._drink_icons[drink] = icon
-            self._ensure_user_id()
             await _log_price_change(
                 self.hass,
-                self._user_id,
+                self.context.get("user_id"),
                 "add_drink",
                 f"{drink}={price}",
             )
@@ -486,10 +435,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             drink = user_input[CONF_DRINK]
             self._drinks.pop(drink, None)
             self._drink_icons.pop(drink, None)
-            self._ensure_user_id()
             await _log_price_change(
                 self.hass,
-                self._user_id,
+                self.context.get("user_id"),
                 "remove_drink",
                 drink,
             )
@@ -515,14 +463,12 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 old = self._drinks.get(drink)
                 self._drinks[drink] = price
                 self._drink_icons[drink] = icon
-                if old != price:
-                    self._ensure_user_id()
-                    await _log_price_change(
-                        self.hass,
-                        self._user_id,
-                        "edit_drink",
-                        f"{drink}:{old}->{price}",
-                    )
+                await _log_price_change(
+                    self.hass,
+                    self.context.get("user_id"),
+                    "edit_drink",
+                    f"{drink}:{old}->{price}",
+                )
                 self._edit_drink = None
                 if user_input.get("edit_more") and self._drinks:
                     return await self.async_step_edit_price()
@@ -550,10 +496,9 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             old = self._free_amount
             self._free_amount = float(user_input[CONF_FREE_AMOUNT])
-            self._ensure_user_id()
             await _log_price_change(
                 self.hass,
-                self._user_id,
+                self.context.get("user_id"),
                 "set_free_amount",
                 f"{old}->{self._free_amount}",
             )
@@ -839,7 +784,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         self.config_entry = config_entry
-        self._user_id: str | None = None
         self._drinks: dict[str, float] = {}
         self._drink_icons: dict[str, str] = {}
         self._free_amount: float = 0.0
@@ -851,18 +795,7 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         self._cash_user_name: str = get_cash_user_name(None)
         self._edit_drink: str | None = None
 
-    def _ensure_user_id(self) -> None:
-        if self._user_id is None:
-            self._user_id = _get_flow_user_id(self.hass, self.context)
-        _debug_user_state(
-            self.hass, "options_flow.ensure_user_id", self._user_id, self.context
-        )
-
     async def async_step_init(self, user_input=None):
-        self._user_id = _get_flow_user_id(self.hass, self.context)
-        _debug_user_state(
-            self.hass, "options_flow.init", self._user_id, self.context
-        )
         self._drinks = self.hass.data.get(DOMAIN, {}).get("drinks", {}).copy()
         self._drink_icons = (
             self.hass.data.get(DOMAIN, {}).get("drink_icons", {})
@@ -1045,10 +978,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             icon = user_input[CONF_ICON]
             self._drinks[drink] = price
             self._drink_icons[drink] = icon
-            self._ensure_user_id()
             await _log_price_change(
                 self.hass,
-                self._user_id,
+                self.context.get("user_id"),
                 "add_drink",
                 f"{drink}={price}",
             )
@@ -1071,10 +1003,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             drink = user_input[CONF_DRINK]
             self._drinks.pop(drink, None)
             self._drink_icons.pop(drink, None)
-            self._ensure_user_id()
             await _log_price_change(
                 self.hass,
-                self._user_id,
+                self.context.get("user_id"),
                 "remove_drink",
                 drink,
             )
@@ -1102,14 +1033,12 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
                 old = self._drinks.get(drink)
                 self._drinks[drink] = price
                 self._drink_icons[drink] = icon
-                if old != price:
-                    self._ensure_user_id()
-                    await _log_price_change(
-                        self.hass,
-                        self._user_id,
-                        "edit_drink",
-                        f"{drink}:{old}->{price}",
-                    )
+                await _log_price_change(
+                    self.hass,
+                    self.context.get("user_id"),
+                    "edit_drink",
+                    f"{drink}:{old}->{price}",
+                )
                 self._edit_drink = None
                 if user_input.get("edit_more") and self._drinks:
                     return await self.async_step_edit_price()
@@ -1139,10 +1068,9 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             old = self._free_amount
             self._free_amount = float(user_input[CONF_FREE_AMOUNT])
-            self._ensure_user_id()
             await _log_price_change(
                 self.hass,
-                self._user_id,
+                self.context.get("user_id"),
                 "set_free_amount",
                 f"{old}->{self._free_amount}",
             )
