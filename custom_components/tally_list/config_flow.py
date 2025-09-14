@@ -160,7 +160,7 @@ async def _log_price_change(hass, user_id, action: str, details: str) -> None:
     await _async_update_price_feed_sensor(hass)
 
 
-async def _log_logging_toggle(hass, user_id, option: str, enabled: bool) -> None:
+async def _log_logging_toggle(hass, user_id, enabled: bool) -> None:
     auth = getattr(hass, "auth", None)
     if user_id is None and auth is not None:
         current = getattr(auth, "current_user", None)
@@ -179,7 +179,7 @@ async def _log_logging_toggle(hass, user_id, option: str, enabled: bool) -> None
         )
         or "Unknown"
     )
-    action = f"enable_{option}" if enabled else f"disable_{option}"
+    action = "enable_logging" if enabled else "disable_logging"
     await hass.async_add_executor_job(
         _write_price_list_log, hass, name, action, action
     )
@@ -445,34 +445,11 @@ class TallyListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._ensure_user_id()
             new_enable = user_input[CONF_ENABLE_LOGGING]
             if new_enable != self._enable_logging:
-                await _log_logging_toggle(
-                    self.hass, self._user_id, "logging", new_enable
-                )
+                await _log_logging_toggle(self.hass, self._user_id, new_enable)
             self._enable_logging = new_enable
-
-            new_log_drinks = user_input[CONF_LOG_DRINKS]
-            if new_log_drinks != self._log_drinks:
-                await _log_logging_toggle(
-                    self.hass, self._user_id, "log_drinks", new_log_drinks
-                )
-            self._log_drinks = new_log_drinks
-
-            new_log_price_changes = user_input[CONF_LOG_PRICE_CHANGES]
-            if new_log_price_changes != self._log_price_changes:
-                await _log_logging_toggle(
-                    self.hass,
-                    self._user_id,
-                    "log_price_changes",
-                    new_log_price_changes,
-                )
-            self._log_price_changes = new_log_price_changes
-
-            new_log_free_drinks = user_input[CONF_LOG_FREE_DRINKS]
-            if new_log_free_drinks != self._log_free_drinks:
-                await _log_logging_toggle(
-                    self.hass, self._user_id, "log_free_drinks", new_log_free_drinks
-                )
-            self._log_free_drinks = new_log_free_drinks
+            self._log_drinks = user_input[CONF_LOG_DRINKS]
+            self._log_price_changes = user_input[CONF_LOG_PRICE_CHANGES]
+            self._log_free_drinks = user_input[CONF_LOG_FREE_DRINKS]
             return await self.async_step_menu()
         schema = vol.Schema(
             {
@@ -1067,34 +1044,11 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
             self._ensure_user_id()
             new_enable = user_input[CONF_ENABLE_LOGGING]
             if new_enable != self._enable_logging:
-                await _log_logging_toggle(
-                    self.hass, self._user_id, "logging", new_enable
-                )
+                await _log_logging_toggle(self.hass, self._user_id, new_enable)
             self._enable_logging = new_enable
-
-            new_log_drinks = user_input[CONF_LOG_DRINKS]
-            if new_log_drinks != self._log_drinks:
-                await _log_logging_toggle(
-                    self.hass, self._user_id, "log_drinks", new_log_drinks
-                )
-            self._log_drinks = new_log_drinks
-
-            new_log_price_changes = user_input[CONF_LOG_PRICE_CHANGES]
-            if new_log_price_changes != self._log_price_changes:
-                await _log_logging_toggle(
-                    self.hass,
-                    self._user_id,
-                    "log_price_changes",
-                    new_log_price_changes,
-                )
-            self._log_price_changes = new_log_price_changes
-
-            new_log_free_drinks = user_input[CONF_LOG_FREE_DRINKS]
-            if new_log_free_drinks != self._log_free_drinks:
-                await _log_logging_toggle(
-                    self.hass, self._user_id, "log_free_drinks", new_log_free_drinks
-                )
-            self._log_free_drinks = new_log_free_drinks
+            self._log_drinks = user_input[CONF_LOG_DRINKS]
+            self._log_price_changes = user_input[CONF_LOG_PRICE_CHANGES]
+            self._log_free_drinks = user_input[CONF_LOG_FREE_DRINKS]
             return await self.async_step_menu()
         schema = vol.Schema(
             {
