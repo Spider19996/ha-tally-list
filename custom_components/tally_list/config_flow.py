@@ -1047,7 +1047,6 @@ class TallyListOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options."""
 
     def __init__(self, config_entry):
-        self.config_entry = config_entry
         self._user_id: str | None = None
         self._drinks: dict[str, float] = {}
         self._drink_icons: dict[str, str] = {}
