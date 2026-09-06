@@ -42,8 +42,17 @@ async def async_register_frontend(hass: HomeAssistant) -> None:
 
 async def _async_register_resource(hass: HomeAssistant, url: str) -> None:
     """Register or update the card as a Lovelace resource."""
-    lovelace_data = hass.data.get("lovelace") or {}
-    resources = lovelace_data.get("resources")
+    lovelace_data = hass.data.get("lovelace")
+    if lovelace_data is None:
+        _LOGGER.debug("Lovelace resources not available; skipping registration")
+        return
+
+    # hass.data["lovelace"] is a LovelaceData dataclass on recent Home
+    # Assistant versions and was a plain dict before.
+    if isinstance(lovelace_data, dict):
+        resources = lovelace_data.get("resources")
+    else:
+        resources = getattr(lovelace_data, "resources", None)
     if resources is None:
         _LOGGER.debug("Lovelace resources not available; skipping registration")
         return
