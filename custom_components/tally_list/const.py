@@ -1,5 +1,9 @@
 DOMAIN = "tally_list"
 
+# Lovelace card bundled with this integration
+CARD_FILENAME = "tally-list-card.js"
+CARD_URL_BASE = f"/{DOMAIN}/{CARD_FILENAME}"
+
 CONF_USER = "user"
 CONF_DRINKS = "drinks"
 CONF_DRINK = "drink"

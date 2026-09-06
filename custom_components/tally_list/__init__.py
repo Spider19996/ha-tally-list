@@ -21,6 +21,7 @@ from .sensor import FreeDrinkFeedSensor
 from .security import hash_pin, verify_pin
 from .utils import get_person_name
 from .config_flow import _log_price_change
+from .frontend import async_register_frontend
 
 from .const import (
     DOMAIN,
@@ -684,6 +685,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     await async_register_ws(hass)
+
+    # Serve the bundled Lovelace cards and register them as a resource so the
+    # dashboard cards work without a separate HACS (plugin) installation.
+    await async_register_frontend(hass)
 
     return True
 
